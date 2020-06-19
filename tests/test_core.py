@@ -10,7 +10,7 @@ def test_grid():
                  "r_max": 0.1}
     grid = Grid(grid_conf)
     assert grid.grid_data == grid_conf
-    assert grid.r_min == 0.0
+    assert grid.r_min == 0.1
     assert grid.r_max == 0.1
 
 
