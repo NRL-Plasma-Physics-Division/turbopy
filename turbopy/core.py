@@ -25,7 +25,14 @@ class Simulation:
     diagnostics. It also coordinates them. The main simulation loop is
     driven by an instance of this class.
 
-    Based on the Simulation class in TurboWAVE
+    Attributes
+    ----------
+    physics_modules : list
+        A list of PhysicsModules for this simulation.
+    diagnostics : list
+        A list of Diagnostics for this simulation.
+    compute_tools : list
+        A list of ComputeTools for this simulation.
     """
 
     def __init__(self, input_data: dict):
