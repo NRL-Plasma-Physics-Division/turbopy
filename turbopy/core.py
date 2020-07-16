@@ -25,14 +25,102 @@ class Simulation:
     diagnostics. It also coordinates them. The main simulation loop is
     driven by an instance of this class.
 
+    Parameters
+    ----------
+    input_data : `dict`
+        This dictionary contains all parameters needed to set up a
+        turboPy simulation. Each key describes a section, and the value
+        is another dictionary with the needed parameters for that
+        section.
+
+        Expected keys are:
+
+        ``"Grid"``
+            Dictionary containg parameters needed to defined the grid.
+            Currently only 1D grids are defined in turboPy.
+
+            The expected parameters are:
+
+            - ``"N"`` | {``"dr"`` | ``"dx"``} :
+                The number of grid points (`int`) | the grid spacing
+                (`float`)
+            - ``"min"`` | ``"x_min"`` | ``"r_min"`` :
+                The coordinate value of the minimum grid point (`float`)
+            - ``"max"`` | ``"x_max"`` | ``"r_max"`` :
+                The coordinate value of the maximum grid point (`float`)
+
+        ``"Clock"``
+            Dictionary of parameters needed to define the simulation
+            clock.
+
+            The expected parameters are:
+
+            - ``"start_time"`` :
+                The time for the start of the simulation (`float`)
+            - ``"end_time"`` :
+                The time for the end of the simulation (`float`)
+            - ``"num_steps"`` | ``"dt"`` :
+                The number of time steps (`int`) | the size of the time
+                step (`float`)
+            - ``"print_time"`` :
+                `bool`, optional, default is ``False``
+
+        ``"PhysicsModules"`` : `dict` [`str`, `dict`]
+            Dictionary of PhysicsModules needed for the simulation.
+
+            Each key in the dictionary should map to a PhysicsModule
+            subclass key in the PhysicsModule registry.
+
+            The value is a dictionary of parameters which is passed to
+            the constructor for the PhysicsModule.
+
+        ``"Diagnostics"`` : `dict` [`str`, `dict`], optional
+            Dictionary of Diagnostics needed for the simulaiton.
+
+            Each key in the dictionary should map to a Diagnostic
+            subclass key in the Diagnostic registry.
+
+            The value is a dictionary of parameters which is passed to
+            the constructor for the Diagnostic.
+
+            If the key is not found in the registry, then the key/value
+            pair is interpreted as a default parameter value, and is
+            added to dictionary of parameters for all of the Diagnostic
+            constructors.
+
+        ``"Tools"`` : `dict` [`str`, `dict`], optional
+            Dictionary of ComputeTools needed for the simulation.
+
+            Each key in the dictionary should map to a ComputeTool
+            subclass key in the ComputeTool registry.
+
+            The value is a dictionary of parameters which is passed to
+            the constructor for the ComputeTool.
+
     Attributes
     ----------
-    physics_modules : list
+    physics_modules : list of PhysicsModule subclass objects
         A list of PhysicsModules for this simulation.
-    diagnostics : list
+    diagnostics : list of Diagnostic subclass objects
         A list of Diagnostics for this simulation.
-    compute_tools : list
+    compute_tools : list of ComputeTool subclass objects
         A list of ComputeTools for this simulation.
+
+    Methods
+    -------
+
+    See also
+    --------
+
+    Notes
+    -----
+
+    References
+    ----------
+
+    Examples
+    --------
+
     """
 
     def __init__(self, input_data: dict):
