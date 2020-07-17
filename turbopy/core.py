@@ -66,7 +66,7 @@ class Simulation:
                 `bool`, optional, default is ``False``
 
         ``"PhysicsModules"`` : `dict` [`str`, `dict`]
-            Dictionary of :class:`PhysicsModules` needed for the
+            Dictionary of :class:`PhysicsModule` items needed for the
             simulation.
 
             Each key in the dictionary should map to a
@@ -77,7 +77,7 @@ class Simulation:
             the constructor for the :class:`PhysicsModule`.
 
         ``"Diagnostics"`` : `dict` [`str`, `dict`], optional
-            Dictionary of :class:`Diagnostics` needed for the
+            Dictionary of :class:`Diagnostic` items needed for the
             simulaiton.
 
             Each key in the dictionary should map to a
@@ -93,7 +93,7 @@ class Simulation:
             :class:`Diagnostic` constructors.
 
         ``"Tools"`` : `dict` [`str`, `dict`], optional
-            Dictionary of :class:`ComputeTools` needed for the
+            Dictionary of :class:`ComputeTool` items needed for the
             simulation.
 
             Each key in the dictionary should map to a
@@ -223,7 +223,7 @@ class Simulation:
                 self.compute_tools.append(tool_class(owner=self, input_data=params))
 
     def read_modules_from_input(self):
-        """Construct :class:`PhysicsModules` based on input"""
+        """Construct :class:`PhysicsModule` instances based on input"""
         for physics_module_name, physics_module_data in self.input_data["PhysicsModules"].items():
             physics_module_class = PhysicsModule.lookup(physics_module_name)
             physics_module_data["name"] = physics_module_name
@@ -231,7 +231,7 @@ class Simulation:
         self.sort_modules()
 
     def read_diagnostics_from_input(self):
-        """Construct :class:`Diagnostics` based on input"""
+        """Construct :class:`Diagnostic` instances based on input"""
         if "Diagnostics" in self.input_data:
             # This dictionary has two types of keys:
             #    keys that are valid diagnostic types
@@ -256,7 +256,7 @@ class Simulation:
                     self.diagnostics.append(diagnostic_class(owner=self, input_data=di))
 
     def sort_modules(self):
-        """Sort :class:`PhysicsModules` by some logic
+        """Sort :class:`Simulation.physics_modules` by some logic
 
         Unused stub for future implementation"""
         pass
