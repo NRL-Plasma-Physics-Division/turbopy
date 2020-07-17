@@ -200,7 +200,7 @@ class Simulation:
         """
         Close out the simulation
 
-        Runs the finalize() method for each diagnostic.
+        Runs the :class:`Diagnostic.finalize()` method for each diagnostic.
         """
         for d in self.diagnostics:
             d.finalize()
