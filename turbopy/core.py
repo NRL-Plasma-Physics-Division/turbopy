@@ -23,7 +23,92 @@ class Simulation:
     diagnostics. It also coordinates them. The main simulation loop is
     driven by an instance of this class.
 
-    Based on the Simulation class in TurboWAVE
+    Parameters
+    ----------
+    input_data : `dict`
+        This dictionary contains all parameters needed to set up a
+        turboPy simulation. Each key describes a section, and the value
+        is another dictionary with the needed parameters for that
+        section.
+
+        Expected keys are:
+
+        ``"Grid"``
+            Dictionary containg parameters needed to defined the grid.
+            Currently only 1D grids are defined in turboPy.
+
+            The expected parameters are:
+
+            - ``"N"`` | {``"dr"`` | ``"dx"``} :
+                The number of grid points (`int`) | the grid spacing
+                (`float`)
+            - ``"min"`` | ``"x_min"`` | ``"r_min"`` :
+                The coordinate value of the minimum grid point (`float`)
+            - ``"max"`` | ``"x_max"`` | ``"r_max"`` :
+                The coordinate value of the maximum grid point (`float`)
+
+        ``"Clock"``
+            Dictionary of parameters needed to define the simulation
+            clock.
+
+            The expected parameters are:
+
+            - ``"start_time"`` :
+                The time for the start of the simulation (`float`)
+            - ``"end_time"`` :
+                The time for the end of the simulation (`float`)
+            - ``"num_steps"`` | ``"dt"`` :
+                The number of time steps (`int`) | the size of the time
+                step (`float`)
+            - ``"print_time"`` :
+                `bool`, optional, default is ``False``
+
+        ``"PhysicsModules"`` : `dict` [`str`, `dict`]
+            Dictionary of :class:`PhysicsModule` items needed for the
+            simulation.
+
+            Each key in the dictionary should map to a
+            :class:`PhysicsModule` subclass key in the
+            :class:`PhysicsModule` registry.
+
+            The value is a dictionary of parameters which is passed to
+            the constructor for the :class:`PhysicsModule`.
+
+        ``"Diagnostics"`` : `dict` [`str`, `dict`], optional
+            Dictionary of :class:`Diagnostic` items needed for the
+            simulaiton.
+
+            Each key in the dictionary should map to a
+            :class:`Diagnostic` subclass key in the :class:`Diagnostic`
+            registry.
+
+            The value is a dictionary of parameters which is passed to
+            the constructor for the :class:`Diagnostic`.
+
+            If the key is not found in the registry, then the key/value
+            pair is interpreted as a default parameter value, and is
+            added to dictionary of parameters for all of the
+            :class:`Diagnostic` constructors.
+
+        ``"Tools"`` : `dict` [`str`, `dict`], optional
+            Dictionary of :class:`ComputeTool` items needed for the
+            simulation.
+
+            Each key in the dictionary should map to a
+            :class:`ComputeTool` subclass key in the
+            :class:`ComputeTool` registry.
+
+            The value is a dictionary of parameters which is passed to
+            the constructor for the :class:`ComputeTool`.
+
+    Attributes
+    ----------
+    physics_modules : list of :class:`PhysicsModule` subclass objects
+        A list of :class:`PhysicsModule` objects for this simulation.
+    diagnostics : list of :class:`Diagnostic` subclass objects
+        A list of :class:`Diagnostic` objects for this simulation.
+    compute_tools : list of :class:`ComputeTool` subclass objects
+        A list of :class:`ComputeTool` objects for this simulation.
     """
 
     def __init__(self, input_data: dict):
@@ -108,7 +193,7 @@ class Simulation:
         """
         Close out the simulation
 
-        Runs the finalize() method for each diagnostic.
+        Runs the :class:`Diagnostic.finalize()` method for each diagnostic.
         """
         for d in self.diagnostics:
             d.finalize()
@@ -122,7 +207,7 @@ class Simulation:
         self.clock = SimulationClock(self, self.input_data["Clock"])
 
     def read_tools_from_input(self):
-        """Construct ComputeTools based on input"""
+        """Construct :class:`ComputeTools` based on input"""
         if "Tools" in self.input_data:
             for tool_name, params in self.input_data["Tools"].items():
                 tool_class = ComputeTool.lookup(tool_name)
@@ -131,7 +216,7 @@ class Simulation:
                 self.compute_tools.append(tool_class(owner=self, input_data=params))
 
     def read_modules_from_input(self):
-        """Construct PhysicsModules based on input"""
+        """Construct :class:`PhysicsModule` instances based on input"""
         for physics_module_name, physics_module_data in self.input_data["PhysicsModules"].items():
             physics_module_class = PhysicsModule.lookup(physics_module_name)
             physics_module_data["name"] = physics_module_name
@@ -139,7 +224,7 @@ class Simulation:
         self.sort_modules()
 
     def read_diagnostics_from_input(self):
-        """Construct Diagnostics based on input"""
+        """Construct :class:`Diagnostic` instances based on input"""
         if "Diagnostics" in self.input_data:
             # This dictionary has two types of keys:
             #    keys that are valid diagnostic types
@@ -164,13 +249,13 @@ class Simulation:
                     self.diagnostics.append(diagnostic_class(owner=self, input_data=di))
 
     def sort_modules(self):
-        """Sort PhysicsModules by some logic
+        """Sort :class:`Simulation.physics_modules` by some logic
 
         Unused stub for future implementation"""
         pass
 
     def find_tool_by_name(self, tool_name: str):
-        """Returns the ComputeTool associated with the given name"""
+        """Returns the :class:`ComputeTool` associated with the given name"""
         tools = [t for t in self.compute_tools if t.name == tool_name]
         if len(tools) == 1:
             return tools[0]
