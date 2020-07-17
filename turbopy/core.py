@@ -337,6 +337,14 @@ class SimulationClock:
 
 
 class Grid:
+    """Grid class
+
+    Attributes
+    ----------
+    grid_data: dict
+        Grid data.
+
+    """
     def __init__(self, grid_data: dict):
         self.grid_data = grid_data
         self.r_min = None
@@ -345,7 +353,8 @@ class Grid:
         self.dr = None
         self.parse_grid_data()
 
-        self.r = self.r_min + (self.r_max - self.r_min) * self.generate_linear()
+        self.r = (self.r_min + (self.r_max - self.r_min) *
+                  self.generate_linear())
         self.cell_edges = self.r
         self.cell_centers = (self.r[1:] + self.r[:-1]) / 2
         self.cell_widths = (self.r[1:] - self.r[:-1])
@@ -354,14 +363,15 @@ class Grid:
         self.r_inv[0] = 0
 
     def parse_grid_data(self):
-        """Initializes the grid spacing, range, and number of points of the grid from data.
-        
-        Determines step size and number of points depending on which data is given.
-        
+        """
+        Initializes the grid spacing, range, and number of points on the grid
+        from :class:`Grid.grid_data`.
+
         Raises
         ------
         RuntimeError
-            If the range and step size causes a non-integer number of grid points.
+            If the range and step size causes a non-integer number of grid
+            points.
         """
         self.set_value_from_keys("r_min", {"min", "x_min", "r_min"})
         self.set_value_from_keys("r_max", {"max", "x_max", "r_max"})
@@ -372,24 +382,28 @@ class Grid:
             self.set_value_from_keys("dr", {"dr", "dx"})
             self.num_points = 1 + (self.r_max - self.r_min) / self.dr
             if not (self.num_points % 1 == 0):
-                raise (RuntimeError("Invalid grid spacing: configuration does not imply integer number of grid points"))
+                raise (RuntimeError("Invalid grid spacing: configuration "
+                                    "does not imply integer number of grid "
+                                    "points"))
             self.num_points = np.int(self.num_points)
 
     def set_value_from_keys(self, var_name, options):
         """
-        Initializes the specified attribute to the value from the given grid data.
-        
+        Initializes a specified attribute to a value provided in
+        :class:`Grid.grid_data`.
+
         Parameters
         ----------
         var_name : str
             Attribute name to be initialized.
         options : set
-            Set of possible keys in grid_data dictionary.
-        
+            Set of keys in :class:`Grid.grid_data` to search for values.
+
         Raises
         ------
         KeyError
-            If there is no key found for the given attribute from the grid_data and key options.
+            If none of the keys in `options` are present in
+            :class:`Grid.grid_data`.
         """
         for name in options:
             if name in self.grid_data:
