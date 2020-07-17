@@ -11,9 +11,11 @@ TODO: As appropriate, add some of the following sections
 * references  
 * examples  
 """
+
 from pathlib import Path
 from abc import ABC, abstractmethod
 import numpy as np
+import qtoml as toml
 
 
 class Simulation:
@@ -112,6 +114,11 @@ class Simulation:
     """
 
     def __init__(self, input_data: dict):
+        # Check if the input is a filename of parameters to parse
+        if isinstance(input_data, str):
+            with open(input_data) as f:
+                input_data = toml.load(f)
+
         self.physics_modules = []
         self.compute_tools = []
         self.diagnostics = []
