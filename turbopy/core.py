@@ -354,6 +354,15 @@ class Grid:
         self.r_inv[0] = 0
 
     def parse_grid_data(self):
+        """Initializes the grid spacing, range, and number of points of the grid from data.
+        
+        Determines step size and number of points depending on which data is given.
+        
+        Raises
+        ------
+        RuntimeError
+            If the range and step size causes a non-integer number of grid points.
+        """
         self.set_value_from_keys("r_min", {"min", "x_min", "r_min"})
         self.set_value_from_keys("r_max", {"max", "x_max", "r_max"})
         if "N" in self.grid_data:
@@ -367,6 +376,21 @@ class Grid:
             self.num_points = np.int(self.num_points)
 
     def set_value_from_keys(self, var_name, options):
+        """
+        Initializes the specified attribute to the value from the given grid data.
+        
+        Parameters
+        ----------
+        var_name : str
+            Attribute name to be initialized.
+        options : set
+            Set of possible keys in grid_data dictionary.
+        
+        Raises
+        ------
+        KeyError
+            If there is no key found for the given attribute from the grid_data and key options.
+        """
         for name in options:
             if name in self.grid_data:
                 setattr(self, var_name, self.grid_data[name])
