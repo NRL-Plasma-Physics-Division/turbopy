@@ -66,45 +66,51 @@ class Simulation:
                 `bool`, optional, default is ``False``
 
         ``"PhysicsModules"`` : `dict` [`str`, `dict`]
-            Dictionary of PhysicsModules needed for the simulation.
+            Dictionary of :class:`PhysicsModules` needed for the
+            simulation.
 
-            Each key in the dictionary should map to a PhysicsModule
-            subclass key in the PhysicsModule registry.
+            Each key in the dictionary should map to a
+            :class:`PhysicsModule` subclass key in the
+            :class:`PhysicsModule` registry.
 
             The value is a dictionary of parameters which is passed to
-            the constructor for the PhysicsModule.
+            the constructor for the :class:`PhysicsModule`.
 
         ``"Diagnostics"`` : `dict` [`str`, `dict`], optional
-            Dictionary of Diagnostics needed for the simulaiton.
+            Dictionary of :class:`Diagnostics` needed for the
+            simulaiton.
 
-            Each key in the dictionary should map to a Diagnostic
-            subclass key in the Diagnostic registry.
+            Each key in the dictionary should map to a
+            :class:`Diagnostic` subclass key in the :class:`Diagnostic`
+            registry.
 
             The value is a dictionary of parameters which is passed to
-            the constructor for the Diagnostic.
+            the constructor for the :class:`Diagnostic`.
 
             If the key is not found in the registry, then the key/value
             pair is interpreted as a default parameter value, and is
-            added to dictionary of parameters for all of the Diagnostic
-            constructors.
+            added to dictionary of parameters for all of the
+            :class:`Diagnostic` constructors.
 
         ``"Tools"`` : `dict` [`str`, `dict`], optional
-            Dictionary of ComputeTools needed for the simulation.
+            Dictionary of :class:`ComputeTools` needed for the
+            simulation.
 
-            Each key in the dictionary should map to a ComputeTool
-            subclass key in the ComputeTool registry.
+            Each key in the dictionary should map to a
+            :class:`ComputeTool` subclass key in the
+            :class:`ComputeTool` registry.
 
             The value is a dictionary of parameters which is passed to
-            the constructor for the ComputeTool.
+            the constructor for the :class:`ComputeTool`.
 
     Attributes
     ----------
-    physics_modules : list of PhysicsModule subclass objects
-        A list of PhysicsModules for this simulation.
-    diagnostics : list of Diagnostic subclass objects
-        A list of Diagnostics for this simulation.
-    compute_tools : list of ComputeTool subclass objects
-        A list of ComputeTools for this simulation.
+    physics_modules : list of :class:`PhysicsModule` subclass objects
+        A list of :class:`PhysicsModule` objects for this simulation.
+    diagnostics : list of :class:`Diagnostic` subclass objects
+        A list of :class:`Diagnostic` objects for this simulation.
+    compute_tools : list of :class:`ComputeTool` subclass objects
+        A list of :class:`ComputeTool` objects for this simulation.
     """
 
     def __init__(self, input_data: dict):
@@ -208,7 +214,7 @@ class Simulation:
         self.clock = SimulationClock(self, self.input_data["Clock"])
 
     def read_tools_from_input(self):
-        """Construct ComputeTools based on input"""
+        """Construct :class:`ComputeTools` based on input"""
         if "Tools" in self.input_data:
             for tool_name, params in self.input_data["Tools"].items():
                 tool_class = ComputeTool.lookup(tool_name)
@@ -217,7 +223,7 @@ class Simulation:
                 self.compute_tools.append(tool_class(owner=self, input_data=params))
 
     def read_modules_from_input(self):
-        """Construct PhysicsModules based on input"""
+        """Construct :class:`PhysicsModules` based on input"""
         for physics_module_name, physics_module_data in self.input_data["PhysicsModules"].items():
             physics_module_class = PhysicsModule.lookup(physics_module_name)
             physics_module_data["name"] = physics_module_name
@@ -225,7 +231,7 @@ class Simulation:
         self.sort_modules()
 
     def read_diagnostics_from_input(self):
-        """Construct Diagnostics based on input"""
+        """Construct :class:`Diagnostics` based on input"""
         if "Diagnostics" in self.input_data:
             # This dictionary has two types of keys:
             #    keys that are valid diagnostic types
@@ -250,13 +256,13 @@ class Simulation:
                     self.diagnostics.append(diagnostic_class(owner=self, input_data=di))
 
     def sort_modules(self):
-        """Sort PhysicsModules by some logic
+        """Sort :class:`PhysicsModules` by some logic
 
         Unused stub for future implementation"""
         pass
 
     def find_tool_by_name(self, tool_name: str):
-        """Returns the ComputeTool associated with the given name"""
+        """Returns the :class:`ComputeTool` associated with the given name"""
         tools = [t for t in self.compute_tools if t.name == tool_name]
         if len(tools) == 1:
             return tools[0]
