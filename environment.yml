@@ -8,6 +8,7 @@ dependencies:
         - pytest-runner
         - pytest
         - pytest-cov
+        - sphinx
         - pip
         - pip:
                 - qtoml
