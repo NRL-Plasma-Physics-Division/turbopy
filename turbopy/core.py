@@ -1,30 +1,32 @@
 """
-Computational Physics Simulation Framework
+Core base classes of the turboPy framework
 
-Based on the structure of turboWAVE
+TODO: add extended summary  
+
+TODO: As appropriate, add some of the following sections
+
+* routine listings  
+* see also  
+* notes  
+* references  
+* examples  
 """
-
 from pathlib import Path
 from abc import ABC, abstractmethod
 import numpy as np
-import qtoml as toml
 
 
 class Simulation:
-    """
-    This Class "owns" all the physics modules, compute tools, and diagnostics.
-    It also coordinates them.  The main simulation loop is driven by an
-    instance of this class.
+    """Main turboPy simulation class
+
+    This Class "owns" all the physics modules, compute tools, and
+    diagnostics. It also coordinates them. The main simulation loop is
+    driven by an instance of this class.
 
     Based on the Simulation class in TurboWAVE
     """
 
     def __init__(self, input_data: dict):
-        # Check if the input is a filename of parameters to parse
-        if isinstance(input_data, str):
-            with open(input_data) as f:
-                input_data = toml.load(f)
-
         self.physics_modules = []
         self.compute_tools = []
         self.diagnostics = []
@@ -37,7 +39,10 @@ class Simulation:
 
     def run(self):
         """
-        Runs the simulation.
+        Runs the simulation
+
+        This initializes the simulation, runs the main loop, and then
+        finalizes the simulation.
         """
         print("Simulation is initializing")
         self.prepare_simulation()
@@ -52,7 +57,10 @@ class Simulation:
 
     def fundamental_cycle(self):
         """
-        Executes each diagnostic and physics module and advances the clock.
+        Perform one step of the main time loop
+
+        Executes each diagnostic and physics module, and advances
+        the clock.
         """
         for d in self.diagnostics:
             d.diagnose()
@@ -98,19 +106,23 @@ class Simulation:
 
     def finalize_simulation(self):
         """
-        Close out the simulation. Runs the finalize() method
-        for each diagnostic.
+        Close out the simulation
+
+        Runs the finalize() method for each diagnostic.
         """
         for d in self.diagnostics:
             d.finalize()
 
     def read_grid_from_input(self):
+        """Construct the grid based on input parameters"""
         self.grid = Grid(self.input_data["Grid"])
 
     def read_clock_from_input(self):
+        """Construct the clock based on input parameters"""
         self.clock = SimulationClock(self, self.input_data["Clock"])
 
     def read_tools_from_input(self):
+        """Construct ComputeTools based on input"""
         if "Tools" in self.input_data:
             for tool_name, params in self.input_data["Tools"].items():
                 tool_class = ComputeTool.lookup(tool_name)
@@ -119,6 +131,7 @@ class Simulation:
                 self.compute_tools.append(tool_class(owner=self, input_data=params))
 
     def read_modules_from_input(self):
+        """Construct PhysicsModules based on input"""
         for physics_module_name, physics_module_data in self.input_data["PhysicsModules"].items():
             physics_module_class = PhysicsModule.lookup(physics_module_name)
             physics_module_data["name"] = physics_module_name
@@ -126,6 +139,7 @@ class Simulation:
         self.sort_modules()
 
     def read_diagnostics_from_input(self):
+        """Construct Diagnostics based on input"""
         if "Diagnostics" in self.input_data:
             # This dictionary has two types of keys:
             #    keys that are valid diagnostic types
@@ -150,9 +164,13 @@ class Simulation:
                     self.diagnostics.append(diagnostic_class(owner=self, input_data=di))
 
     def sort_modules(self):
+        """Sort PhysicsModules by some logic
+
+        Unused stub for future implementation"""
         pass
 
-    def find_tool_by_name(self, tool_name):
+    def find_tool_by_name(self, tool_name: str):
+        """Returns the ComputeTool associated with the given name"""
         tools = [t for t in self.compute_tools if t.name == tool_name]
         if len(tools) == 1:
             return tools[0]
@@ -160,9 +178,10 @@ class Simulation:
 
 
 class DynamicFactory(ABC):
-    """
-    This base class provides a dynamic factory pattern functionality to classes
-    that derive from this.
+    """Abstract class which provides dynamic factory functionality
+
+    This base class provides a dynamic factory pattern functionality to
+    classes that derive from this.
     """
     @property
     @abstractmethod
@@ -175,7 +194,8 @@ class DynamicFactory(ABC):
         pass
 
     @classmethod
-    def register(cls, name_to_register, class_to_register):
+    def register(cls, name_to_register: str, class_to_register):
+        """Add a derived class to the registry"""
         if name_to_register in cls._registry:
             raise ValueError("{0} '{1}' already registered".format(cls._factory_type_name, name_to_register))
         if not issubclass(class_to_register, cls):
@@ -183,14 +203,16 @@ class DynamicFactory(ABC):
         cls._registry[name_to_register] = class_to_register
 
     @classmethod
-    def lookup(cls, name):
+    def lookup(cls, name: str):
+        """Look up a name in the registry, and return the associated derived class"""
         try:
             return cls._registry[name]
         except KeyError:
             raise KeyError("{0} '{1}' not found in registry".format(cls._factory_type_name, name))
 
     @classmethod
-    def is_valid_name(cls, name):
+    def is_valid_name(cls, name: str):
+        """Check if the name is in the registry"""
         return name in cls._registry
 
 
@@ -202,7 +224,7 @@ class PhysicsModule(DynamicFactory):
     Because python mutable/immutable is different than C++ pointers, the implementation 
     here is different. Here, a "resource" is a dictionary, and can have more than one 
     thing being shared. Note that the value stored in the dictionary needs to be mutable. 
-    Make sure not to reinitialize, because other physics modules will be holding a reference to it.
+    Make sure not to reinitialize it, because other physics modules will be holding a reference to it.
     """
     _factory_type_name = "Physics Module"
     _registry = {}
@@ -213,39 +235,56 @@ class PhysicsModule(DynamicFactory):
         self.input_data = input_data
 
     def publish_resource(self, resource: dict):
+        """Method which implements the details of sharing resources"""
         for physics_module in self.owner.physics_modules:
             physics_module.inspect_resource(resource)
         for diagnostic in self.owner.diagnostics:
             diagnostic.inspect_resource(resource)
 
     def inspect_resource(self, resource: dict):
-        """
-        If your subclass needs the data described by the key, now's their chance to 
-        save a pointer to the data
+        """Method for accepting resources shared by other PhysicsModules
+
+        If your subclass needs the data described by the key, now's
+        their chance to save a pointer to the data.
         """
         pass
 
     def exchange_resources(self):
-        """
-        This is the function where you call publish_resource, to tell other physics modules 
-        about data you want to share
+        """Main method for sharing resources with other PhysicsModules
+
+        This is the function where you call publish_resource, to tell
+        other physics modules about data you want to share.
         """
         pass
 
     def update(self):
+        """Do the main work of the PhysicsModule
+
+        This is called at every time step in the main loop.
+        """
         raise NotImplementedError
 
     def reset(self):
+        """Perform any needed reset operations
+
+        This is called at every time step in the main loop, before any
+        of the calls to `update`.
+        """
         pass
 
     def initialize(self):
+        """Perform initialization operations for this PhysicsModule
+
+        This is called before the main simulation loop
+        """
         pass
 
 
 class ComputeTool(DynamicFactory):
-    """
-    This is the base class for compute tools. These are the compute-heavy functions,
-    which have implementations of numerical methods which can be shared between physics modules.
+    """This is the base class for compute tools
+
+    These are the compute-heavy functions, which have implementations
+    of numerical methods which can be shared between physics modules.
     """
     _factory_type_name = "Compute Tool"
     _registry = {}
@@ -256,10 +295,14 @@ class ComputeTool(DynamicFactory):
         self.name = input_data["type"]
 
     def initialize(self):
+        """Perform any initialization operations needed for this tool"""
         pass
 
 
 class SimulationClock:
+    """
+    Clock class for turboPy
+    """
     def __init__(self, owner: Simulation, clock_data: dict):
         self.owner = owner
         self.start_time = clock_data["start_time"]
@@ -282,12 +325,14 @@ class SimulationClock:
             self.num_steps = np.int(np.rint(self.num_steps))
 
     def advance(self):
+        """Increment the time"""
         self.this_step += 1
         self.time = self.start_time + self.dt * self.this_step
         if self.print_time:
             print(f"t = {self.time}")
 
     def is_running(self):
+        """Check if time is less than end time"""
         return self.this_step < self.num_steps
 
 
@@ -361,17 +406,30 @@ class Diagnostic(DynamicFactory):
         self.input_data = input_data
 
     def inspect_resource(self, resource: dict):
-        """
+        """Save references to data from other PhysicsModules
+
         If your subclass needs the data described by the key, now's their chance to 
-        save a pointer to the data
+        save a reference to the data
         """
         pass
 
     def diagnose(self):
+        """Perform diagnostic step
+
+        This gets called on every step of the main simulation loop.
+        """
         raise NotImplementedError
 
     def initialize(self):
+        """Perform any initialization operations
+
+        This gets called once before the main simulation loop.
+        """
         pass
 
     def finalize(self):
+        """Perform any finalization operations
+
+        This gets called once after the main simulation loop is complete.
+        """
         pass

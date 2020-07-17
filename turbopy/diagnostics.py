@@ -1,23 +1,56 @@
-# Computational Physics Simulation Framework
-#
-# Based on the structure of turboWAVE
-#
+"""
+Diagnostics module for the turboPy computational physics simulation framework.
+
+Diagnostics can access :class:`PhysicsModule` data. 
+They are called every time step, or every N steps.
+They can write to file, cache for later, update plots, etc, and they
+can halt the simulation if conditions require.
+"""
 import numpy as np
 
 from .core import Diagnostic, Simulation
 
 
 class CSVDiagnosticOutput:
+    """Comma separated value (CSV) diagnostic
+
+    Provides a diagnostic for writing data to a file in CSV format.
+
+    Parameters
+    ----------
+    filename : str
+       File name for CSV data file.
+    diagnostic_size : int
+       Size of data set to be written to CSV file.
+
+    Attributes
+    ----------
+    filename: str
+        File name for CSV data file.
+    buffer: :class:`numpy.ndarray`
+        Buffer for storing data before it is written to file.
+    buffer_index: int
+        Position in buffer.
+    """
     def __init__(self, filename, diagnostic_size):
         self.filename = filename
         self.buffer = np.zeros(diagnostic_size)
         self.buffer_index = 0
         
     def append(self, data):
+        """Append data to the buffer.
+
+        Parameters
+        ----------
+        data : :class:`numpy.ndarray`
+            1D numpy array of values to be added to the buffer.
+        """
         self.buffer[self.buffer_index, :] = data
         self.buffer_index += 1
     
     def finalize(self):
+        """Write the CSV data to file.
+        """
         with open(self.filename, 'wb') as f:
             np.savetxt(f, self.buffer, delimiter=",")
 
