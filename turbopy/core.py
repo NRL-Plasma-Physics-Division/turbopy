@@ -105,22 +105,6 @@ class Simulation:
         A list of Diagnostics for this simulation.
     compute_tools : list of ComputeTool subclass objects
         A list of ComputeTools for this simulation.
-
-    Methods
-    -------
-
-    See also
-    --------
-
-    Notes
-    -----
-
-    References
-    ----------
-
-    Examples
-    --------
-
     """
 
     def __init__(self, input_data: dict):
