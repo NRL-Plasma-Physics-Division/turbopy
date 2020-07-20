@@ -22,7 +22,7 @@ class CSVDiagnosticOutput:
        File name for CSV data file.
     diagnostic_size : (int, int)
        Size of data set to be written to CSV file. First value is the number of
-       time points. Second value is number of spacial points.
+       time points. Second value is number of spatial points.
 
     Attributes
     ----------
