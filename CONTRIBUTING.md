@@ -7,7 +7,9 @@ Issues
 ------
 
 Please make use of the Issue Labels when creating issues. This helps us track
-and follow the improvements being made to turboPy.
+and follow the improvements being made to turboPy.  
+
+The Issue templates are used to help with organization.
 
 Naming Branches
 ---------------
@@ -33,5 +35,16 @@ any code.
 As noted in the README.md, if using `pylint`, add `variable-rgx=[a-z0-9_]{1,30}$`
 to your .pylintrc file to allow single character variable names.
 
+Issues
+------
+
+Please make use of the Issue Labels when creating issues. This helps us track
+and follow the improvements being made to turboPy.
 
 
+Pull Requests
+-------------
+
+When making a pull request, the title should be a brief description, similar to the
+branch name. If you're planning to make more changes to that branch, then add `[WIP]`
+to the beginning of the title and make a draft pull request.
