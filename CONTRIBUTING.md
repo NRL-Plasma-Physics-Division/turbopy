@@ -9,6 +9,13 @@ Issues
 Please make use of the Issue Labels when creating issues. This helps us track
 and follow the improvements being made to turboPy.
 
+Templates
+----------
+
+Use the appropriate template when creating an issue or pull request. Adhere
+to the formatting guides within the template to ensure organizational standards
+are kept consistent throughout the repo.
+
 Naming Branches
 ---------------
 
