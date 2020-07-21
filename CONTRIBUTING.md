@@ -35,13 +35,6 @@ any code.
 As noted in the README.md, if using `pylint`, add `variable-rgx=[a-z0-9_]{1,30}$`
 to your .pylintrc file to allow single character variable names.
 
-Issues
-------
-
-Please make use of the Issue Labels when creating issues. This helps us track
-and follow the improvements being made to turboPy.
-
-
 Pull Requests
 -------------
 
