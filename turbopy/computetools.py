@@ -18,6 +18,13 @@ class PoissonSolver1DRadial(ComputeTool):
     """
     `ComputeTool` that solves an instance of Poisson's Equation in a radial 1-D context
 
+    Parameters
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Data containing the name of the tool
+    
     Attributes
     ----------
     owner : Simulation
@@ -244,11 +251,48 @@ class FiniteDifference(ComputeTool):
 
 
 class BorisPush(ComputeTool):
+    """
+    Calculate the motion of a charged particle in a magnetic field
+
+    Parameters
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Data including the name of the tool
+
+    Attributes
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Dictionary containing data concerning the object, namely the class name
+    c2 : float
+        The speed of light squared
+    """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
         self.c2 = 2.9979e8 ** 2
 
     def push(self, position, momentum, charge, mass, E, B):
+        """
+        Update the position and momentum of a charged particle in an electromagnetic field
+
+        Parameters
+        ----------
+        position : ndarray
+            The initial position of the particle as a vector
+        momentum : ndarray
+            The initial momentum of the particle as a vector
+        charge : float
+            The electric charge of the particle
+        mass : float
+            The mass of the particle
+        E : ndarray
+            The uniform electric field around the particle
+        B: ndarray
+            The uniform magnetic field around the particle
+        """
         dt = self.owner.clock.dt
 
         vminus = momentum + dt * E * charge / 2
@@ -265,10 +309,44 @@ class BorisPush(ComputeTool):
 
 
 class Interpolators(ComputeTool):
+    """
+    Interpolate a function given two lists of numbers (input and output)
+
+    Parameters
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Dictionary containing information about the class, i.e. its name
+
+    Attributes
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Dictionary containing information about the class, i.e. its name
+    """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
 
     def interpolate1D(self, x, y, kind='linear'):
+        """
+        Given two datasets, return a function relating them
+
+        Parameters
+        ----------
+        x : list
+            List of input values to be interpolated
+        y : list
+            List of output values to be interpolated
+        kind : str
+            Order of function being used to relate the two datasets, defaults to "linear"
+
+        Returns
+        -------
+        f : scipy.interpolate.interpolate.interp1d
+            Function relating `x` and `y`
+        """
         f = interpolate.interp1d(x, y, kind)
         return f
 
