@@ -497,13 +497,51 @@ class Grid:
         raise (KeyError("Grid configuration for " + var_name + " not found."))
 
     def generate_field(self, num_components=1):
+        """Returns squeezed :class:`numpy.ndarray` of zeros with dimensions
+        :class:`Grid.num_points` and `num_components`.
+        
+        Parameters
+        ----------
+        num_components : int, defaults to 1
+            Number of components for each point given in :class:`Grid.num_points`.
+        Returns
+        -------
+        :class:`numpy.ndarray`
+            Squeezed array of zeros.
+        """
         return np.squeeze(np.zeros((self.num_points, num_components)))
 
     def generate_linear(self):
+        """Returns :class:`numpy.ndarray` with :class:`Grid.num_points` evenly
+         spaced intervals between 0 and 1.
+         
+         Returns
+         -------
+         :class:`numpy.ndarray`
+            Evenly spaced array.
+         """
         return np.linspace(0, 1, self.num_points)
 
     def create_interpolator(self, r0):
-        # Return a function which linearly interpolates any field on this grid, to the point x
+        """Return a function which linearly interpolates any field on this grid,
+        to the point `r0`.
+        
+        Determines list of index points of :class:`Grid.r` that are in the
+        interval (r0 - dr, r0 + dr) for interpolation function.
+        
+        Parameters
+        ----------
+        r0 : float
+            The requested point on the grid.
+        
+        Returns
+        -------
+        lambda : function
+            Returns a function that returns the value of a list at the index of r0.
+        interpval : function
+            Returns a function that linerarly interpolates a list if there are
+            more than one index point.
+        """
         assert (r0 >= self.r_min), "Requested point is not in the grid"
         assert (r0 <= self.r_max), "Requested point is not in the grid"
         i, = np.where((r0 - self.dr < self.r) & (self.r < r0 + self.dr))
@@ -531,7 +569,7 @@ class Diagnostic(DynamicFactory):
     def inspect_resource(self, resource: dict):
         """Save references to data from other PhysicsModules
 
-        If your subclass needs the data described by the key, now's their chance to 
+        If your subclass needs the data described by the key, now's their chance to
         save a reference to the data
         """
         pass
