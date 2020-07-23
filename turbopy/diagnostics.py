@@ -7,7 +7,7 @@ import numpy as np
 from .core import Diagnostic, Simulation
 
 
-class CSVDiagnosticOutput:
+class CSVOutputUtility:
     def __init__(self, filename, diagnostic_size):
         self.filename = filename
         self.buffer = np.zeros(diagnostic_size)
