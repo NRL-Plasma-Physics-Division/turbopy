@@ -1,7 +1,12 @@
-# Computational Physics Simulation Framework
-#
-# Based on the structure of turboWAVE
-#
+"""
+Several subclasses of the `ComputeTool` class for common scenarios
+
+Included stock subclasses:
+    Solver for Poisson's equation (1-D) to find electric potential fields
+    EXPLAIN : FINITEDIFFERENCE CLASS
+    Particle pusher for magnetic fields using the Boris method
+    Interpolate a function given two datasets
+"""
 import numpy as np
 import scipy.interpolate as interpolate
 from scipy import sparse
@@ -10,14 +15,46 @@ from .core import ComputeTool, Simulation
 
 
 class PoissonSolver1DRadial(ComputeTool):
+    """
+    `ComputeTool` that solves an instance of Poisson's Equation in a radial 1-D context
+
+    Attributes
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Dictionary containing the name of the `ComputeTool` so it can be called by `PhysicsModules`
+    field : ndarray
+        TODO: Add description
+    """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
         self.field = None
         
     def initialize(self):
+        """
+        The `Grid` that provides the `field` attribute may be instantiated after the computetool.
+        In order to ensure that the grid exists when it is called to provide the data for `field`,
+        the initialize method is called after all the objects in the `Simulation` are created.
+
+        This method pulls the field data from the `Grid`
+        """
         self.field = self.owner.grid.generate_field(1)
     
     def solve(self, sources):
+        """
+        Solves Poisson's Equation
+
+        Parameters
+        ----------
+        sources : TODO
+            TODO: explain what `sources` is supposed to be
+
+        Returns
+        -------
+        ndarray
+            
+        """
         r = self.owner.grid.r
         dr = np.mean(self.owner.grid.cell_widths)
         I1 = np.cumsum(r * sources * dr)
