@@ -433,7 +433,7 @@ class Grid:
     ----------
     grid_data : dict
         Grid data.
-    r_mi n: float, None
+    r_min: float, None
         Min of the Grid range.
     r_max : float, None
         Max of the Grid range.
@@ -444,11 +444,11 @@ class Grid:
     r, cell_edges : :class:`numpy.ndarray`
         Array of evenly spaced Grid values.
     cell_centers : float
-        Value of value in the middle of the Grid range.
+        Value of the coordinate in the middle of each Grid cell.
     cell_widths : float
         Width of each cell in the Grid.
     r_inv : float
-        Inverse of Grid values, :class:`r`.
+        Inverse of coordinate values at each Grid point, 1/:class:`Grid.r`.
     """
     def __init__(self, grid_data: dict):
         self.grid_data = grid_data
@@ -523,7 +523,7 @@ class Grid:
         Parameters
         ----------
         num_components : int, defaults to 1
-            Number of components for each point given in :class:`Grid.num_points`.
+            Number of vector components at each point.
         Returns
         -------
         :class:`numpy.ndarray`
@@ -533,7 +533,7 @@ class Grid:
 
     def generate_linear(self):
         """Returns :class:`numpy.ndarray` with :class:`Grid.num_points` evenly
-         spaced intervals between 0 and 1.
+         spaced in the interval between 0 and 1.
 
          Returns
          -------
