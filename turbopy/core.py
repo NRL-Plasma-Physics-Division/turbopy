@@ -1,15 +1,15 @@
 """
 Core base classes of the turboPy framework
 
-TODO: add extended summary  
+TODO: add extended summary
 
 TODO: As appropriate, add some of the following sections
 
-* routine listings  
-* see also  
-* notes  
-* references  
-* examples  
+* routine listings
+* see also
+* notes
+* references
+* examples
 """
 from pathlib import Path
 from abc import ABC, abstractmethod
@@ -306,9 +306,9 @@ class PhysicsModule(DynamicFactory):
     This is the base class for all physics modules
     Based on Module class in TurboWAVE
 
-    Because python mutable/immutable is different than C++ pointers, the implementation 
-    here is different. Here, a "resource" is a dictionary, and can have more than one 
-    thing being shared. Note that the value stored in the dictionary needs to be mutable. 
+    Because python mutable/immutable is different than C++ pointers, the implementation
+    here is different. Here, a "resource" is a dictionary, and can have more than one
+    thing being shared. Note that the value stored in the dictionary needs to be mutable.
     Make sure not to reinitialize it, because other physics modules will be holding a reference to it.
     """
     _factory_type_name = "Physics Module"
@@ -424,11 +424,31 @@ class SimulationClock:
 class Grid:
     """Grid class
 
-    Attributes
+    Parameters
     ----------
-    grid_data: dict
+    grid_data : dict
         Grid data.
 
+    Attributes
+    ----------
+    grid_data : dict
+        Grid data.
+    r_mi n: float, None
+        Min of the Grid range.
+    r_max : float, None
+        Max of the Grid range.
+    num_points: int, None
+        Number of points on Grid.
+    dr : float, None
+        Grid spacing.
+    r, cell_edges : :class:`numpy.ndarray`
+        Array of evenly spaced Grid values.
+    cell_centers : float
+        Value of value in the middle of the Grid range.
+    cell_widths : float
+        Width of each cell in the Grid.
+    r_inv : float
+        Inverse of Grid values, :class:`r`.
     """
     def __init__(self, grid_data: dict):
         self.grid_data = grid_data
@@ -499,7 +519,7 @@ class Grid:
     def generate_field(self, num_components=1):
         """Returns squeezed :class:`numpy.ndarray` of zeros with dimensions
         :class:`Grid.num_points` and `num_components`.
-        
+
         Parameters
         ----------
         num_components : int, defaults to 1
@@ -514,7 +534,7 @@ class Grid:
     def generate_linear(self):
         """Returns :class:`numpy.ndarray` with :class:`Grid.num_points` evenly
          spaced intervals between 0 and 1.
-         
+
          Returns
          -------
          :class:`numpy.ndarray`
@@ -525,15 +545,15 @@ class Grid:
     def create_interpolator(self, r0):
         """Return a function which linearly interpolates any field on this grid,
         to the point `r0`.
-        
+
         Determines list of index points of :class:`Grid.r` that are in the
         interval (r0 - dr, r0 + dr) for interpolation function.
-        
+
         Parameters
         ----------
         r0 : float
             The requested point on the grid.
-        
+
         Returns
         -------
         lambda : function
