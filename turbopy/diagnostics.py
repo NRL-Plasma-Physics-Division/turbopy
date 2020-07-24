@@ -184,19 +184,46 @@ class GridDiagnostic(Diagnostic):
 
 
 class ClockDiagnostic(Diagnostic):
+    """
+    Parameters
+    ----------
+    owner : Simulation
+        The 'Simulation' object that contains this object
+    input_data : dict
+        Dictionary containing information abut the class such as its name
+    Attributes
+    ----------
+    owner : Simulation
+        The 'Simulation' object that contains this object
+    input_data : dict
+        Dictionary containing information abut the class such as its name
+    filename : str
+        File name for CSV time file
+    csv : :class:'numpy.ndarray'
+        Array to store values to be written to CSV file
+    """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
         self.filename = input_data["filename"]
         self.csv = None
 
     def diagnose(self):
+        """
+        Appends time into the self.csv ndarray
+        """
         self.csv.append(self.owner.clock.time)
 
     def initialize(self):
+        """
+        Initializes self.csv as an instance of the CSVOuputUtility class
+        """
         diagnostic_size = (self.owner.clock.num_steps + 1, 1)
         self.csv = CSVOutputUtility(self.input_data["filename"], diagnostic_size)
 
     def finalize(self):
+        """
+        Writes time into self.csv and saves as a CSV file
+        """
         self.diagnose()
         self.csv.finalize()
 
