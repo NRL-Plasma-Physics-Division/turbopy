@@ -15,18 +15,18 @@ def test_grid():
     assert grid.r_max == 0.1
 
 
-def test_clock():
+def test_integer_num_steps():
     """Tests for initialization of SimulationClock"""
     clock_config = {'start_time': 0.0,
                     'end_time': 1e-8,
-                    'dt': 1e-2,
+                    'dt': 1e-8 / 10.5,
                     'print_time': True}
     with pytest.raises(RuntimeError):
         SimulationClock(Simulation({}), clock_config)
 
 
 def test_advance():
-    """Tests advanced method of the SimulationClock class"""
+    """Tests `advance` method of the SimulationClock class"""
     clock_config = {'start_time': 0.0,
                     'end_time': 1e-8,
                     'num_steps': 20,
@@ -39,7 +39,7 @@ def test_advance():
 
 
 def test_is_running():
-    """Tests the is_running method of the SimulationClock class"""
+    """Tests `is_running` method of the SimulationClock class"""
     clock_config = {'start_time': 0.0,
                     'end_time': 1e-8,
                     'dt': 1e-8 / 20,
