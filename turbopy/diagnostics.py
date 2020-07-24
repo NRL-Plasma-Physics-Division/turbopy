@@ -169,6 +169,25 @@ class FieldDiagnostic(Diagnostic):
 
 
 class GridDiagnostic(Diagnostic):
+    """Diagnostic subclass used to store and save grid data into a CSV file
+
+    Parameters
+    ----------
+    owner : Simulation
+        The 'Simulation' object that contains this object
+    input_data : dict
+        Dictionary containing information abut the class such as its name
+
+    Attributes
+    ----------
+    owner : Simulation
+        The 'Simulation' object that contains this object
+    input_data : dict
+        Dictionary containing information abut the class such as its name
+    filename : str
+        File name for CSV grid file
+    """
+
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
         self.filename = input_data["filename"]
@@ -177,6 +196,7 @@ class GridDiagnostic(Diagnostic):
         pass
 
     def initialize(self):
+        """Save grid data into CSV file"""
         with open(self.filename, 'wb') as f:
             np.savetxt(f, self.owner.grid.r, delimiter=",")
 
@@ -194,6 +214,7 @@ class ClockDiagnostic(Diagnostic):
         The 'Simulation' object that contains this object
     input_data : dict
         Dictionary containing information abut the class such as its name
+
     Attributes
     ----------
     owner : Simulation
