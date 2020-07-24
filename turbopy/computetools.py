@@ -289,9 +289,9 @@ class BorisPush(ComputeTool):
         mass : float
             The mass of the particle
         E : ndarray
-            The uniform electric field around the particle
+            The value of the electric field around the particle
         B: ndarray
-            The uniform magnetic field around the particle
+            The value of the magnetic field around the particle
         """
         dt = self.owner.clock.dt
 
