@@ -32,7 +32,7 @@ class PoissonSolver1DRadial(ComputeTool):
     input_data : dict
         Dictionary containing the name of the `ComputeTool` so it can be called by `PhysicsModules`
     field : ndarray
-        TODO: Add description
+        The list of points over which the computations are done
     """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
@@ -60,7 +60,7 @@ class PoissonSolver1DRadial(ComputeTool):
         Returns
         -------
         ndarray
-            
+            TODO: explain
         """
         r = self.owner.grid.r
         dr = np.mean(self.owner.grid.cell_widths)
