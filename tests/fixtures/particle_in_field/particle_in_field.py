@@ -5,7 +5,7 @@ import xarray as xr
 import pytest
 
 from turbopy import Simulation, PhysicsModule, Diagnostic
-from turbopy import CSVDiagnosticOutput, ComputeTool #, FieldDiagnostic
+from turbopy import CSVOutputUtility, ComputeTool #, FieldDiagnostic
 from turbopy import construct_simulation_from_toml
 
 
@@ -85,7 +85,7 @@ class ParticleDiagnostic(Diagnostic):
         self.output_function = functions[self.input_data["output_type"]]
         if self.input_data["output_type"] == "csv":
             diagnostic_size = (self.owner.clock.num_steps + 1, 3)
-            self.csv = CSVDiagnosticOutput(self.input_data["filename"], diagnostic_size)
+            self.csv = CSVOutputUtility(self.input_data["filename"], diagnostic_size)
 
     def finalize(self):
         self.diagnose()
