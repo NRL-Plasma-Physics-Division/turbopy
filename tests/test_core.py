@@ -77,7 +77,8 @@ def test_create_interpolator():
                  "r_min": 0,
                  "r_max": 0.1}
     grid = Grid(grid_conf)
-    field = grid.generate_field(3)
-    interp = grid.create_interpolator(0.05)
-    assert np.ndarray.all(interp(field) == np.zeros(3))
+    field = grid.generate_linear()
+    r0 = 0.05
+    interp = grid.create_interpolator(r0)
+    assert abs(interp(field) - (r0 / (grid.r_max - grid.r_min))) < 0.001
     
