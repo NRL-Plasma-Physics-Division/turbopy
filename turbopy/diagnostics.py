@@ -176,14 +176,14 @@ class GridDiagnostic(Diagnostic):
     owner : Simulation
         The 'Simulation' object that contains this object
     input_data : dict
-        Dictionary containing information abut the class such as its name
+        Dictionary containing information about this diagnostic such as its name
 
     Attributes
     ----------
     owner : Simulation
         The 'Simulation' object that contains this object
     input_data : dict
-        Dictionary containing information abut the class such as its name
+        Dictionary containing information about this diagnostic such as its name
     filename : str
         File name for CSV grid file
     """
@@ -213,14 +213,14 @@ class ClockDiagnostic(Diagnostic):
     owner : Simulation
         The 'Simulation' object that contains this object
     input_data : dict
-        Dictionary containing information abut the class such as its name
+        Dictionary containing information about this diagnostic such as its name
 
     Attributes
     ----------
     owner : Simulation
         The 'Simulation' object that contains this object
     input_data : dict
-        Dictionary containing information abut the class such as its name
+        Dictionary containing information about this diagnostic such as its name
     filename : str
         File name for CSV time file
     csv : :class:'numpy.ndarray'
@@ -233,11 +233,11 @@ class ClockDiagnostic(Diagnostic):
         self.csv = None
 
     def diagnose(self):
-        """Append time into the self.csv ndarray."""
+        """Append time into the csv buffer."""
         self.csv.append(self.owner.clock.time)
 
     def initialize(self):
-        """Initialize self.csv as an instance of the CSVOuputUtility class."""
+        """Initialize 'self.csv' as an instance of the :class:'CSVOuputUtility' class."""
         diagnostic_size = (self.owner.clock.num_steps + 1, 1)
         self.csv = CSVOutputUtility(self.input_data["filename"], diagnostic_size)
 
