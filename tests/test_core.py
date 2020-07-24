@@ -77,7 +77,7 @@ def test_create_interpolator():
                  "r_min": 0,
                  "r_max": 0.1}
     grid = Grid(grid_conf)
-    field = grid.generate_field(grid.num_points)
+    field = grid.generate_field(3)
     interp = grid.create_interpolator(0.05)
-    assert np.ndarray.all(interp(field) == np.zeros(grid.num_points))
+    assert np.ndarray.all(interp(field) == np.zeros(3))
     
