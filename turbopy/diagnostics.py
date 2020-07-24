@@ -35,6 +35,7 @@ class CSVOutputUtility:
     buffer_index: int
         Position in buffer.
     """
+
     def __init__(self, filename, diagnostic_size):
         self.filename = filename
         self.buffer = np.zeros(diagnostic_size)
@@ -184,7 +185,9 @@ class GridDiagnostic(Diagnostic):
 
 
 class ClockDiagnostic(Diagnostic):
-    """
+    """Diagnostic subclass used to store and save time data into a CSV file
+    using the CSVOutputUtility class.
+
     Parameters
     ----------
     owner : Simulation
@@ -200,30 +203,25 @@ class ClockDiagnostic(Diagnostic):
     filename : str
         File name for CSV time file
     csv : :class:'numpy.ndarray'
-        Array to store values to be written to CSV file
+        Array to store values to be written into a CSV file
     """
+
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
         self.filename = input_data["filename"]
         self.csv = None
 
     def diagnose(self):
-        """
-        Appends time into the self.csv ndarray
-        """
+        """Append time into the self.csv ndarray."""
         self.csv.append(self.owner.clock.time)
 
     def initialize(self):
-        """
-        Initializes self.csv as an instance of the CSVOuputUtility class
-        """
+        """Initialize self.csv as an instance of the CSVOuputUtility class."""
         diagnostic_size = (self.owner.clock.num_steps + 1, 1)
         self.csv = CSVOutputUtility(self.input_data["filename"], diagnostic_size)
 
     def finalize(self):
-        """
-        Writes time into self.csv and saves as a CSV file
-        """
+        """Write time into self.csv and saves as a CSV file."""
         self.diagnose()
         self.csv.finalize()
 
