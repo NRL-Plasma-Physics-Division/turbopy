@@ -20,6 +20,8 @@ More Resources
 
 -   [Official turboWAVE Repo](https://github.com/USNavalResearchLaboratory/turboWAVE)
 -   [TurboWAVE Documentation](https://turbowave.readthedocs.io)
+-   The current html turboPy documentation can be found [here](https://turbopy.readthedocs.io/en/latest)
+-   The preprint of the turboPy paper can be found [here](https://arxiv.org/pdf/2002.08842.pdf)
 
 
 turboPy Conda environment

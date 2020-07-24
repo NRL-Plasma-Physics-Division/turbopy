@@ -5,9 +5,11 @@ dependencies:
         - python=3.7
         - numpy
         - scipy
+        - xarray
         - pytest-runner
         - pytest
         - pytest-cov
+        - sphinx
         - pip
         - pip:
                 - qtoml

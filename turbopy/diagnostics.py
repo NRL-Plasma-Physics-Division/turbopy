@@ -1,23 +1,59 @@
-# Computational Physics Simulation Framework
-#
-# Based on the structure of turboWAVE
-#
+"""
+Diagnostics module for the turboPy computational physics simulation framework.
+
+Diagnostics can access :class:`PhysicsModule` data. 
+They are called every time step, or every N steps.
+They can write to file, cache for later, update plots, etc, and they
+can halt the simulation if conditions require.
+"""
 import numpy as np
 
 from .core import Diagnostic, Simulation
 
 
-class CSVDiagnosticOutput:
+class CSVOutputUtility:
+    """Comma separated value (CSV) diagnostic output helper class
+
+    Provides routines for writing data to a file in CSV format. This
+    class can be used by Diagnostics subclassses to handle output to
+    csv format.
+
+    Parameters
+    ----------
+    filename : str
+       File name for CSV data file.
+    diagnostic_size : (int, int)
+       Size of data set to be written to CSV file. First value is the number of
+       time points. Second value is number of spatial points.
+
+    Attributes
+    ----------
+    filename: str
+        File name for CSV data file.
+    buffer: :class:`numpy.ndarray`
+        Buffer for storing data before it is written to file.
+    buffer_index: int
+        Position in buffer.
+    """
     def __init__(self, filename, diagnostic_size):
         self.filename = filename
         self.buffer = np.zeros(diagnostic_size)
         self.buffer_index = 0
         
     def append(self, data):
+        """Append data to the buffer.
+
+        Parameters
+        ----------
+        data : :class:`numpy.ndarray`
+            1D numpy array of values to be added to the buffer.
+        """
         self.buffer[self.buffer_index, :] = data
         self.buffer_index += 1
     
     def finalize(self):
+        """Write the CSV data to file.
+        """
         with open(self.filename, 'wb') as f:
             np.savetxt(f, self.buffer, delimiter=",")
 
@@ -55,7 +91,8 @@ class PointDiagnostic(Diagnostic):
 
         if self.input_data["output_type"] == "csv":
             diagnostic_size = (self.owner.clock.num_steps + 1, 1)
-            self.csv = CSVDiagnosticOutput(self.input_data["filename"], diagnostic_size)
+            # Use composition to provide csv i/o functionality
+            self.csv = CSVOutputUtility(self.input_data["filename"], diagnostic_size)
 
     def csv_diagnose(self, data):
         self.csv.append(data)
@@ -119,7 +156,7 @@ class FieldDiagnostic(Diagnostic):
                      }
         self.output_function = functions[self.input_data["output_type"]]
         if self.input_data["output_type"] == "csv":
-            self.csv = CSVDiagnosticOutput(self.input_data["filename"], self.diagnostic_size)
+            self.csv = CSVOutputUtility(self.input_data["filename"], self.diagnostic_size)
     
     def csv_diagnose(self, data):
         self.csv.append(data)
@@ -157,7 +194,7 @@ class ClockDiagnostic(Diagnostic):
 
     def initialize(self):
         diagnostic_size = (self.owner.clock.num_steps + 1, 1)
-        self.csv = CSVDiagnosticOutput(self.input_data["filename"], diagnostic_size)
+        self.csv = CSVOutputUtility(self.input_data["filename"], diagnostic_size)
 
     def finalize(self):
         self.diagnose()

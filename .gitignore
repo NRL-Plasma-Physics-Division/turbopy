@@ -12,3 +12,10 @@ turbopy.egg-info/
 
 # Sphinx
 _build/
+
+# VS Code
+.vscode/
+
+# tmp directory for test output, etc
+tmp/
+.idea

@@ -1,0 +1,58 @@
+# Define simulation related parameters
+[Grid]
+N = 30
+r_min = 0.0
+r_max = 1.0
+
+[Clock]
+start_time = 0.0
+end_time = 1e-8
+num_steps = 20
+
+
+# Add the physics modules
+[PhysicsModules]         
+[PhysicsModules.EMWave]
+amplitude = 1.0
+omega = 2e8
+
+[PhysicsModules.ChargedParticle]
+position = 0.5
+pusher = "ForwardEuler"
+
+# Add the compute tools
+# Empty "heading" is ok, adds the tool with no/default parameters
+[Tools.ForwardEuler]
+
+
+# Add the diagnostics
+[Diagnostics]
+# First add some default diagnostic parameters
+directory = "tmp/particle_in_field/output"
+output_type = "csv"
+
+[Diagnostics.grid]
+filename = "grid.csv"
+
+[Diagnostics.clock]
+filename = "time.csv"
+
+# [[Diagnostics.field]] # Double brackets here because we can have multiples of these...
+[[Diagnostics.FieldPlottingDiagnostic]]
+component = 0
+field = "EMField:E"
+filename = "efield.csv"
+
+[Diagnostics.point] # single brackets here because we only have one of these...
+field = "EMField:E"
+location = 0.5
+filename = "e_0.5.csv"
+
+[[Diagnostics.ParticleDiagnostic]]
+component = "momentum"
+filename = "particle_p.csv"
+
+[[Diagnostics.ParticleDiagnostic]]
+component = "position"
+filename = "particle_x.csv"
+
