@@ -387,7 +387,34 @@ class ComputeTool(DynamicFactory):
 class SimulationClock:
     """
     Clock class for turboPy
+
+    Parameters
+    ----------
+    owner : :class:`Simulation`
+        Simulation class that SimulationClock belongs to.
+    clock_data : dict
+        Clock data.
+
+    Attributes
+    ----------
+    owner : :class:`Simulation`
+        Simulation class that SimulationClock belongs to.
+    start_time : float
+        Clock start time.
+    time : float
+        Current time on clock.
+    end_time : float
+        Clock end time.
+    this_step : int
+        Current time step since start.
+    print_time : bool
+        If True will print current time after each increment.
+    num_steps : int
+        Number of steps clock will take in the interval.
+    dt : float
+        Time passed at each increment.
     """
+
     def __init__(self, owner: Simulation, clock_data: dict):
         self.owner = owner
         self.start_time = clock_data["start_time"]
@@ -406,7 +433,7 @@ class SimulationClock:
             self.dt = clock_data["dt"]
             self.num_steps = (self.end_time - self.start_time) / self.dt
             if not np.isclose(self.num_steps, np.rint(self.num_steps)):
-                raise (RuntimeError("Simulation interval is not an integer multiple of timestep dt"))
+                raise RuntimeError("Simulation interval is not an integer multiple of timestep dt")
             self.num_steps = np.int(np.rint(self.num_steps))
 
     def advance(self):
