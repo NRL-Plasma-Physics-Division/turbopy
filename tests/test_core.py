@@ -69,3 +69,15 @@ def test_generate_linear():
     for i in range(grid.num_points):
         comp.append(i/(grid.num_points - 1))
     assert np.ndarray.all(abs(grid.generate_linear() - np.array(comp)) < 0.001)
+
+def test_create_interpolator():
+    """Test create_interpolator method in Grid class"""
+    n_grid = 8
+    grid_conf = {"N": n_grid,
+                 "r_min": 0,
+                 "r_max": 0.1}
+    grid = Grid(grid_conf)
+    field = grid.generate_field(grid.num_points)
+    interp = grid.create_interpolator(0.05)
+    assert interp(field) == np.zeros(grid.num_points)
+    
