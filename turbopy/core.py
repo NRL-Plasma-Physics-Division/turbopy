@@ -546,9 +546,6 @@ class Grid:
         """Return a function which linearly interpolates any field on this grid,
         to the point `r0`.
 
-        Determines list of index points of :class:`Grid.r` that are in the
-        interval (r0 - dr, r0 + dr) for interpolation function.
-
         Parameters
         ----------
         r0 : float
@@ -556,11 +553,9 @@ class Grid:
 
         Returns
         -------
-        lambda : function
-            Returns a function that returns the value of a list at the index of r0.
-        interpval : function
-            Returns a function that linerarly interpolates a list if there are
-            more than one index point.
+        function
+            A function which takes a grid quantity `y` and returns the interpolated value
+            of `y` at the point `r0`.
         """
         assert (r0 >= self.r_min), "Requested point is not in the grid"
         assert (r0 <= self.r_max), "Requested point is not in the grid"
