@@ -650,7 +650,9 @@ class Diagnostic(DynamicFactory):
         Raises
         ------
         NotImplementedError
-            Method or function hasn't been implemented yet
+            Method or function hasn't been implemented yet. This is an abstract
+            base class. Derived classes must implement this method in order to
+            be a child class of :class:'Diagnostic'.
         """
         raise NotImplementedError
 
