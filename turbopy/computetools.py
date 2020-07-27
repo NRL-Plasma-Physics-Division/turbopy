@@ -1,7 +1,12 @@
-# Computational Physics Simulation Framework
-#
-# Based on the structure of turboWAVE
-#
+"""
+Several subclasses of the `ComputeTool` class for common scenarios
+
+Included stock subclasses:
+    Solver for Poisson's equation (1-D) to find electric potential fields
+    EXPLAIN : FINITEDIFFERENCE CLASS
+    Particle pusher for magnetic fields using the Boris method
+    Interpolate a function given two datasets
+"""
 import numpy as np
 import scipy.interpolate as interpolate
 from scipy import sparse
@@ -10,14 +15,53 @@ from .core import ComputeTool, Simulation
 
 
 class PoissonSolver1DRadial(ComputeTool):
+    """
+    `ComputeTool` that solves an instance of Poisson's Equation in a radial 1-D context
+
+    Parameters
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Data containing the name of the tool
+    
+    Attributes
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Dictionary containing the name of the `ComputeTool` so it can be called by `PhysicsModules`
+    field : ndarray
+        The list of points over which the computations are done
+    """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
         self.field = None
         
     def initialize(self):
+        """
+        The `Grid` that provides the `field` attribute may be instantiated after the computetool.
+        In order to ensure that the grid exists when it is called to provide the data for `field`,
+        the initialize method is called after all the objects in the `Simulation` are created.
+
+        This method pulls the field data from the `Grid`
+        """
         self.field = self.owner.grid.generate_field(1)
     
     def solve(self, sources):
+        """
+        Solves Poisson's Equation
+
+        Parameters
+        ----------
+        sources : TODO
+            TODO: explain what `sources` is supposed to be
+
+        Returns
+        -------
+        ndarray
+            TODO: explain
+        """
         r = self.owner.grid.r
         dr = np.mean(self.owner.grid.cell_widths)
         I1 = np.cumsum(r * sources * dr)
@@ -207,11 +251,48 @@ class FiniteDifference(ComputeTool):
 
 
 class BorisPush(ComputeTool):
+    """
+    Calculate the motion of a charged particle in a magnetic field
+
+    Parameters
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Data including the name of the tool
+
+    Attributes
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Dictionary containing data concerning the object, namely the class name
+    c2 : float
+        The speed of light squared
+    """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
         self.c2 = 2.9979e8 ** 2
 
     def push(self, position, momentum, charge, mass, E, B):
+        """
+        Update the position and momentum of a charged particle in an electromagnetic field
+
+        Parameters
+        ----------
+        position : ndarray
+            The initial position of the particle as a vector
+        momentum : ndarray
+            The initial momentum of the particle as a vector
+        charge : float
+            The electric charge of the particle
+        mass : float
+            The mass of the particle
+        E : ndarray
+            The value of the electric field around the particle
+        B: ndarray
+            The value of the magnetic field around the particle
+        """
         dt = self.owner.clock.dt
 
         vminus = momentum + dt * E * charge / 2
@@ -228,10 +309,44 @@ class BorisPush(ComputeTool):
 
 
 class Interpolators(ComputeTool):
+    """
+    Interpolate a function given two lists of numbers (input and output)
+
+    Parameters
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Dictionary containing information about the class, i.e. its name
+
+    Attributes
+    ----------
+    owner : Simulation
+        The `Simulation` object that contains this object
+    input_data : dict
+        Dictionary containing information about the class, i.e. its name
+    """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
 
     def interpolate1D(self, x, y, kind='linear'):
+        """
+        Given two datasets, return a function relating them
+
+        Parameters
+        ----------
+        x : list
+            List of input values to be interpolated
+        y : list
+            List of output values to be interpolated
+        kind : str
+            Order of function being used to relate the two datasets, defaults to "linear"
+
+        Returns
+        -------
+        f : scipy.interpolate.interpolate.interp1d
+            Function relating `x` and `y`
+        """
         f = interpolate.interp1d(x, y, kind)
         return f
 
