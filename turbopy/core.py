@@ -370,8 +370,30 @@ class ComputeTool(DynamicFactory):
 
     These are the compute-heavy functions, which have implementations
     of numerical methods which can be shared between physics modules.
+
+    Parameters
+    ----------
+    owner : :class:`Simulation`
+        Simulation class that ComputeTool belongs to.
+    input_data : dict
+        Dictionary of input data.
+
+    Attributes
+    ----------
+    _registery : dict
+        Registered derived ComputeTool classes.
+    owner : :class:`Simulation`
+        Simulation class that ComputeTool belongs to.
+    input_data : dict
+        Input data for ComputeTool.
+    name : str
+        Type of ComputeTool.
     """
+
     _factory_type_name = "Compute Tool"
+    """Base DynamicFactory type (`str`).
+    """
+
     _registry = {}
 
     def __init__(self, owner: Simulation, input_data: dict):
