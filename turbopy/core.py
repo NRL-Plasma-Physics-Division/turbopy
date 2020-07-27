@@ -634,6 +634,11 @@ class Diagnostic(DynamicFactory):
 
         If your subclass needs the data described by the key, now's their
         chance to save a reference to the data
+
+        Parameters
+        ----------
+        resource: dict
+            ????
         """
         pass
 
@@ -641,6 +646,11 @@ class Diagnostic(DynamicFactory):
         """Perform diagnostic step
 
         This gets called on every step of the main simulation loop.
+
+        Raises
+        ------
+        NotImplementedError
+            Method or function hasn't been implemented yet
         """
         raise NotImplementedError
 
