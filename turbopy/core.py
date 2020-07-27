@@ -601,8 +601,8 @@ class Grid:
 
 
 class Diagnostic(DynamicFactory):
-    """
-    
+    """Base diagnostic class.
+
     Parameters
     ----------
     owner: Simulation
@@ -621,6 +621,7 @@ class Diagnostic(DynamicFactory):
     input_data: dict
         Dictionary that contains information about this object such as its name
     """
+
     _factory_type_name = "Diagnostic"
     _registry = {}
 
