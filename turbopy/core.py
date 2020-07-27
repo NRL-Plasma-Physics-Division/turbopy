@@ -638,7 +638,7 @@ class Diagnostic(DynamicFactory):
         Parameters
         ----------
         resource: dict
-            ????
+            A dictionary containing references to data shared by other PhysicsModules.
         """
         pass
 
