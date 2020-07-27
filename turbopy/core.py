@@ -614,8 +614,8 @@ class Diagnostic(DynamicFactory):
     ----------
     _factory_type_name: str
         Type of DynamicFactory child class
-    _registry: ???
-        ??????
+    _registry: dict
+        Registered derived Diagnostic classes
     owner: Simulation
         The Simulation object that contains this object
     input_data: dict
