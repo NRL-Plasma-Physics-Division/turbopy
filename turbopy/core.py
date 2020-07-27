@@ -601,6 +601,26 @@ class Grid:
 
 
 class Diagnostic(DynamicFactory):
+    """
+    
+    Parameters
+    ----------
+    owner: Simulation
+        The Simulation object that owns this object
+    input_data: dict
+        Dictionary containing information about this diagnostic
+
+    Attributes
+    ----------
+    _factory_type_name: str
+        Type of DynamicFactory child class
+    _registry: ???
+        ??????
+    owner: Simulation
+        The Simulation object that contains this object
+    input_data: dict
+        Dictionary that contains information about this object such as its name
+    """
     _factory_type_name = "Diagnostic"
     _registry = {}
 
@@ -611,8 +631,8 @@ class Diagnostic(DynamicFactory):
     def inspect_resource(self, resource: dict):
         """Save references to data from other PhysicsModules
 
-        If your subclass needs the data described by the key, now's their chance to
-        save a reference to the data
+        If your subclass needs the data described by the key, now's their
+        chance to save a reference to the data
         """
         pass
 
