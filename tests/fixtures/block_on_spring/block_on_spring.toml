@@ -1,0 +1,47 @@
+# Define simulation related parameters
+[Grid]
+N = 30
+r_min = 0.0
+r_max = 1.0
+
+[Clock]
+start_time = 0.0
+end_time = 10
+num_steps = 100
+
+
+# Add the physics modules
+[PhysicsModules]
+[PhysicsModules.BlockOnSpring]
+mass = 1
+spring_constant = 1
+pusher = "LeapFrog"
+x0 = [0, 1, 0]
+p0 = [0, 0, 0]
+
+
+# Add the compute tools
+# Empty "heading" is ok, adds the tool with no/default parameters
+[Tools.BackwardEuler]
+[Tools.LeapFrog]
+
+
+# Add the diagnostics
+[Diagnostics]
+# First add some default diagnostic parameters
+directory = "tmp/block_on_spring/output"
+output_type = "csv"
+
+
+[Diagnostics.clock]
+filename = "time.csv"
+
+# [[Diagnostics.field]] # Double brackets here because we can have multiples of these...
+[[Diagnostics.ParticleDiagnostic]]
+component = "momentum"
+filename = "block_p.csv"
+
+[[Diagnostics.ParticleDiagnostic]]
+component = "position"
+filename = "block_x.csv"
+
