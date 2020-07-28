@@ -37,11 +37,11 @@ output_type = "csv"
 filename = "time.csv"
 
 # [[Diagnostics.field]] # Double brackets here because we can have multiples of these...
-[[Diagnostics.ParticleDiagnostic]]
+[[Diagnostics.BlockDiagnostic]]
 component = "momentum"
 filename = "block_p.csv"
 
-[[Diagnostics.ParticleDiagnostic]]
+[[Diagnostics.BlockDiagnostic]]
 component = "position"
 filename = "block_x.csv"
 
