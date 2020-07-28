@@ -127,13 +127,14 @@ class Leapfrog(ComputeTool):
         momentum[:] = momentum - self.dt * spring_constant * position
 
 
+PhysicsModule.register("BlockOnSpring", BlockOnSpring)
+Diagnostic.register("BlockDiagnostic", BlockDiagnostic)
+ComputeTool.register("BlockForwardEuler", ForwardEuler)
+ComputeTool.register("BackwardEuler", BackwardEuler)
+ComputeTool.register("Leapfrog", Leapfrog)
+
 @pytest.fixture
 def bos_run():
-    PhysicsModule.register("BlockOnSpring", BlockOnSpring)
-    Diagnostic.register("BlockDiagnostic", BlockDiagnostic)
-    ComputeTool.register("BlockForwardEuler", ForwardEuler)
-    ComputeTool.register("BackwardEuler", BackwardEuler)
-    ComputeTool.register("Leapfrog", Leapfrog)
     # Note: grid isn't used, but "gridless" sims aren't an option yet
     problem_config = {
         "Grid": {"N": 2, "x_min": 0, "x_max": 1},
