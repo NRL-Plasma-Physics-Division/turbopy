@@ -6,7 +6,7 @@ to "good" output.
 import numpy as np
 
 
-def test_pif(pif_run):
+def test_bos(bos_run):
     for filename in ['e_0.5', 'grid', 'particle_p', 'particle_x', 'time']:
         ref_data = np.genfromtxt(f'tests/fixtures/particle_in_field/output/{filename}.csv',
                                  delimiter=',')
