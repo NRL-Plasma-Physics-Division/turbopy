@@ -4,6 +4,24 @@ import numpy as np
 from turbopy.core import *
 
 
+#Simulation class test methods
+@pytest.fixture(name='simple_sim')
+def sim_fixt():
+    """Pytest fixture for basic simulation class"""
+    dic = {'This is': 'A dictionary'}
+    return Simulation(dic)
+
+def test_simulation_init_should_create_class_instance_when_called(simple_sim):
+    """Test init method for Simulation class"""
+    assert simple_sim.physics_modules == []
+    assert simple_sim.compute_tools == []
+    assert simple_sim.diagnostics == []
+    assert simple_sim.grid is None
+    assert simple_sim.clock is None
+    assert simple_sim.units is None
+    assert simple_sim.input_data['This is'] == 'A dictionary'
+   
+
 #Grid class test methods
 @pytest.fixture(name='simple_grid')
 def grid_conf():
