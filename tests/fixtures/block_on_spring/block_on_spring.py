@@ -1,9 +1,6 @@
 """Use turboPy to compute the motion of a block on a spring"""
 import numpy as np
 import pytest
-# import xarray as xr
-# import matplotlib.pyplot as plt
-
 from turbopy import Simulation, PhysicsModule, Diagnostic
 from turbopy import CSVOutputUtility, ComputeTool
 
@@ -132,6 +129,7 @@ Diagnostic.register("BlockDiagnostic", BlockDiagnostic)
 ComputeTool.register("BlockForwardEuler", ForwardEuler)
 ComputeTool.register("BackwardEuler", BackwardEuler)
 ComputeTool.register("Leapfrog", Leapfrog)
+
 
 @pytest.fixture
 def bos_run():
