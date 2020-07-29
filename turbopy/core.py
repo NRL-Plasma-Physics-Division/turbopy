@@ -302,6 +302,7 @@ class DynamicFactory(ABC):
         """Check if the name is in the registry"""
         return name in cls._registry
 
+
 class PhysicsModule(DynamicFactory):
     """
     This is the base class for all physics modules
@@ -313,14 +314,14 @@ class PhysicsModule(DynamicFactory):
 
     Parameters
     ----------
-    owner : :class:`Simulation`
-        Simulation class that PhysicsModule belongs to.
-    input_data : dict
-       Input data.
     _registery : dict
         Registered derived ComputeTool classes.
     _factory_type_name : str
         Type of PhysicsModule child class
+    owner : :class:`Simulation`
+        Simulation class that PhysicsModule belongs to.
+    input_data : dict
+       Input data.
 
     Attributes
     ----------
@@ -329,7 +330,7 @@ class PhysicsModule(DynamicFactory):
     module_type : None
         Module type.
     input_data : dict
-       Input data.
+       Dictionary that contains user defined parameters about this object such as its name.
     """
     _factory_type_name = "Physics Module"
     _registry = {}
@@ -392,7 +393,6 @@ class PhysicsModule(DynamicFactory):
         pass
 
 
-
 class ComputeTool(DynamicFactory):
     """This is the base class for compute tools
 
@@ -410,20 +410,17 @@ class ComputeTool(DynamicFactory):
     ----------
     _registery : dict
         Registered derived ComputeTool classes.
-     _factory_type_name : str
+    _factory_type_name : str
         Type of ComputeTool child class
     owner : :class:`Simulation`
         Simulation class that ComputeTool belongs to.
     input_data : dict
-        Input data for ComputeTool.
+        Dictionary that contains user defined parameters about this object such as its name.
     name : str
         Type of ComputeTool.
     """
 
     _factory_type_name = "Compute Tool"
-    """Base DynamicFactory type (`str`).
-    """
-
     _registry = {}
 
     def __init__(self, owner: Simulation, input_data: dict):
@@ -445,7 +442,20 @@ class SimulationClock:
     owner : :class:`Simulation`
         Simulation class that SimulationClock belongs to.
     clock_data : dict
-        Clock data.
+        Dictionary of parameters needed to define the simulation
+        clock.
+
+        The expected parameters are:
+
+        - ``"start_time"`` :
+            The time for the start of the simulation (`float`)
+        - ``"end_time"`` :
+            The time for the end of the simulation (`float`)
+        - ``"num_steps"`` | ``"dt"`` :
+            The number of time steps (`int`) | the size of the time
+            step (`float`)
+        - ``"print_time"`` :
+            `bool`, optional, default is ``False``
 
     Attributes
     ----------
@@ -506,7 +516,18 @@ class Grid:
     Parameters
     ----------
     grid_data : dict
-        Grid data.
+        Dictionary containg parameters needed to defined the grid.
+        Currently only 1D grids are defined in turboPy.
+
+        The expected parameters are:
+
+        - ``"N"`` | {``"dr"`` | ``"dx"``} :
+            The number of grid points (`int`) | the grid spacing
+            (`float`)
+        - ``"min"`` | ``"x_min"`` | ``"r_min"`` :
+            The coordinate value of the minimum grid point (`float`)
+        - ``"max"`` | ``"x_max"`` | ``"r_max"`` :
+            The coordinate value of the maximum grid point (`float`)
 
     Attributes
     ----------
@@ -671,7 +692,7 @@ class Diagnostic(DynamicFactory):
     owner: Simulation
         The Simulation object that contains this object
     input_data: dict
-        Dictionary that contains information about this object such as its name
+        Dictionary that contains user defined parameters about this object such as its name.
     """
 
     _factory_type_name = "Diagnostic"
