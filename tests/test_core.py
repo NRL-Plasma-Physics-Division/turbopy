@@ -6,17 +6,13 @@ from turbopy.core import *
 
 class ExampleTool(ComputeTool):
     """Example ComputeTool subclass for tests"""
-    def __init__(self,  owner: Simulation, input_data: dict):
-        self.owner = owner
-        self.input_data = input_data
 
 
 class ExampleModule(PhysicsModule):
     """Example PhysicModule subclass for tests"""
-    def __init__(self,  owner: Simulation, input_data: dict):
-        self.owner = owner
-        self.input_data = input_data
-    
+    def update(self):
+        pass
+
 
 #Simulation class test methods
 @pytest.fixture(name='simple_sim')
@@ -27,7 +23,7 @@ def sim_fixt():
                      "end_time": 10,
                      "num_steps": 100},
            "Tools": {"ExampleTool": {}},
-           "PhysicsModules": {"ExampleModule": {}}
+           "PhysicsModules": {"ExampleModule": {}},
            }
     return Simulation(dic)
 
@@ -100,8 +96,9 @@ def test_fundamental_cycle_should_advance_clock_when_called(simple_sim):
 def test_run_should_run_simulation_while_clock_is_running(simple_sim):
     """Test run method in Simulation class"""
     PhysicsModule.register("ExampleModule", ExampleModule)
-    with pytest.raises(NotImplementedError):
-        assert simple_sim.run()
+    simple_sim.run()
+    assert simple_sim.clock.this_step == 100
+    assert simple_sim.clock.time == 10
 
 
 def test_read_modules_from_input_should_set_modules_attr_when_called(simple_sim):
