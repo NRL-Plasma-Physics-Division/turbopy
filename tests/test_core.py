@@ -12,7 +12,8 @@ def sim_fixt():
            "Clock": {"start_time": 0,
                      "end_time": 10,
                      "num_steps": 100},
-           "Tools": {"example_tool": {}}
+           "Tools": {},
+           "PhysicsModules": {}
            }
     return Simulation(dic)
 
@@ -29,7 +30,8 @@ def test_simulation_init_should_create_class_instance_when_called(simple_sim):
            "Clock": {"start_time": 0,
                      "end_time": 10,
                      "num_steps": 100},
-           "Tools": {"example_tool": {}}
+           "Tools": {},
+           "PhysicsModules": {}
            }
     assert simple_sim.input_data == dic
 
@@ -50,7 +52,7 @@ def test_read_clock_from_input_should_set_clock_attr_when_called(simple_sim):
     assert simple_sim.clock.time == 0
     assert simple_sim.clock.end_time == 10
     assert simple_sim.clock.this_step == 0
-    assert simple_sim.clock.print_time == False
+    assert simple_sim.clock.print_time is False
     assert simple_sim.clock.num_steps == 100
     assert simple_sim.clock.dt == 0.1
     dic = {"Grid": {"N": 2, "r_min": 0, "r_max": 1},
@@ -62,13 +64,36 @@ def test_read_clock_from_input_should_set_clock_attr_when_called(simple_sim):
     other_sim.read_clock_from_input()
     assert other_sim.clock.dt == 0.2
     assert other_sim.clock.num_steps == 50
-    assert other_sim.clock.print_time == True
+    assert other_sim.clock.print_time is True
 
 
-def test_read_tools_from_input_should_set_tools_attr_when_called(simple_sim):
+def test_read_tools_from_input_should_set_tools_attr_when_called():
     """Test read_tools_from_input method in Simulation class"""
+    dic = {"Grid": {"N": 2, "r_min": 0, "r_max": 1},
+           "Clock": {"start_time": 0,
+                     "end_time": 10,
+                     "num_steps": 100},
+           "Tools": {"example_tool": {}}
+           }
+    other_sim = Simulation(dic)
     with pytest.raises(KeyError):
-        assert simple_sim.read_tools_from_input()
+        assert other_sim.read_tools_from_input()
+
+
+def test_fundamental_cycle_should_advance_clock_when_called(simple_sim):
+    """Test fundamental_cycle method in Simulation class"""
+    simple_sim.read_clock_from_input()
+    simple_sim.fundamental_cycle()
+    assert simple_sim.clock.this_step == 1
+    assert simple_sim.clock.time == 0.1
+
+
+def test_run_should_run_simulation_while_clock_is_running(simple_sim):
+    """Test run method in Simulation class"""
+    simple_sim.run()
+    assert simple_sim.clock.this_step == 100
+    assert simple_sim.clock.time == 10
+
 
 #Grid class test methods
 @pytest.fixture(name='simple_grid')
