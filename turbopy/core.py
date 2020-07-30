@@ -222,7 +222,8 @@ class Simulation:
         for physics_module_name, physics_module_data in self.input_data["PhysicsModules"].items():
             physics_module_class = PhysicsModule.lookup(physics_module_name)
             physics_module_data["name"] = physics_module_name
-            self.physics_modules.append(physics_module_class(owner=self, input_data=physics_module_data))
+            self.physics_modules.append(physics_module_class(owner=self,
+                                                             input_data=physics_module_data))
         self.sort_modules()
 
     def read_diagnostics_from_input(self):
@@ -231,8 +232,10 @@ class Simulation:
             # This dictionary has two types of keys:
             #    keys that are valid diagnostic types
             #    other keys, which should be passed along as "default" parameters
-            diags = {k: v for k, v in self.input_data["Diagnostics"].items() if Diagnostic.is_valid_name(k)}
-            params = {k: v for k, v in self.input_data["Diagnostics"].items() if not Diagnostic.is_valid_name(k)}
+            diags = {k: v for k, v in self.input_data["Diagnostics"].items()
+                     if Diagnostic.is_valid_name(k)}
+            params = {k: v for k, v in self.input_data["Diagnostics"].items()
+                      if not Diagnostic.is_valid_name(k)}
 
             # todo: implement a system for making default file names
             if "directory" in params:
@@ -284,7 +287,8 @@ class DynamicFactory(ABC):
     def register(cls, name_to_register: str, class_to_register):
         """Add a derived class to the registry"""
         if name_to_register in cls._registry:
-            raise ValueError("{0} '{1}' already registered".format(cls._factory_type_name, name_to_register))
+            raise ValueError("{0} '{1}' already registered".format(cls._factory_type_name,
+                                                                   name_to_register))
         if not issubclass(class_to_register, cls):
             raise TypeError("{0} is not a subclass of {1}".format(class_to_register, cls))
         cls._registry[name_to_register] = class_to_register
@@ -310,7 +314,8 @@ class PhysicsModule(DynamicFactory):
     Because python mutable/immutable is different than C++ pointers, the implementation
     here is different. Here, a "resource" is a dictionary, and can have more than one
     thing being shared. Note that the value stored in the dictionary needs to be mutable.
-    Make sure not to reinitialize it, because other physics modules will be holding a reference to it.
+    Make sure not to reinitialize it, because other physics modules will be holding a
+    reference to it.
 
     Parameters
     ----------
@@ -321,7 +326,7 @@ class PhysicsModule(DynamicFactory):
     owner : :class:`Simulation`
         Simulation class that PhysicsModule belongs to.
     input_data : dict
-       Input data.
+       Dictionary that contains user defined parameters about this object such as its name.
 
     Attributes
     ----------
@@ -404,7 +409,7 @@ class ComputeTool(DynamicFactory):
     owner : :class:`Simulation`
         Simulation class that ComputeTool belongs to.
     input_data : dict
-        Dictionary of input data.
+        Dictionary that contains user defined parameters about this object such as its name.
 
     Attributes
     ----------
@@ -532,7 +537,8 @@ class Grid:
     Attributes
     ----------
     grid_data : dict
-        Grid data.
+        Dictionary containg parameters needed to defined the grid.
+        Currently only 1D grids are defined in turboPy.
     r_min: float, None
         Min of the Grid range.
     r_max : float, None
@@ -681,7 +687,7 @@ class Diagnostic(DynamicFactory):
     owner: Simulation
         The Simulation object that owns this object
     input_data: dict
-        Dictionary containing information about this diagnostic
+        Dictionary that contains user defined parameters about this object such as its name.
 
     Attributes
     ----------
