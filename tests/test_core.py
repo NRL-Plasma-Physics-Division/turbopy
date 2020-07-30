@@ -4,6 +4,20 @@ import numpy as np
 from turbopy.core import *
 
 
+class ExampleTool(ComputeTool):
+    """Example ComputeTool subclass for tests"""
+    def __init__(self,  owner: Simulation, input_data: dict):
+        self.owner = owner
+        self.input_data = input_data
+
+
+class ExampleModule(PhysicsModule):
+    """Example PhysicModule subclass for tests"""
+    def __init__(self,  owner: Simulation, input_data: dict):
+        self.owner = owner
+        self.input_data = input_data
+    
+
 #Simulation class test methods
 @pytest.fixture(name='simple_sim')
 def sim_fixt():
@@ -12,8 +26,8 @@ def sim_fixt():
            "Clock": {"start_time": 0,
                      "end_time": 10,
                      "num_steps": 100},
-           "Tools": {},
-           "PhysicsModules": {}
+           "Tools": {"ExampleTool": {}},
+           "PhysicsModules": {"ExampleModule": {}}
            }
     return Simulation(dic)
 
@@ -30,8 +44,8 @@ def test_simulation_init_should_create_class_instance_when_called(simple_sim):
            "Clock": {"start_time": 0,
                      "end_time": 10,
                      "num_steps": 100},
-           "Tools": {},
-           "PhysicsModules": {}
+           "Tools": {"ExampleTool": {}},
+           "PhysicsModules": {"ExampleModule": {}}
            }
     assert simple_sim.input_data == dic
 
@@ -67,17 +81,12 @@ def test_read_clock_from_input_should_set_clock_attr_when_called(simple_sim):
     assert other_sim.clock.print_time is True
 
 
-def test_read_tools_from_input_should_set_tools_attr_when_called():
+def test_read_tools_from_input_should_set_tools_attr_when_called(simple_sim):
     """Test read_tools_from_input method in Simulation class"""
-    dic = {"Grid": {"N": 2, "r_min": 0, "r_max": 1},
-           "Clock": {"start_time": 0,
-                     "end_time": 10,
-                     "num_steps": 100},
-           "Tools": {"example_tool": {}}
-           }
-    other_sim = Simulation(dic)
-    with pytest.raises(KeyError):
-        assert other_sim.read_tools_from_input()
+    ComputeTool.register("ExampleTool", ExampleTool)
+    simple_sim.read_tools_from_input()
+    assert simple_sim.compute_tools[0].owner == simple_sim
+    assert simple_sim.compute_tools[0].input_data == {"type": "ExampleTool"}
 
 
 def test_fundamental_cycle_should_advance_clock_when_called(simple_sim):
@@ -90,9 +99,16 @@ def test_fundamental_cycle_should_advance_clock_when_called(simple_sim):
 
 def test_run_should_run_simulation_while_clock_is_running(simple_sim):
     """Test run method in Simulation class"""
-    simple_sim.run()
-    assert simple_sim.clock.this_step == 100
-    assert simple_sim.clock.time == 10
+    PhysicsModule.register("ExampleModule", ExampleModule)
+    with pytest.raises(NotImplementedError):
+        assert simple_sim.run()
+
+
+def test_read_modules_from_input_should_set_modules_attr_when_called(simple_sim):
+    """Test read_modules_from_input method in Simulation calss"""
+    simple_sim.read_modules_from_input()
+    assert simple_sim.physics_modules[0].owner == simple_sim
+    assert simple_sim.physics_modules[0].input_data == {"name": "ExampleModule"}
 
 
 #Grid class test methods
