@@ -14,7 +14,7 @@ class ExampleModule(PhysicsModule):
         pass
 
 
-#Simulation class test methods
+# Simulation class test methods
 @pytest.fixture(name='simple_sim')
 def sim_fixt():
     """Pytest fixture for basic simulation class"""
