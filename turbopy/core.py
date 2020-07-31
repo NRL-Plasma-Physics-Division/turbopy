@@ -195,7 +195,8 @@ class Simulation:
         """
         Close out the simulation
 
-        Runs the :class:`Diagnostic.finalize()` method for each diagnostic.
+        Runs the :class:`Diagnostic.finalize()` method for each
+        diagnostic.
         """
         for d in self.diagnostics:
             d.finalize()
@@ -214,16 +215,20 @@ class Simulation:
             for tool_name, params in self.input_data["Tools"].items():
                 tool_class = ComputeTool.lookup(tool_name)
                 params["type"] = tool_name
-                # TODO: somehow make tool names unique, or prevent more than one each
-                self.compute_tools.append(tool_class(owner=self, input_data=params))
+                # TODO: somehow make tool names unique, or prevent
+                #  more than one each
+                self.compute_tools.append(tool_class(
+                    owner=self, input_data=params))
 
     def read_modules_from_input(self):
         """Construct :class:`PhysicsModule` instances based on input"""
-        for physics_module_name, physics_module_data in self.input_data["PhysicsModules"].items():
-            physics_module_class = PhysicsModule.lookup(physics_module_name)
+        for physics_module_name, physics_module_data in \
+                self.input_data["PhysicsModules"].items():
+            physics_module_class = PhysicsModule.lookup(
+                                            physics_module_name)
             physics_module_data["name"] = physics_module_name
-            self.physics_modules.append(physics_module_class(owner=self,
-                                                             input_data=physics_module_data))
+            self.physics_modules.append(physics_module_class(
+                            owner=self, input_data=physics_module_data))
         self.sort_modules()
 
     def read_diagnostics_from_input(self):
@@ -231,10 +236,13 @@ class Simulation:
         if "Diagnostics" in self.input_data:
             # This dictionary has two types of keys:
             #    keys that are valid diagnostic types
-            #    other keys, which should be passed along as "default" parameters
-            diags = {k: v for k, v in self.input_data["Diagnostics"].items()
+            #    other keys, which should be passed along
+            #    as "default" parameters
+            diags = {k: v for k, v in
+                     self.input_data["Diagnostics"].items()
                      if Diagnostic.is_valid_name(k)}
-            params = {k: v for k, v in self.input_data["Diagnostics"].items()
+            params = {k: v for k, v in
+                      self.input_data["Diagnostics"].items()
                       if not Diagnostic.is_valid_name(k)}
 
             # todo: implement a system for making default file names
@@ -247,11 +255,14 @@ class Simulation:
                 if not type(d) is list:
                     d = [d]
                 for di in d:
-                    # Values in di supersede values in params because of the order
+                    # Values in di supersede values in params because
+                    # of the order in which these are combined
                     di = {**params, **di, "type": diag_type}
                     if "directory" in di and "filename" in di:
-                        di["filename"] = str(Path(di["directory"]) / Path(di["filename"]))
-                    self.diagnostics.append(diagnostic_class(owner=self, input_data=di))
+                        di["filename"] = str(Path(di["directory"])
+                                             / Path(di["filename"]))
+                    self.diagnostics.append(
+                        diagnostic_class(owner=self, input_data=di))
 
     def sort_modules(self):
         """Sort :class:`Simulation.physics_modules` by some logic
@@ -260,7 +271,8 @@ class Simulation:
         pass
 
     def find_tool_by_name(self, tool_name: str):
-        """Returns the :class:`ComputeTool` associated with the given name"""
+        """Returns the :class:`ComputeTool` associated with the
+        given name"""
         tools = [t for t in self.compute_tools if t.name == tool_name]
         if len(tools) == 1:
             return tools[0]
@@ -276,30 +288,37 @@ class DynamicFactory(ABC):
     @property
     @abstractmethod
     def _factory_type_name(self):
+        """Override this in derived classes with a string that
+        describes type of the derived factory"""
         pass
 
     @property
     @abstractmethod
     def _registry(self):
+        """Override this in derived classes with a dictionary that
+        holds references to derived subclasses"""
         pass
 
     @classmethod
     def register(cls, name_to_register: str, class_to_register):
         """Add a derived class to the registry"""
         if name_to_register in cls._registry:
-            raise ValueError("{0} '{1}' already registered".format(cls._factory_type_name,
-                                                                   name_to_register))
+            raise ValueError("{0} '{1}' already registered".format(
+                cls._factory_type_name, name_to_register))
         if not issubclass(class_to_register, cls):
-            raise TypeError("{0} is not a subclass of {1}".format(class_to_register, cls))
+            raise TypeError("{0} is not a subclass of {1}".format(
+                class_to_register, cls))
         cls._registry[name_to_register] = class_to_register
 
     @classmethod
     def lookup(cls, name: str):
-        """Look up a name in the registry, and return the associated derived class"""
+        """Look up a name in the registry, and return the associated
+        derived class"""
         try:
             return cls._registry[name]
         except KeyError:
-            raise KeyError("{0} '{1}' not found in registry".format(cls._factory_type_name, name))
+            raise KeyError("{0} '{1}' not found in registry".format(
+                cls._factory_type_name, name))
 
     @classmethod
     def is_valid_name(cls, name: str):
@@ -311,11 +330,12 @@ class PhysicsModule(DynamicFactory):
     """
     This is the base class for all physics modules
     Based on Module class in TurboWAVE
-    Because python mutable/immutable is different than C++ pointers, the implementation
-    here is different. Here, a "resource" is a dictionary, and can have more than one
-    thing being shared. Note that the value stored in the dictionary needs to be mutable.
-    Make sure not to reinitialize it, because other physics modules will be holding a
-    reference to it.
+    Because python mutable/immutable is different than C++ pointers, the
+    implementation here is different. Here, a "resource" is a
+    dictionary, and can have more than one thing being shared. Note that
+    the value stored in the dictionary needs to be mutable. Make sure
+    not to reinitialize it, because other physics modules will be
+    holding a reference to it.
 
     Parameters
     ----------
@@ -326,7 +346,8 @@ class PhysicsModule(DynamicFactory):
     owner : :class:`Simulation`
         Simulation class that PhysicsModule belongs to.
     input_data : dict
-       Dictionary that contains user defined parameters about this object such as its name.
+       Dictionary that contains user defined parameters about this
+       object such as its name.
 
     Attributes
     ----------
@@ -335,7 +356,8 @@ class PhysicsModule(DynamicFactory):
     module_type : None
         Module type.
     input_data : dict
-       Dictionary that contains user defined parameters about this object such as its name.
+       Dictionary that contains user defined parameters about this
+       object such as its name.
     """
     _factory_type_name = "Physics Module"
     _registry = {}
@@ -409,7 +431,8 @@ class ComputeTool(DynamicFactory):
     owner : :class:`Simulation`
         Simulation class that ComputeTool belongs to.
     input_data : dict
-        Dictionary that contains user defined parameters about this object such as its name.
+        Dictionary that contains user defined parameters about this
+        object such as its name.
 
     Attributes
     ----------
@@ -420,7 +443,8 @@ class ComputeTool(DynamicFactory):
     owner : :class:`Simulation`
         Simulation class that ComputeTool belongs to.
     input_data : dict
-        Dictionary that contains user defined parameters about this object such as its name.
+        Dictionary that contains user defined parameters about this
+        object such as its name.
     name : str
         Type of ComputeTool.
     """
@@ -494,13 +518,15 @@ class SimulationClock:
 
         if "num_steps" in clock_data:
             self.num_steps = clock_data["num_steps"]
-            self.dt = ((clock_data["end_time"] - clock_data["start_time"]) /
-                       clock_data["num_steps"])
+            self.dt = (
+                    (clock_data["end_time"] - clock_data["start_time"])
+                    / clock_data["num_steps"])
         elif "dt" in clock_data:
             self.dt = clock_data["dt"]
             self.num_steps = (self.end_time - self.start_time) / self.dt
             if not np.isclose(self.num_steps, np.rint(self.num_steps)):
-                raise RuntimeError("Simulation interval is not an integer multiple of timestep dt")
+                raise RuntimeError("Simulation interval is not an "
+                                   "integer multiple of timestep dt")
             self.num_steps = np.int(np.rint(self.num_steps))
 
     def advance(self):
@@ -554,7 +580,8 @@ class Grid:
     cell_widths : float
         Width of each cell in the Grid.
     r_inv : float
-        Inverse of coordinate values at each Grid point, 1/:class:`Grid.r`.
+        Inverse of coordinate values at each Grid point,
+        1/:class:`Grid.r`.
     """
     def __init__(self, grid_data: dict):
         self.grid_data = grid_data
@@ -569,20 +596,21 @@ class Grid:
         self.cell_edges = self.r
         self.cell_centers = (self.r[1:] + self.r[:-1]) / 2
         self.cell_widths = (self.r[1:] - self.r[:-1])
-        # This will give a divide-by-zero warning. I'm ok with that for now.
+        # This will give a divide-by-zero warning.
+        # I'm ok with that for now.
         self.r_inv = 1 / self.r
         self.r_inv[0] = 0
 
     def parse_grid_data(self):
         """
-        Initializes the grid spacing, range, and number of points on the grid
-        from :class:`Grid.grid_data`.
+        Initializes the grid spacing, range, and number of points on the
+        grid from :class:`Grid.grid_data`.
 
         Raises
         ------
         RuntimeError
-            If the range and step size causes a non-integer number of grid
-            points.
+            If the range and step size causes a non-integer number of
+            grid points.
         """
         self.set_value_from_keys("r_min", {"min", "x_min", "r_min"})
         self.set_value_from_keys("r_max", {"max", "x_max", "r_max"})
@@ -593,9 +621,9 @@ class Grid:
             self.set_value_from_keys("dr", {"dr", "dx"})
             self.num_points = 1 + (self.r_max - self.r_min) / self.dr
             if not (self.num_points % 1 == 0):
-                raise (RuntimeError("Invalid grid spacing: configuration "
-                                    "does not imply integer number of grid "
-                                    "points"))
+                raise (RuntimeError("Invalid grid spacing: "
+                                    "configuration does not imply "
+                                    "integer number of grid points"))
             self.num_points = np.int(self.num_points)
 
     def set_value_from_keys(self, var_name, options):
@@ -620,11 +648,12 @@ class Grid:
             if name in self.grid_data:
                 setattr(self, var_name, self.grid_data[name])
                 return
-        raise (KeyError("Grid configuration for " + var_name + " not found."))
+        raise (KeyError("Grid configuration for " + var_name
+                        + " not found."))
 
     def generate_field(self, num_components=1):
-        """Returns squeezed :class:`numpy.ndarray` of zeros with dimensions
-        :class:`Grid.num_points` and `num_components`.
+        """Returns squeezed :class:`numpy.ndarray` of zeros with
+        dimensions :class:`Grid.num_points` and `num_components`.
 
         Parameters
         ----------
@@ -638,8 +667,8 @@ class Grid:
         return np.squeeze(np.zeros((self.num_points, num_components)))
 
     def generate_linear(self):
-        """Returns :class:`numpy.ndarray` with :class:`Grid.num_points` evenly
-         spaced in the interval between 0 and 1.
+        """Returns :class:`numpy.ndarray` with :class:`Grid.num_points`
+        evenly spaced in the interval between 0 and 1.
 
          Returns
          -------
@@ -649,8 +678,8 @@ class Grid:
         return np.linspace(0, 1, self.num_points)
 
     def create_interpolator(self, r0):
-        """Return a function which linearly interpolates any field on this grid,
-        to the point `r0`.
+        """Return a function which linearly interpolates any field on
+        this grid, to the point `r0`.
 
         Parameters
         ----------
@@ -660,21 +689,37 @@ class Grid:
         Returns
         -------
         function
-            A function which takes a grid quantity `y` and returns the interpolated value
-            of `y` at the point `r0`.
+            A function which takes a grid quantity `y` and returns the
+            interpolated value of `y` at the point `r0`.
         """
         assert (r0 >= self.r_min), "Requested point is not in the grid"
         assert (r0 <= self.r_max), "Requested point is not in the grid"
         i, = np.where((r0 - self.dr < self.r) & (self.r < r0 + self.dr))
-        assert (len(i) in [1, 2]), "Error finding requested point in the grid"
+        assert (len(i) in [1, 2]), ("Error finding requested point"
+                                    "in the grid")
         if len(i) == 1:
             return lambda y: y[i]
         if len(i) == 2:
             # linearly interpolate
             def interpval(yvec):
+                """A function which takes a grid quantity `y` and
+                returns the interpolated value of `y` at the
+                point `r0`.
+
+                Parameters
+                ----------
+                yvec : :class:`numpy.ndarray`
+                    A vector describing a quantity `y` on the grid
+
+                Returns
+                -------
+                float
+                    Value of `y` linearly interpolated to the point `r0`
+                """
                 rvals = self.r[i]
                 y = yvec[i]
-                return y[0] + (r0 - rvals[0]) * (y[1] - y[0]) / (rvals[1] - rvals[0])
+                return y[0] + ((r0 - rvals[0]) * (y[1] - y[0])
+                               / (rvals[1] - rvals[0]))
 
             return interpval
 
@@ -687,7 +732,8 @@ class Diagnostic(DynamicFactory):
     owner: Simulation
         The Simulation object that owns this object
     input_data: dict
-        Dictionary that contains user defined parameters about this object such as its name.
+        Dictionary that contains user defined parameters about this
+        object such as its name.
 
     Attributes
     ----------
@@ -698,7 +744,8 @@ class Diagnostic(DynamicFactory):
     owner: Simulation
         The Simulation object that contains this object
     input_data: dict
-        Dictionary that contains user defined parameters about this object such as its name.
+        Dictionary that contains user defined parameters about this
+        object such as its name.
     """
 
     _factory_type_name = "Diagnostic"
@@ -711,13 +758,14 @@ class Diagnostic(DynamicFactory):
     def inspect_resource(self, resource: dict):
         """Save references to data from other PhysicsModules
 
-        If your subclass needs the data described by the key, now's their
-        chance to save a reference to the data
+        If your subclass needs the data described by the key, now's
+        their chance to save a reference to the data
 
         Parameters
         ----------
         resource: dict
-            A dictionary containing references to data shared by other PhysicsModules.
+            A dictionary containing references to data shared by other
+            PhysicsModules.
         """
         pass
 
@@ -729,9 +777,10 @@ class Diagnostic(DynamicFactory):
         Raises
         ------
         NotImplementedError
-            Method or function hasn't been implemented yet. This is an abstract
-            base class. Derived classes must implement this method in order to
-            be a child class of :class:'Diagnostic'.
+            Method or function hasn't been implemented yet. This is an
+            abstract base class. Derived classes must implement this
+            method in order to be a concrete child class of
+            :class:'Diagnostic'.
         """
         raise NotImplementedError
 
@@ -745,6 +794,7 @@ class Diagnostic(DynamicFactory):
     def finalize(self):
         """Perform any finalization operations
 
-        This gets called once after the main simulation loop is complete.
+        This gets called once after the main simulation loop is
+        complete.
         """
         pass

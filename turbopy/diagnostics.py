@@ -23,8 +23,8 @@ class CSVOutputUtility:
     filename : str
        File name for CSV data file.
     diagnostic_size : (int, int)
-       Size of data set to be written to CSV file. First value is the number of
-       time points. Second value is number of spatial points.
+       Size of data set to be written to CSV file. First value is the
+       number of time points. Second value is number of spatial points.
 
     Attributes
     ----------
@@ -65,7 +65,8 @@ class PointDiagnostic(Diagnostic):
     owner : Simulation
        Simulation object containing current object.
     input_data : dict
-       Dictionary that contains information regarding location, field, and output type.
+       Dictionary that contains information regarding location, field,
+       and output type.
 
     Attributes
     ----------
@@ -129,7 +130,8 @@ class PointDiagnostic(Diagnostic):
         as an instance of the :class: 'CSVOuputUtility' class.
         """
         # set up function to interpolate the field value
-        self.get_value = self.owner.grid.create_interpolator(self.location)
+        self.get_value = self.owner.grid.create_interpolator(
+                                self.location)
 
         # setup output method
         functions = {"stdout": self.print_diagnose,
@@ -140,7 +142,8 @@ class PointDiagnostic(Diagnostic):
         if self.input_data["output_type"] == "csv":
             diagnostic_size = (self.owner.clock.num_steps + 1, 1)
             # Use composition to provide csv i/o functionality
-            self.csv = CSVOutputUtility(self.input_data["filename"], diagnostic_size)
+            self.csv = CSVOutputUtility(self.input_data["filename"],
+                                        diagnostic_size)
 
     def csv_diagnose(self, data):
         """
@@ -169,7 +172,8 @@ class FieldDiagnostic(Diagnostic):
     owner : Simulation
        Simulation object containing current object.
     input_data : dict
-       Dictionary that contains information regarding location, field, and output type.
+       Dictionary that contains information regarding location, field,
+       and output type.
 
     Attributes
     ----------
@@ -185,10 +189,11 @@ class FieldDiagnostic(Diagnostic):
     last_dump : SimulationClock, None
         Time of last diagnostic run.
     diagnose : method
-        Run `do_diagnostic` or `check_step` method depending on configuration parameters.
+        Run `do_diagnostic` or `check_step` method depending on
+        configuration parameters.
     diagnostic_size : (int, int), None
-        Size of data set to be written to CSV file. First value is the number of
-       time points. Second value is number of spatial points.
+        Size of data set to be written to CSV file. First value is the
+        number of time points. Second value is number of spatial points.
     field_was_found : bool
         Boolean representing if field was found in inspect_resource.
     """
@@ -209,7 +214,8 @@ class FieldDiagnostic(Diagnostic):
 
     def check_step(self):
         """
-        Run diagnostic if dump_interval time has passed since last_dump and update last_dump with current time if run.
+        Run diagnostic if dump_interval time has passed since last_dump
+        and update last_dump with current time if run.
         """
         if self.owner.clock.time >= self.last_dump + self.dump_interval:
             self.do_diagnostic()
@@ -226,7 +232,8 @@ class FieldDiagnostic(Diagnostic):
 
     def inspect_resource(self, resource):
         """
-        Assign attribute field if field_name given in resource and update boolean if field was found.
+        Assign attribute field if field_name given in resource and
+        update boolean if field was found.
 
         Parameters
         ----------
@@ -250,19 +257,22 @@ class FieldDiagnostic(Diagnostic):
 
     def initialize(self):
         """
-        Initalize diagnostic_size and output function if provided as csv, and self.csv
-        as an instance of the :class: 'CSVOuputUtility' class.
+        Initalize diagnostic_size and output function if provided as
+        csv, and self.csv as an instance of the
+        :class:'CSVOutputUtility' class.
         """
         if not self.field_was_found:
-            raise (RuntimeError(f"Diagnostic field {self.field_name} was not found"))
+            raise (RuntimeError(f"Diagnostic field {self.field_name}"
+                                " was not found"))
         self.diagnostic_size = (self.owner.clock.num_steps + 1,
                                 self.owner.grid.num_points)
         if "dump_interval" in self.input_data:
             self.dump_interval = self.input_data["dump_interval"]
             self.diagnose = self.check_step
             self.last_dump = 0
-            self.diagnostic_size = (int(np.ceil(self.owner.clock.end_time / self.dump_interval) + 1),
-                                    self.owner.grid.num_points)
+            self.diagnostic_size = (int(np.ceil(
+                self.owner.clock.end_time / self.dump_interval) + 1),
+                self.owner.grid.num_points)
 
             # setup output method
         functions = {"stdout": self.print_diagnose,
@@ -270,7 +280,8 @@ class FieldDiagnostic(Diagnostic):
                      }
         self.output_function = functions[self.input_data["output_type"]]
         if self.input_data["output_type"] == "csv":
-            self.csv = CSVOutputUtility(self.input_data["filename"], self.diagnostic_size)
+            self.csv = CSVOutputUtility(self.input_data["filename"],
+                                        self.diagnostic_size)
 
     def csv_diagnose(self, data):
         """
@@ -293,21 +304,24 @@ class FieldDiagnostic(Diagnostic):
 
 
 class GridDiagnostic(Diagnostic):
-    """Diagnostic subclass used to store and save grid data into a CSV file
+    """Diagnostic subclass used to store and save grid data
+    into a CSV file
 
     Parameters
     ----------
     owner : Simulation
         The 'Simulation' object that contains this object
     input_data : dict
-        Dictionary containing information about this diagnostic such as its name
+        Dictionary containing information about this diagnostic such as
+        its name
 
     Attributes
     ----------
     owner : Simulation
         The 'Simulation' object that contains this object
     input_data : dict
-        Dictionary containing information about this diagnostic such as its name
+        Dictionary containing information about this diagnostic such as
+        its name
     filename : str
         File name for CSV grid file
     """
@@ -317,6 +331,7 @@ class GridDiagnostic(Diagnostic):
         self.filename = input_data["filename"]
 
     def diagnose(self):
+        """Grid diagnotic only runs at startup"""
         pass
 
     def initialize(self):
@@ -324,27 +339,26 @@ class GridDiagnostic(Diagnostic):
         with open(self.filename, 'wb') as f:
             np.savetxt(f, self.owner.grid.r, delimiter=",")
 
-    def finalize(self):
-        pass
-
 
 class ClockDiagnostic(Diagnostic):
-    """Diagnostic subclass used to store and save time data into a CSV file
-    using the CSVOutputUtility class.
+    """Diagnostic subclass used to store and save time data into a CSV
+    file using the CSVOutputUtility class.
 
     Parameters
     ----------
     owner : Simulation
         The 'Simulation' object that contains this object
     input_data : dict
-        Dictionary containing information about this diagnostic such as its name
+        Dictionary containing information about this diagnostic such as
+        its name
 
     Attributes
     ----------
     owner : Simulation
         The 'Simulation' object that contains this object
     input_data : dict
-        Dictionary containing information about this diagnostic such as its name
+        Dictionary containing information about this diagnostic such as
+        its name
     filename : str
         File name for CSV time file
     csv : :class:'numpy.ndarray'
@@ -361,9 +375,11 @@ class ClockDiagnostic(Diagnostic):
         self.csv.append(self.owner.clock.time)
 
     def initialize(self):
-        """Initialize 'self.csv' as an instance of the :class:'CSVOuputUtility' class."""
+        """Initialize 'self.csv' as an instance of the
+        :class:'CSVOuputUtility' class."""
         diagnostic_size = (self.owner.clock.num_steps + 1, 1)
-        self.csv = CSVOutputUtility(self.input_data["filename"], diagnostic_size)
+        self.csv = CSVOutputUtility(self.input_data["filename"],
+                                    diagnostic_size)
 
     def finalize(self):
         """Write time into self.csv and saves as a CSV file."""
