@@ -669,7 +669,7 @@ class Grid:
         number_of_field_points = None
         if placement_of_points == "edge-centered":
             number_of_field_points = self.num_points
-        if placement_of_points == "cell-centered":
+        elif placement_of_points == "cell-centered":
             number_of_field_points = self.num_points - 1
         else:
             raise ValueError("Unknown placement option specified")
