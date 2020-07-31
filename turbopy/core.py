@@ -651,7 +651,7 @@ class Grid:
         raise (KeyError("Grid configuration for " + var_name
                         + " not found."))
 
-    def generate_field(self, num_components=1):
+    def generate_field(self, num_components=1, placement_of_points="edge-centered"):
         """Returns squeezed :class:`numpy.ndarray` of zeros with
         dimensions :class:`Grid.num_points` and `num_components`.
 
@@ -659,12 +659,19 @@ class Grid:
         ----------
         num_components : int, defaults to 1
             Number of vector components at each point.
+        placement_of_points : str, defaults to "edge-centered"
+            Designate position of points on grid
         Returns
         -------
         :class:`numpy.ndarray`
             Squeezed array of zeros.
         """
-        return np.squeeze(np.zeros((self.num_points, num_components)))
+        amended_point_number = None
+        if placement_of_points == "edge-centered":
+            amended_point_number = self.num_points
+        else:
+            amended_point_number = self.num_points - 1
+        return np.squeeze(np.zeros((amended_point_number, num_components)))
 
     def generate_linear(self):
         """Returns :class:`numpy.ndarray` with :class:`Grid.num_points`
