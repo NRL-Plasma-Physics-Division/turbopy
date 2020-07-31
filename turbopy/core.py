@@ -666,12 +666,14 @@ class Grid:
         :class:`numpy.ndarray`
             Squeezed array of zeros.
         """
-        amended_point_number = None
+        number_of_field_points = None
         if placement_of_points == "edge-centered":
-            amended_point_number = self.num_points
+            number_of_field_points = self.num_points
+        if placement_of_points == "cell-centered":
+            number_of_field_points = self.num_points - 1
         else:
-            amended_point_number = self.num_points - 1
-        return np.squeeze(np.zeros((amended_point_number, num_components)))
+            raise ValueError("Unknown placement option specified")
+        return np.squeeze(np.zeros((number_of_field_points, num_components)))
 
     def generate_linear(self):
         """Returns :class:`numpy.ndarray` with :class:`Grid.num_points`
