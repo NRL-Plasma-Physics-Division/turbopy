@@ -1,5 +1,6 @@
 """Tests for turbopy/computetools.py"""
 import pytest
+import numpy as np
 from turbopy.computetools import *
 
 
@@ -17,11 +18,11 @@ def test_interpolate1D(interpolator):
 
     f1 = interpolator.interpolate1D(x, y)
     f2 = interpolate.interp1d(x, y)
-    assert f1(x).all() == y.all()
-    assert f1(xnew).all() == f2(xnew).all()
+    assert np.allclose(f1(x), y)
+    assert np.allclose(f1(xnew), f2(xnew))
 
     y = np.asarray([n**2 for n in x])
     f1 = interpolator.interpolate1D(x, y, 'quadratic')
     f2 = interpolate.interp1d(x, y, 'quadratic')
-    assert f1(x).all() == y.all()
-    assert f1(xnew).all() == f2(xnew).all()
+    assert np.allclose(f1(x), y)
+    assert np.allclose(f1(xnew), f2(xnew))
