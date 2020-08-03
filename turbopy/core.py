@@ -300,9 +300,10 @@ class DynamicFactory(ABC):
         pass
 
     @classmethod
-    def register(cls, name_to_register: str, class_to_register):
+    def register(cls, name_to_register: str, class_to_register,
+                 override=False):
         """Add a derived class to the registry"""
-        if name_to_register in cls._registry:
+        if name_to_register in cls._registry and not override:
             raise ValueError("{0} '{1}' already registered".format(
                 cls._factory_type_name, name_to_register))
         if not issubclass(class_to_register, cls):
