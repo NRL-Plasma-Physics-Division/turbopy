@@ -599,8 +599,18 @@ class Grid:
         self.cell_widths = (self.r[1:] - self.r[:-1])
         # This will give a divide-by-zero warning.
         # I'm ok with that for now.
-        self.r_inv = 1 / self.r
-        self.r_inv[0] = 0
+        self.coordinate_system = "cartesian"
+        if "coordinate_system" in grid_data:
+            self.coordinate_system = grid_data["coordinate_system"]
+        self.set_cell_volumes()
+        self.set_interface_areas()
+        self.set_interface_volumes()
+        self.r_inv = np.zeros_like(self.r)
+        self.r_inv[1:] = 1 / self.r[1:]
+        if self.r[0] == 0.0:
+            self.r_inv[0] = 0.0
+        else:
+            self.r_inv[0] = 1.0/self.r[0]
 
     def parse_grid_data(self):
         """
@@ -734,7 +744,7 @@ class Grid:
             return interpval
 
 
-    def set_cell_volumes(self, coordinate_system):
+    def set_cell_volumes(self):
         """
         This function sets some volume-related elements that are useful for
         finite difference solvers in curvilinear coordinates.
@@ -748,9 +758,10 @@ class Grid:
         interface_volume(edge.size) - Average of adjacent cell volumes
         inverse_cell_volume(cell.size)   -  1/cell_volume
         """
+        coordinate_system = self.coordinate_system
         old_grid = self.cell_edges  # Old grid at beginning of time step
         new_grid = self.cell_edges  # New grid at end of time step
-        fourthirds = 4/0/3.0
+        fourthirds = 4.0/3.0
         if coordinate_system.lower().strip() == 'cartesian':
             self.old_cell_volume = old_grid[1:] - old_grid[0:-1]
             self.cell_volume = new_grid[1:] - new_grid[0:-1]
@@ -769,7 +780,7 @@ class Grid:
         self.inverse_volume = 1./self.cell_volume
 
 
-    def set_interface_volumes(self, coordinate_system):
+    def set_interface_volumes(self):
         """
         This function sets some volume-related elements that are useful for
         finite difference solvers in curvilinear coordinates.
@@ -778,8 +789,9 @@ class Grid:
 
         inverse_interface_volume   -   Interface volume elements
         """
+        coordinate_system = self.coordinate_system
         grid = self.cell_centers  # Dual grid at cell centers
-        fourthirds = 4/0/3.0
+        fourthirds = 4.0/3.0
         if coordinate_system.lower().strip() == 'cartesian':
             scrh = grid
             self.interface_volume = scrh[1:] - scrh[0:-1]
@@ -793,7 +805,7 @@ class Grid:
             raise Exception('grid type not defined')
 
 
-    def set_interface_area(self, coordinate_system):
+    def set_interface_areas(self):
         """
         This function sets the interface area and some related values that are useful for
         finite difference solvers in curvilinear coordinates.
@@ -804,9 +816,10 @@ class Grid:
         area_swept_out            - area swept out by changing grid
 
         """
+        coordinate_system = self.coordinate_system
         old_grid = self.cell_edges  # Old grid at beginning of time step
         new_grid = self.cell_edges  # New grid at end of time step
-        fourthirds = 4/0/3.0
+        fourthirds = 4,0/3.0
         if coordinate_system.lower().strip() == 'cartesian':
             self.interface_area = np.ones_like(new_grid)
         elif coordinate_system.lower().strip() == 'cylindrical':
