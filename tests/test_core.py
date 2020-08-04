@@ -149,8 +149,8 @@ def test_set_value_from_keys(simple_grid):
         
 def test_generate_field(simple_grid):
     """Test generate_field method in Grid class"""
-    assert np.ndarray.all(simple_grid.generate_field() == np.zeros(8))
-    assert np.ndarray.all(simple_grid.generate_field(3) == np.zeros((8, 3)))
+    assert np.allclose(simple_grid.generate_field(), np.zeros(8))
+    assert np.allclose(simple_grid.generate_field(3), np.zeros((8, 3)))
 
     
 def test_generate_linear(simple_grid):
@@ -158,7 +158,7 @@ def test_generate_linear(simple_grid):
     comp = []
     for i in range(simple_grid.num_points):
         comp.append(i/(simple_grid.num_points - 1))
-    assert np.ndarray.all(abs(simple_grid.generate_linear() - np.array(comp)) < 0.001)
+    assert np.allclose(simple_grid.generate_linear(), np.array(comp))
 
     
 def test_create_interpolator(simple_grid):
