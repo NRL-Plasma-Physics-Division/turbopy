@@ -265,14 +265,14 @@ class FieldDiagnostic(Diagnostic):
             raise (RuntimeError(f"Diagnostic field {self.field_name}"
                                 " was not found"))
         self.diagnostic_size = (self.owner.clock.num_steps + 1,
-                                self.owner.grid.num_points)
+                                self.field.shape[0])
         if "dump_interval" in self.input_data:
             self.dump_interval = self.input_data["dump_interval"]
             self.diagnose = self.check_step
             self.last_dump = 0
             self.diagnostic_size = (int(np.ceil(
                 self.owner.clock.end_time / self.dump_interval) + 1),
-                self.owner.grid.num_points)
+                self.field.shape[0])
 
             # setup output method
         functions = {"stdout": self.print_diagnose,

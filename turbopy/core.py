@@ -300,9 +300,10 @@ class DynamicFactory(ABC):
         pass
 
     @classmethod
-    def register(cls, name_to_register: str, class_to_register):
+    def register(cls, name_to_register: str, class_to_register,
+                 override=False):
         """Add a derived class to the registry"""
-        if name_to_register in cls._registry:
+        if name_to_register in cls._registry and not override:
             raise ValueError("{0} '{1}' already registered".format(
                 cls._factory_type_name, name_to_register))
         if not issubclass(class_to_register, cls):
@@ -651,7 +652,7 @@ class Grid:
         raise (KeyError("Grid configuration for " + var_name
                         + " not found."))
 
-    def generate_field(self, num_components=1):
+    def generate_field(self, num_components=1, placement_of_points="edge-centered"):
         """Returns squeezed :class:`numpy.ndarray` of zeros with
         dimensions :class:`Grid.num_points` and `num_components`.
 
@@ -659,12 +660,21 @@ class Grid:
         ----------
         num_components : int, defaults to 1
             Number of vector components at each point.
+        placement_of_points : str, defaults to "edge-centered"
+            Designate position of points on grid
         Returns
         -------
         :class:`numpy.ndarray`
             Squeezed array of zeros.
         """
-        return np.squeeze(np.zeros((self.num_points, num_components)))
+        number_of_field_points = None
+        if placement_of_points == "edge-centered":
+            number_of_field_points = self.num_points
+        elif placement_of_points == "cell-centered":
+            number_of_field_points = self.num_points - 1
+        else:
+            raise ValueError("Unknown placement option specified")
+        return np.squeeze(np.zeros((number_of_field_points, num_components)))
 
     def generate_linear(self):
         """Returns :class:`numpy.ndarray` with :class:`Grid.num_points`
