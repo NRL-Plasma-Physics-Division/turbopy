@@ -175,11 +175,33 @@ def test_set_cell_volumes():
     """
     Test that cell volumes are set properly.
     """
+# Test cartesian volumes
     grid_conf2 = {"r_min": 0,
-                  "r_max": 0.1,
-                  "dr": 0.1/7,
-                  coordinate_system = 'cartesian'}
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "cartesian"}
     grid2 = Grid(grid_conf2)
+    grid = grid2.cell_edges
+    volumes = grid[1:] - grid[0:-1]
+    assert np.allclose(grid2.cell_volume, volumes)
+# Test cylindrical volumes
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "cylindrical"}
+    grid2 = Grid(grid_conf2)
+    grid = grid2.cell_edges
+    volumes = np.pi*(grid[1:]**2 - grid[0:-1]**2)
+    assert np.allclose(grid2.cell_volume, volumes)
+# Test cylindrical volumes
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "spherical"}
+    grid2 = Grid(grid_conf2)
+    grid = grid2.cell_edges
+    volumes = 4./3.*np.pi*(grid[1:]**3 - grid[0:-1]**3)
+    assert np.allclose(grid2.cell_volume, volumes)
 
 
 
