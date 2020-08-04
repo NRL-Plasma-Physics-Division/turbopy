@@ -89,3 +89,47 @@ def test_radial_curl(upwind_finite):
         assert d_array[ind][ind] == d.data[1][ind]
     for ind in range(N - 1):
         assert d_array[ind][ind + 1] == d.data[2][ind + 1]
+
+def test_del2_radial(upwind_finite):
+    N = upwind_finite.owner.grid.num_points
+    dr = upwind_finite.owner.grid.dr
+    r = upwind_finite.owner.grid.r
+    g1 = 1 / (2.0 * dr)
+    g2 = 1 / (dr ** 2)
+    below = np.append(-g1 / r[1:], [-g1]) + (g2 * np.ones(N))
+    above = np.append([g1, 0], g1 / r[1:-1]) + np.append([g2, g2 * 2], g2 * np.ones(N - 2))
+    diag = -2 * g2 * np.ones(N)
+    
+    d = upwind_finite.del2_radial()
+    d_array = d.toarray()
+    assert d.shape == (N, N)
+    for ind in range(N - 1):
+        assert d_array[ind + 1][ind] == below[ind]
+    for ind in range(N):
+        assert d_array[ind][ind] == diag[ind]
+    for ind in range(N - 1):
+        assert d_array[ind][ind + 1] == above[ind + 1]
+
+
+def test_del2(upwind_finite):
+    N = upwind_finite.owner.grid.num_points
+    d = upwind_finite.del2()
+    d_array = d.toarray()
+    assert d.shape == (N, N)
+    for ind in range(N - 1):
+        assert d_array[ind + 1][ind] == d.data[0][ind]
+    for ind in range(N):
+        assert d_array[ind][ind] == d.data[1][ind]
+    for ind in range(N - 1):
+        assert d_array[ind][ind + 1] == d.data[2][ind + 1]
+
+
+def test_ddr(centered_finite):
+    N = centered_finite.owner.grid.num_points
+    d = centered_finite.ddr()
+    d_array = d.toarray()
+    assert d.shape == (N, N)
+    for ind in range(N - 1):
+        assert d_array[ind + 1][ind] == d.data[0][ind]
+    for ind in range(N - 1):
+        assert d_array[ind][ind + 1] == d.data[1][ind + 1]
