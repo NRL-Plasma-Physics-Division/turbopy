@@ -21,8 +21,71 @@ def test_interpolate1D(interpolator):
     assert np.allclose(f1(x), y)
     assert np.allclose(f1(xnew), f2(xnew))
 
-    y = np.asarray([n**2 for n in x])
+    y = np.asarray([n ** 2 for n in x])
     f1 = interpolator.interpolate1D(x, y, 'quadratic')
     f2 = interpolate.interp1d(x, y, 'quadratic')
     assert np.allclose(f1(x), y)
     assert np.allclose(f1(xnew), f2(xnew))
+
+
+@pytest.fixture
+def centered_finite():
+    dic = {"Grid": {"N": 10, "r_min": 0, "r_max": 10},
+           "Clock": {"start_time": 0,
+                     "end_time": 10,
+                     "num_steps": 100},
+           "Tools": {},
+           "PhysicsModules": {},
+           }
+    sim = Simulation(dic)
+    sim.run()
+    return FiniteDifference(sim, {'type': 'FiniteDifference', 'method': 'centered'})
+
+
+@pytest.fixture
+def upwind_finite():
+    dic = {"Grid": {"N": 10, "r_min": 1, "r_max": 11},
+           "Clock": {"start_time": 0,
+                     "end_time": 10,
+                     "num_steps": 100},
+           "Tools": {},
+           "PhysicsModules": {},
+           }
+    sim = Simulation(dic)
+    sim.run()
+    return FiniteDifference(sim, {'type': 'FiniteDifference', 'method': 'upwind_left'})
+
+
+def test_setup_ddx_returns_respected_functions(centered_finite, upwind_finite):
+    center = centered_finite.setup_ddx()
+    upwind = upwind_finite.setup_ddx()
+    assert center == centered_finite.centered_difference
+    assert upwind == upwind_finite.upwind_left
+    
+    y = np.arange(0, 10)
+    assert center(y).shape == (10,)
+    assert upwind(y).shape == (10,)
+    assert np.allclose(center(y), centered_finite.centered_difference(y))
+    assert np.allclose(upwind(y), upwind_finite.upwind_left(y))
+
+
+def test_ddx(centered_finite):
+    N = centered_finite.owner.grid.num_points
+    g = 1 / (2.0 * centered_finite.dr)
+    d = centered_finite.ddx()
+    assert d.shape == (N, N)
+    assert np.allclose(d.toarray(), sparse.dia_matrix(([np.zeros(N) - g, np.zeros(N) + g], [-1, 1]),
+                                                      shape=(N, N)).toarray())
+
+
+def test_radial_curl(upwind_finite):
+    N = upwind_finite.owner.grid.num_points
+    d = upwind_finite.radial_curl()
+    d_array = d.toarray()
+    assert d.shape == (N, N)
+    for ind in range(N - 1):
+        assert d_array[ind + 1][ind] == d.data[0][ind]
+    for ind in range(N):
+        assert d_array[ind][ind] == d.data[1][ind]
+    for ind in range(N - 1):
+        assert d_array[ind][ind + 1] == d.data[2][ind + 1]
