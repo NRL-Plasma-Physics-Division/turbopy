@@ -50,7 +50,7 @@ def test_initialize_should_set_remaining_parameters_when_called(simple_field):
     """Tests initialize method in FieldDiagnostic class"""
     with pytest.raises(RuntimeError):
         assert simple_field.initialize()
-    simple_field.inspect_resource({"Field": "filler"})
+    simple_field.inspect_resource({"Field": np.linspace(0, 1, 2)})
     simple_field.initialize()
     assert simple_field.dump_interval == 1
     assert simple_field.last_dump == 0
