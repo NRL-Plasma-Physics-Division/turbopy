@@ -599,8 +599,7 @@ class Grid:
         self.cell_widths = (self.r[1:] - self.r[:-1])
         with np.errstate(divide='ignore'):
             self.r_inv = 1 / self.r
-            if self.r[0] == 0:
-                self.r_inv[0] = 0
+            self.r_inv[self.r_inv==np.inf] = 0
 
     def parse_grid_data(self):
         """
