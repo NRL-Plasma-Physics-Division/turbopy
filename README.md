@@ -1,6 +1,5 @@
 turboPy
 =======================
-[![DOI](https://zenodo.org/badge/242016626.svg)](https://zenodo.org/badge/latestdoi/242016626)
 [![Documentation Status](https://readthedocs.org/projects/turbopy/badge/?version=latest)](https://turbopy.readthedocs.io/en/latest/?badge=latest)
 [![Build Status](https://travis-ci.org/NRL-Plasma-Physics-Division/turbopy.svg?branch=main)](https://travis-ci.org/NRL-Plasma-Physics-Division/turbopy)
 [![codecov](https://codecov.io/gh/NRL-Plasma-Physics-Division/turbopy/branch/main/graph/badge.svg)](https://codecov.io/gh/NRL-Plasma-Physics-Division/turbopy)

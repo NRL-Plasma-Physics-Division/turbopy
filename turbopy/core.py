@@ -597,10 +597,6 @@ class Grid:
         self.cell_edges = self.r
         self.cell_centers = (self.r[1:] + self.r[:-1]) / 2
         self.cell_widths = (self.r[1:] - self.r[:-1])
-        # This will give a divide-by-zero warning.
-        # I'm ok with that for now.
-        self.r_inv = np.zeros_like(self.r)
-        self.r_inv[1:] = 1 / self.r[1:]
         # set the coordinate system
         self.coordinate_system = "cartesian"
         if "coordinate_system" in grid_data:
@@ -618,6 +614,9 @@ class Grid:
         else:
             raise Exception('Coordinate system is undefined')
 
+        with np.errstate(divide='ignore'):
+            self.r_inv = 1 / self.r
+            self.r_inv[self.r_inv==np.inf] = 0
 
     def parse_grid_data(self):
         """
