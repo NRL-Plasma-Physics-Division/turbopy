@@ -551,15 +551,13 @@ class SimulationClock:
         return self.this_step < self.num_steps
 
     def __repr__(self):
-        representation = f"{self.__class__.__name__}({self.clock_data})
+        clock_data = {
+            "start_time" : self.start_time,
+            "end_time" : self.end_time,
+            "num_steps" : self.num_steps,
+            "print_time" : self.print_time}
+        representation = f"{self.__class__.__name__}({clock_data})"
         return representation
-
-    def __str__(self):
-        base_str = f"A clock object in a Simulation object. Starts at t = {self.start_time},\
-         ends at t = {self.end_time}. Currently at t = {self.time} on step {self.this_step}.\
-         Step size of {self.dt}, with {self.num_steps} total steps."
-        return base_str
-
 
 class Grid:
     """Grid class
