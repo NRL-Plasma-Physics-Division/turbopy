@@ -751,23 +751,6 @@ class Grid:
             return interpval
 
 
-    def set_volumes(self):
-        """
-        This function sets some volume-related values.
-
-        This function set the following volume-realted quantities:
-
-        old_cell_volume(cell.size) - These are the volume elements at the beginning
-                                     of the time step.
-        cell_volume(cell.size)     - These are the volume elements at the end
-                                     of the time step.
-        interface_volume(edge.size) - Average of adjacent cell volumes
-        inverse_cell_volume(cell.size)   -  1/cell_volume
-        """
-        self.set_cell_volumes()
-        self.set_interface_volumes()
-
-
     def set_cartesian_volumes(self):
         """
         This function sets some Cartesian volume-related elements.
