@@ -91,43 +91,41 @@ def test_ddx(fin_diff):
 
 def test_radial_curl(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's radial_curl method."""
-    N = fin_diff.owner.grid.num_points
-    dr = fin_diff.owner.grid.dr
-    r = fin_diff.owner.grid.r
-    g = 1 / (2.0 * dr)
-
-    below = np.append(-g * (r[:-1] / r[1:])[:-1], [0.0, 0.0])
-    diag = np.append(np.zeros(N - 1), [1/dr])
-    above = np.append([0.0, 2.0 / dr], g * (r[1:] / r[:-1])[1:])
-
-    d = fin_diff.radial_curl()
-    assert d.shape == (N, N)
-    for actual, expected in zip(d.data, [below, diag, above]):
-        assert np.allclose(actual, expected)
+    with np.errstate(divide='ignore'):
+        N = fin_diff.owner.grid.num_points
+        dr = fin_diff.owner.grid.dr
+        r = fin_diff.owner.grid.r
+        g = 1 / (2.0 * dr)
+        below = np.append(-g * (r[:-1] / r[1:])[:-1], [0.0, 0.0])
+        diag = np.append(np.zeros(N - 1), [1 / dr])
+        above = np.append([0.0, 2.0 / dr], g * (r[1:] / r[:-1])[1:])
+        d = fin_diff.radial_curl()
+        assert d.shape == (N, N)
+        for actual, expected in zip(d.data, [below, diag, above]):
+            assert np.allclose(actual, expected)
 
 
 def test_del2_radial(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's del2_radial method."""
-    N = fin_diff.owner.grid.num_points
-    dr = fin_diff.owner.grid.dr
-    r = fin_diff.owner.grid.r
-    g1 = 1 / (2.0 * dr)
-    g2 = 1 / (dr ** 2)
-
-    below = np.append(-g1 / r[1:], [-g1]) + (g2 * np.ones(N))
-    above = (np.append([g1, 0], g1 / r[1:-1]) +
-             np.append([g2, g2 * 2], g2 * np.ones(N - 2)))
-    diag = -2 * g2 * np.ones(N)
-
-    d = fin_diff.del2_radial()
-    d_array = d.toarray()
-    assert d.shape == (N, N)
-    for ind in range(N - 1):
-        assert d_array[ind + 1][ind] == below[ind]
-    for ind in range(N):
-        assert d_array[ind][ind] == diag[ind]
-    for ind in range(N - 1):
-        assert d_array[ind][ind + 1] == above[ind + 1]
+    with np.errstate(divide='ignore'):
+        N = fin_diff.owner.grid.num_points
+        dr = fin_diff.owner.grid.dr
+        r = fin_diff.owner.grid.r
+        g1 = 1 / (2.0 * dr)
+        g2 = 1 / (dr ** 2)
+        below = np.append(-g1 / r[1:], [-g1]) + (g2 * np.ones(N))
+        above = (np.append([g1, 0], g1 / r[1:-1]) +
+                 np.append([g2, g2 * 2], g2 * np.ones(N - 2)))
+        diag = -2 * g2 * np.ones(N)
+        d = fin_diff.del2_radial()
+        d_array = d.toarray()
+        assert d.shape == (N, N)
+        for ind in range(N - 1):
+            assert d_array[ind + 1][ind] == below[ind]
+        for ind in range(N):
+            assert d_array[ind][ind] == diag[ind]
+        for ind in range(N - 1):
+            assert d_array[ind][ind + 1] == above[ind + 1]
 
 
 def test_del2(fin_diff):
