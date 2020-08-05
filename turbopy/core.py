@@ -279,19 +279,8 @@ class Simulation:
         return None
 
     def __repr__(self):
-        representation = f"{self.__class__.__name__}"
-        representation += f"(({', '.join(map(str, self.physics_modules))}) "
-        representation += f"({', '.join(map(str, self.compute_tools))}) "
-        representation += f"({', '.join(map(str, self.diagnostics))}), "
-        representation += f"{self.grid}, {self.clock}, {self.units})"
+        representation = f"{self.__class__.__name__}({self.input_data})"
         return representation
-
-    def __str__(self):
-        base_str = f"A Simulation object with "
-        base_str += f"PhysicsModules {', '.join(map(str, self.physics_modules))},"
-        base_str += f", ComputeTools {','.join(map(str, self.compute_tools))}, "
-        base_str += f"and Diagnostics {','.join(map(str, self.diagnostics))}."
-        return base_str
 
 class DynamicFactory(ABC):
     """Abstract class which provides dynamic factory functionality
@@ -434,12 +423,8 @@ class PhysicsModule(DynamicFactory):
         pass
 
     def __repr__(self):
-        representation = f"{self.__class__.__name__}{self.module_type}, {self.input_data})"
+        representation = f"{self.__class__.__name__}({self.input_data})"
         return representation
-
-    def __str__(self):
-        base_str = f"A PhysicsModule with name {self.module_type}."
-        return base_str
 
 
 class ComputeTool(DynamicFactory):
@@ -484,12 +469,8 @@ class ComputeTool(DynamicFactory):
         pass
 
     def __repr__(self):
-        representation = f"{self.__class__.__name__}({self.name})"
+        representation = f"{self.__class__.__name__}({self.input_data})"
         return representation
-
-    def __str__(self):
-        base_str = f"A ComputeTool  with name {self.name}"
-        return base_str
 
 class SimulationClock:
     """
@@ -570,9 +551,7 @@ class SimulationClock:
         return self.this_step < self.num_steps
 
     def __repr__(self):
-        representation = f"{self.__class__.__name__}({self.start_time}, {self.time},"
-        representation += f" {self.end_time}, {self.this_step}, {self.print_time}, "
-        representation += f"{self.num_steps}, {self.dt})"
+        representation = f"{self.__class__.__name__}({self.clock_data})
         return representation
 
     def __str__(self):
@@ -764,15 +743,8 @@ class Grid:
 
             return interpval
     def __repr__(self):
-        representation = f"{self.__class__.__name__}({self.r_min}, {self.r_max}, "
-        representation += f"{self.num_points}, {self.dr}, {self.r}, {self.cell_edges}, "
-        representation += f"{self.cell_centers}, {self.cell_widths}, {self.r_inv})"
+        representation = f"{self.__class__.__name__}({self.grid_data})"
         return representation
-    def __str__(self):
-        base_str = f"Grid that stretched from a minimum value of {self.r_min} to a maximum of "
-        base_str += f"{self.r_max} with {self.num_points} total points, {self.dr} apart."
-        return base_str
-
 
 class Diagnostic(DynamicFactory):
     """Base diagnostic class.
@@ -848,3 +820,6 @@ class Diagnostic(DynamicFactory):
         complete.
         """
         pass
+    
+    def __repr__(self):
+        representation = f"{self.__class__.__name__}({self.input_data})"
