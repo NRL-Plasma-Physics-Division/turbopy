@@ -170,7 +170,6 @@ def test_create_interpolator(simple_grid):
     assert np.allclose(interp(field), linear_value)
 
 
-
 def test_set_cell_volumes():
     """
     Test that cell volumes are set properly.
@@ -183,7 +182,8 @@ def test_set_cell_volumes():
     grid2 = Grid(grid_conf2)
     grid = grid2.cell_edges
     volumes = grid[1:] - grid[0:-1]
-    assert np.allclose(grid2.cell_volume, volumes)
+    assert grid2.cell_volumes.size == grid.size-1
+    assert np.allclose(grid2.cell_volumes, volumes)
 # Test cylindrical volumes
     grid_conf2 = {"r_min": 0,
                   "r_max": 1,
@@ -192,8 +192,9 @@ def test_set_cell_volumes():
     grid2 = Grid(grid_conf2)
     grid = grid2.cell_edges
     volumes = np.pi*(grid[1:]**2 - grid[0:-1]**2)
-    assert np.allclose(grid2.cell_volume, volumes)
-# Test cylindrical volumes
+    assert grid2.cell_volumes.size == grid.size-1
+    assert np.allclose(grid2.cell_volumes, volumes)
+# Test spherical volumes
     grid_conf2 = {"r_min": 0,
                   "r_max": 1,
                   "dr": 0.1,
@@ -201,8 +202,81 @@ def test_set_cell_volumes():
     grid2 = Grid(grid_conf2)
     grid = grid2.cell_edges
     volumes = 4./3.*np.pi*(grid[1:]**3 - grid[0:-1]**3)
-    assert np.allclose(grid2.cell_volume, volumes)
+    assert grid2.cell_volumes.size == grid.size-1
+    assert np.allclose(grid2.cell_volumes, volumes)
 
+
+def test_set_interface_volumes():
+    """
+    Test that cell volumes are set properly.
+    """
+# Test cartesian volumes
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "cartesian"}
+    grid2 = Grid(grid_conf2)
+    grid = grid2.cell_centers
+    volumes = grid[1:] - grid[0:-1]
+    assert grid2.interface_volumes.size == grid.size-1
+    assert np.allclose(grid2.interface_volumes, volumes)
+# Test cylindrical volumes
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "cylindrical"}
+    grid2 = Grid(grid_conf2)
+    grid = grid2.cell_centers
+    volumes = np.pi*(grid[1:]**2 - grid[0:-1]**2)
+    assert grid2.interface_volumes.size == grid.size-1
+    assert np.allclose(grid2.interface_volumes, volumes)
+# Test spherical volumes
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "spherical"}
+    grid2 = Grid(grid_conf2)
+    grid = grid2.cell_edges
+    volumes = 4./3.*np.pi*(grid[1:]**3 - grid[0:-1]**3)
+#    assert grid2.interface_volumes.size == grid.size-1
+#    assert np.allclose(grid2.interface_volumes, volumes)
+
+
+def test_set_interface_area():
+    """
+    Test that cell volumes are set properly.
+    """
+# Test cartesian areas
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "cartesian"}
+    grid2 = Grid(grid_conf2)
+    grid = grid2.cell_edges
+    areas = np.ones_like(grid2.interface_areas)
+    assert grid2.interface_areas.size == grid.size
+    assert np.allclose(grid2.interface_areas, areas)
+
+# Test cylindrical areas
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "cylindrical"}
+    grid2 = Grid(grid_conf2)
+    grid = grid2.cell_edges
+    areas = 2.0*np.pi*grid
+    assert grid2.interface_areas.size == grid.size
+    assert np.allclose(grid2.interface_areas, areas)
+# Test spherical areas
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "spherical"}
+    grid2 = Grid(grid_conf2)
+    grid = grid2.cell_edges
+    areas = 4.*np.pi*grid**2
+    assert grid2.interface_areas.size == grid.size
+    assert np.allclose(grid2.interface_areas, areas)
 
 
 #SimulationClock class test methods

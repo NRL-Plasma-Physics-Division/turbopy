@@ -602,15 +602,15 @@ class Grid:
         self.coordinate_system = "cartesian"
         if "coordinate_system" in grid_data:
             self.coordinate_system = grid_data["coordinate_system"]
-        self.set_cell_volumes()
-        self.set_interface_areas()
-        self.set_interface_volumes()
         self.r_inv = np.zeros_like(self.r)
         self.r_inv[1:] = 1 / self.r[1:]
         if self.r[0] == 0.0:
             self.r_inv[0] = 0.0
         else:
             self.r_inv[0] = 1.0/self.r[0]
+        self.set_interface_areas()
+        self.set_interface_volumes()
+        self.set_cell_volumes()
 
     def parse_grid_data(self):
         """
@@ -763,21 +763,21 @@ class Grid:
         new_grid = self.cell_edges  # New grid at end of time step
         fourthirds = 4.0/3.0
         if coordinate_system.lower().strip() == 'cartesian':
-            self.old_cell_volume = old_grid[1:] - old_grid[0:-1]
-            self.cell_volume = new_grid[1:] - new_grid[0:-1]
+            self.old_cell_volumes = old_grid[1:] - old_grid[0:-1]
+            self.cell_volumes = new_grid[1:] - new_grid[0:-1]
         elif coordinate_system.lower().strip() == 'cylindrical':
             scrh = old_grid * old_grid
-            self.old_cell_volume = np.pi * (scrh[1:] - scrh[0:-1])
+            self.old_cell_volumes = np.pi * (scrh[1:] - scrh[0:-1])
             scrh = new_grid * new_grid
-            self.cell_volume = np.pi * (scrh[1:] - scrh[0:-1])
+            self.cell_volumes = np.pi * (scrh[1:] - scrh[0:-1])
         elif coordinate_system.lower().strip() == 'spherical':
             scrh = old_grid * old_grid * old_grid
-            self.old_cell_volume = fourthirds*np.pi*(scrh[1:]- scrh[0:-1])
+            self.old_cell_volumes = fourthirds*np.pi*(scrh[1:]- scrh[0:-1])
             scrh = new_grid * new_grid * new_grid
-            self.cell_volume = fourthirds*np.pi*(scrh[1:]- scrh[0:-1])
+            self.cell_volumes = fourthirds*np.pi*(scrh[1:]- scrh[0:-1])
         else:
             raise Exception('grid type not defined')
-        self.inverse_volume = 1./self.cell_volume
+        self.inverse_volumes = 1./self.cell_volumes
 
 
     def set_interface_volumes(self):
@@ -794,13 +794,13 @@ class Grid:
         fourthirds = 4.0/3.0
         if coordinate_system.lower().strip() == 'cartesian':
             scrh = grid
-            self.interface_volume = scrh[1:] - scrh[0:-1]
+            self.interface_volumes = scrh[1:] - scrh[0:-1]
         elif coordinate_system.lower().strip() == 'cylindrical':
             scrh = grid * grid
-            self.interface_volume = np.pi * (scrh[1:] - scrh[0:-1])
+            self.interface_volumes = np.pi * (scrh[1:] - scrh[0:-1])
         elif coordinate_system.lower().strip() == 'spherical':
             scrh = grid * grid * grid
-            self.interface_volume = fourthirds*np.pi*(scrh[1:]- scrh[0:-1])
+            self.interface_volumes = fourthirds*np.pi*(scrh[1:]- scrh[0:-1])
         else:
             raise Exception('grid type not defined')
 
@@ -821,11 +821,12 @@ class Grid:
         new_grid = self.cell_edges  # New grid at end of time step
         fourthirds = 4,0/3.0
         if coordinate_system.lower().strip() == 'cartesian':
-            self.interface_area = np.ones_like(new_grid)
+            self.interface_areas = np.ones_like(new_grid)
         elif coordinate_system.lower().strip() == 'cylindrical':
-            self.interface_area = np.pi*(old_grid+new_grid)
+            self.interface_areas = np.pi*(old_grid+new_grid)
         elif coordinate_system.lower().strip() == 'spherical':
-            self.interface_area = np.pi**(old_grid+new_grid)
+            scrh = (old_grid + new_grid) * old_grid
+            self.interface_areas = 4./3.*np.pi*(scrh + new_grid * new_grid)
         else:
             raise Exception('Grid type not defined')
 
