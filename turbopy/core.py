@@ -599,17 +599,27 @@ class Grid:
         self.cell_widths = (self.r[1:] - self.r[:-1])
         # This will give a divide-by-zero warning.
         # I'm ok with that for now.
-        self.coordinate_system = "cartesian"
-        if "coordinate_system" in grid_data:
-            self.coordinate_system = grid_data["coordinate_system"]
         self.r_inv = np.zeros_like(self.r)
         self.r_inv[1:] = 1 / self.r[1:]
-        if self.r[0] == 0.0:
-            self.r_inv[0] = 0.0
+        # set the coordinate system
+        self.coordinate_system = "cartesian"
+        if "coordinate_system" in grid_data:
+            self.coordinate_system = grid_data["coordinate_system"].lower().strip()
+        # set the volume and area elements
+        if self.coordinate_system == 'cartesian':
+            self.set_cartesian_volumes()
+            self.set_cartesian_areas()
+        elif self.coordinate_system == 'cylindrical':
+            self.set_cylindrical_volumes()
+            self.set_cylindrical_areas()
+        elif self.coordinate_system == 'spherical':
+            self.set_spherical_volumes()
+            self.set_spherical_areas()
         else:
-            self.r_inv[0] = 1.0/self.r[0]
+            raise Exception('Coordinate system is undefined')
+        # Set the interface areas and volumes
         self.set_interface_areas()
-        self.set_volumes()
+
 
     def parse_grid_data(self):
         """
@@ -745,8 +755,7 @@ class Grid:
 
     def set_volumes(self):
         """
-        This function sets some volume-related elements that are useful for
-        finite difference solvers in curvilinear coordinates.
+        This function sets some volume-related values.
 
         This function set the following volume-realted quantities:
 
@@ -761,10 +770,9 @@ class Grid:
         self.set_interface_volumes()
 
 
-    def set_cell_volumes(self):
+    def set_cartesian_volumes(self):
         """
-        This function sets some volume-related elements that are useful for
-        finite difference solvers in curvilinear coordinates.
+        This function sets some Cartesian volume-related elements.
 
         This function set the following volume-realted quantities:
 
@@ -773,33 +781,50 @@ class Grid:
         cell_volume(cell.size)     - These are the cell-centered volume elements at the end
                                      of the time step.
         """
-        coordinate_system = self.coordinate_system
-        old_grid = self.cell_edges  # Old grid at beginning of time step
-        new_grid = self.cell_edges  # New grid at end of time step
-        fourthirds = 4.0/3.0
-        if coordinate_system.lower().strip() == 'cartesian':
-            self.old_cell_volumes = old_grid[1:] - old_grid[0:-1]
-            self.cell_volumes = new_grid[1:] - new_grid[0:-1]
-        elif coordinate_system.lower().strip() == 'cylindrical':
-            scrh = old_grid * old_grid
-            self.old_cell_volumes = np.pi * (scrh[1:] - scrh[0:-1])
-            scrh = new_grid * new_grid
-            self.cell_volumes = np.pi * (scrh[1:] - scrh[0:-1])
-        elif coordinate_system.lower().strip() == 'spherical':
-            scrh = old_grid * old_grid * old_grid
-            self.old_cell_volumes = fourthirds*np.pi*(scrh[1:]- scrh[0:-1])
-            scrh = new_grid * new_grid * new_grid
-            self.cell_volumes = fourthirds*np.pi*(scrh[1:]- scrh[0:-1])
-        else:
-            raise Exception('grid type not defined')
+        edges = self.cell_edges
+        self.cell_volumes = edges[1:] - edges[0:-1]
         self.inverse_cell_volumes = 1./self.cell_volumes
+        self.set_interface_volumes()
+
+
+    def set_cylindrical_volumes(self):
+        """
+        This function sets some cylindrical volume-related elements.
+
+        This function set the following volume-realted quantities:
+
+        cell_volume(cell.size)     - These are the cell-centered volume elements.
+        """
+        edges = self.cell_edges
+        scrh = edges * edges
+        self.cell_volumes = np.pi * (scrh[1:] - scrh[0:-1])
+        self.inverse_cell_volumes = 1./self.cell_volumes
+        self.set_interface_volumes()
+
+
+
+    def set_spherical_volumes(self):
+        """
+        This function sets some cylindrical volume-related elements.
+
+        This function set the following volume-realted quantities:
+
+        cell_volume(cell.size)     - These are the cell-centered volume elements.
+        """
+        edges = self.cell_edges
+        scrh = edges * edges * edges
+        self.cell_volumes = 4/3 * np.pi * (scrh[1:] - scrh[0:-1])
+        self.inverse_cell_volumes = 1./self.cell_volumes
+        self.set_interface_volumes()
+
 
 
     def set_interface_volumes(self):
         """
-        This function sets some volume-related elements that are useful for
-        finite difference solvers in curvilinear coordinates.
+        This function sets some edge-based volume-related elements.
 
+
+        The set_interface_volumes function sets some
         This function set the following volume-realted quantities:
 
         interface_volumes  -  edge-centered volume elements
@@ -822,8 +847,7 @@ class Grid:
 
     def set_interface_areas(self):
         """
-        This function sets the interface area and some related values that are useful for
-        finite difference solvers in curvilinear coordinates.
+        This function sets the edge-based interface area values.
 
         This function set the following volume-realted quantities:
 
@@ -834,16 +858,59 @@ class Grid:
         coordinate_system = self.coordinate_system
         old_grid = self.cell_edges  # Old grid at beginning of time step
         new_grid = self.cell_edges  # New grid at end of time step
-        fourthirds = 4/3
-        if coordinate_system.lower().strip() == 'cartesian':
+        fourthirds = 4.0/3.0
+        if coordinate_system == 'cartesian':
             self.interface_areas = np.ones_like(new_grid)
-        elif coordinate_system.lower().strip() == 'cylindrical':
+        elif coordinate_system == 'cylindrical':
             self.interface_areas = np.pi*(old_grid+new_grid)
-        elif coordinate_system.lower().strip() == 'spherical':
+        elif coordinate_system == 'spherical':
             scrh = (old_grid + new_grid) * old_grid
             self.interface_areas = 4./3.*np.pi*(scrh + new_grid * new_grid)
         else:
             raise Exception('Grid type not defined')
+        self.volume_swept_by_changing_grid = self.interface_areas * (new_grid - old_grid)
+
+
+    def set_cartesian_areas(self):
+        """
+        This function sets the area values.
+
+        This function set the following volume-realted quantities:
+
+        interface_area(efge.size) - the area element associated with the cell edge
+        area_swept_out            - area swept out by changing grid
+
+        """
+        edges = self.cell_edges
+        self.interface_areas = np.ones_like(edges)
+
+
+    def set_cylindrical_areas(self):
+        """
+        This function sets the area values.
+
+        This function set the following volume-realted quantities:
+
+        interface_area(efge.size) - the area element associated with the cell edge
+        area_swept_out            - area swept out by changing grid
+
+        """
+        edges = self.cell_edges
+        self.interface_areas = 2.0 * np.pi*edges
+
+
+    def set_spherical_areas(self):
+        """
+        This function sets the area values.
+
+        This function set the following volume-realted quantities:
+
+        interface_area(efge.size) - the area element associated with the cell edge
+        area_swept_out            - area swept out by changing grid
+
+        """
+        edges = self.cell_edges
+        self.interface_areas = 4.0 * np.pi * edges * edges
 
 
 class Diagnostic(DynamicFactory):
