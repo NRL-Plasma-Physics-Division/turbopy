@@ -834,7 +834,7 @@ class Grid:
         coordinate_system = self.coordinate_system
         old_grid = self.cell_edges  # Old grid at beginning of time step
         new_grid = self.cell_edges  # New grid at end of time step
-        fourthirds = 4,0/3.0
+        fourthirds = 4/3
         if coordinate_system.lower().strip() == 'cartesian':
             self.interface_areas = np.ones_like(new_grid)
         elif coordinate_system.lower().strip() == 'cylindrical':
