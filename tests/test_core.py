@@ -160,7 +160,7 @@ def test_generate_linear(simple_grid):
         comp.append(i/(simple_grid.num_points - 1))
     assert np.allclose(simple_grid.generate_linear(), np.array(comp))
 
-
+    
 def test_create_interpolator(simple_grid):
     """Test create_interpolator method in Grid class"""
     field = simple_grid.generate_linear()
