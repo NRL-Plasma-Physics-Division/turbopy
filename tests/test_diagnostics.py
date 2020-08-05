@@ -62,9 +62,9 @@ def test_initialize_should_set_remaining_parameters_when_called(simple_field):
 
 def test_inspect_resource_should_assign_field_attribute_if_field_name_in_resource(simple_field):
     """Tests inspect_resource method in FieldDiagnostic class"""
-    simple_field.inspect_resource({"Field": "filler"})
+    simple_field.inspect_resource({"Field": np.linspace(0, 1, 2)})
     assert simple_field.field_was_found is True
-    assert simple_field.field == "filler"
+    assert np.allclose(simple_field.field, np.linspace(0, 1, 2))
 
 def test_csv_diagnose_should_append_data_to_csv_when_called(simple_field):
     """Tests csv_diagnose method in FieldDiagnostic class"""
