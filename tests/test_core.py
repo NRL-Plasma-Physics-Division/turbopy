@@ -216,9 +216,14 @@ def test_set_interface_volumes():
                   "dr": 0.1,
                   "coordinate_system": "cartesian"}
     grid2 = Grid(grid_conf2)
-    grid = grid2.cell_centers
-    volumes = grid[1:] - grid[0:-1]
-    assert grid2.interface_volumes.size == grid.size-1
+    cell_centers = grid2.cell_centers
+    cell_edges = grid2.cell_edges
+    volumes = np.zeros_like(grid2.cell_edges)
+    volumes[0] = cell_edges[1] - cell_edges[0]
+    for i in range(cell_edges.size-2):
+        volumes[i+1] = 0.5 * (cell_edges[i+2] - cell_edges[i])
+    volumes[-1] = cell_edges[-1] - cell_edges[-2]
+    assert grid2.interface_volumes.size == volumes.size
     assert np.allclose(grid2.interface_volumes, volumes)
 # Test cylindrical volumes
     grid_conf2 = {"r_min": 0,
@@ -226,9 +231,15 @@ def test_set_interface_volumes():
                   "dr": 0.1,
                   "coordinate_system": "cylindrical"}
     grid2 = Grid(grid_conf2)
-    grid = grid2.cell_centers
-    volumes = np.pi*(grid[1:]**2 - grid[0:-1]**2)
-    assert grid2.interface_volumes.size == grid.size-1
+    cell_centers = grid2.cell_centers
+    cell_edges = grid2.cell_edges
+    volumes = np.zeros_like(grid2.cell_edges)
+    volumes[0] = np.pi * (cell_edges[1]**2 - cell_edges[0]**2)
+    for i in range(cell_edges.size-2):
+        volumes[i+1] = 0.5 * np.pi * (cell_edges[i+2]**2 - cell_edges[i]**2)
+    volumes[-1] = np.pi * (cell_edges[-1]**2 - cell_edges[-2]**2)
+
+    assert grid2.interface_volumes.size == volumes.size
     assert np.allclose(grid2.interface_volumes, volumes)
 # Test spherical volumes
     grid_conf2 = {"r_min": 0,
@@ -236,10 +247,16 @@ def test_set_interface_volumes():
                   "dr": 0.1,
                   "coordinate_system": "spherical"}
     grid2 = Grid(grid_conf2)
-    grid = grid2.cell_edges
-    volumes = 4./3.*np.pi*(grid[1:]**3 - grid[0:-1]**3)
-#    assert grid2.interface_volumes.size == grid.size-1
-#    assert np.allclose(grid2.interface_volumes, volumes)
+    cell_centers = grid2.cell_centers
+    cell_edges = grid2.cell_edges
+    volumes = np.zeros_like(grid2.cell_edges)
+    volumes[0] = 4./3.*np.pi * (cell_edges[1]**3 - cell_edges[0]**3)
+    for i in range(cell_edges.size-2):
+        volumes[i+1] = 0.5 * 4./3. * np.pi * (cell_edges[i+2]**3 - cell_edges[i]**3)
+    volumes[-1] = 4.0/3.0 * np.pi * (cell_edges[-1]**3 - cell_edges[-2]**3)
+
+    assert grid2.interface_volumes.size == volumes.size
+    assert np.allclose(grid2.interface_volumes, volumes)
 
 
 def test_set_interface_area():

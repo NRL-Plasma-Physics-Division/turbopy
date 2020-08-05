@@ -609,8 +609,7 @@ class Grid:
         else:
             self.r_inv[0] = 1.0/self.r[0]
         self.set_interface_areas()
-        self.set_interface_volumes()
-        self.set_cell_volumes()
+        self.set_volumes()
 
     def parse_grid_data(self):
         """
@@ -744,7 +743,7 @@ class Grid:
             return interpval
 
 
-    def set_cell_volumes(self):
+    def set_volumes(self):
         """
         This function sets some volume-related elements that are useful for
         finite difference solvers in curvilinear coordinates.
@@ -757,6 +756,22 @@ class Grid:
                                      of the time step.
         interface_volume(edge.size) - Average of adjacent cell volumes
         inverse_cell_volume(cell.size)   -  1/cell_volume
+        """
+        self.set_cell_volumes()
+        self.set_interface_volumes()
+
+
+    def set_cell_volumes(self):
+        """
+        This function sets some volume-related elements that are useful for
+        finite difference solvers in curvilinear coordinates.
+
+        This function set the following volume-realted quantities:
+
+        old_cell_volume(cell.size) - These are the cell-centered volume elements at the beginning
+                                     of the time step.
+        cell_volume(cell.size)     - These are the cell-centered volume elements at the end
+                                     of the time step.
         """
         coordinate_system = self.coordinate_system
         old_grid = self.cell_edges  # Old grid at beginning of time step
@@ -777,7 +792,7 @@ class Grid:
             self.cell_volumes = fourthirds*np.pi*(scrh[1:]- scrh[0:-1])
         else:
             raise Exception('grid type not defined')
-        self.inverse_volumes = 1./self.cell_volumes
+        self.inverse_cell_volumes = 1./self.cell_volumes
 
 
     def set_interface_volumes(self):
@@ -787,22 +802,22 @@ class Grid:
 
         This function set the following volume-realted quantities:
 
+        interface_volumes  -  edge-centered volume elements
         inverse_interface_volume   -   Interface volume elements
         """
         coordinate_system = self.coordinate_system
-        grid = self.cell_centers  # Dual grid at cell centers
+        edges = self.cell_edges  # Dual grid at cell centers
         fourthirds = 4.0/3.0
-        if coordinate_system.lower().strip() == 'cartesian':
-            scrh = grid
-            self.interface_volumes = scrh[1:] - scrh[0:-1]
-        elif coordinate_system.lower().strip() == 'cylindrical':
-            scrh = grid * grid
-            self.interface_volumes = np.pi * (scrh[1:] - scrh[0:-1])
-        elif coordinate_system.lower().strip() == 'spherical':
-            scrh = grid * grid * grid
-            self.interface_volumes = fourthirds*np.pi*(scrh[1:]- scrh[0:-1])
-        else:
-            raise Exception('grid type not defined')
+        self.interface_volumes = np.zeros_like(edges)
+        self.inverse_interface_volumes = np.zeros_like(self.interface_volumes)
+
+        self.interface_volumes[0] = self.cell_volumes[0]
+        self.interface_volumes[1:-1] = 0.5 * (self.cell_volumes[1:] + self.cell_volumes[0:-1])
+        self.interface_volumes[-1] = self.cell_volumes[-1]
+
+        self.inverse_interface_volumes[0] = self.inverse_cell_volumes[0]
+        self.inverse_interface_volumes[1:-1] = 0.5 * (self.inverse_cell_volumes[1:] + self.inverse_cell_volumes[0:-1])
+        self.inverse_interface_volumes[-1] = self.inverse_cell_volumes[-1]
 
 
     def set_interface_areas(self):
