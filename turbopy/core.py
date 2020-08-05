@@ -617,8 +617,6 @@ class Grid:
             self.set_spherical_areas()
         else:
             raise Exception('Coordinate system is undefined')
-        # Set the interface areas and volumes
-        self.set_interface_areas()
 
 
     def parse_grid_data(self):
@@ -845,9 +843,9 @@ class Grid:
         self.inverse_interface_volumes[-1] = self.inverse_cell_volumes[-1]
 
 
-    def set_interface_areas(self):
+    def set_cartesian_areas(self):
         """
-        This function sets the edge-based interface area values.
+        This function sets the area values.
 
         This function set the following volume-realted quantities:
 
