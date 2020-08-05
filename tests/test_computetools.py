@@ -133,3 +133,66 @@ def test_ddr(centered_finite):
         assert d_array[ind + 1][ind] == d.data[0][ind]
     for ind in range(N - 1):
         assert d_array[ind][ind + 1] == d.data[1][ind + 1]
+
+
+def test_BC_left_extrap(centered_finite):
+    N = centered_finite.owner.grid.num_points
+    d = centered_finite.BC_left_extrap()
+    d_array = d.toarray()
+    assert d.shape == (N, N)
+    for ind in range(N):
+        assert d_array[ind][ind] == d.data[0][ind]
+    for ind in range(N - 1):
+        assert d_array[ind][ind + 1] == d.data[1][ind + 1]
+    for ind in range(N - 2):
+        assert d_array[ind][ind + 2] == d.data[2][ind + 2]
+
+
+def test_BC_left_avg(centered_finite):
+    N = centered_finite.owner.grid.num_points
+    d = centered_finite.BC_left_avg()
+    d_array = d.toarray()
+    assert d.shape == (N, N)
+    for ind in range(N):
+        assert d_array[ind][ind] == d.data[0][ind]
+    for ind in range(N - 1):
+        assert d_array[ind][ind + 1] == d.data[1][ind + 1]
+    for ind in range(N - 2):
+        assert d_array[ind][ind + 2] == d.data[2][ind + 2]
+
+
+def test_BC_left_quad(centered_finite):
+    N = centered_finite.owner.grid.num_points
+    d = centered_finite.BC_left_quad()
+    d_array = d.toarray()
+    assert d.shape == (N, N)
+    for ind in range(N):
+        assert d_array[ind][ind] == d.data[0][ind]
+    for ind in range(N - 1):
+        assert d_array[ind][ind + 1] == d.data[1][ind + 1]
+    for ind in range(N - 2):
+        assert d_array[ind][ind + 2] == d.data[2][ind + 2]
+
+
+def test_BC_left_flat(centered_finite):
+    N = centered_finite.owner.grid.num_points
+    d = centered_finite.BC_left_flat()
+    d_array = d.toarray()
+    assert d.shape == (N, N)
+    for ind in range(N):
+        assert d_array[ind][ind] == d.data[0][ind]
+    for ind in range(N - 1):
+        assert d_array[ind][ind + 1] == d.data[1][ind + 1]
+
+
+def test_BC_right_extrap(centered_finite):
+    N = centered_finite.owner.grid.num_points
+    d = centered_finite.BC_right_extrap()
+    d_array = d.toarray()
+    assert d.shape == (N, N)
+    for ind in range(N - 2):
+        assert d_array[ind + 2][ind] == d.data[0][ind]
+    for ind in range(N - 1):
+        assert d_array[ind + 1][ind] == d.data[1][ind]
+    for ind in range(N):
+        assert d_array[ind][ind] == d.data[2][ind]
