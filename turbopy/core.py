@@ -597,6 +597,10 @@ class Grid:
         self.cell_edges = self.r
         self.cell_centers = (self.r[1:] + self.r[:-1]) / 2
         self.cell_widths = (self.r[1:] - self.r[:-1])
+        # This will give a divide-by-zero warning.
+        # I'm ok with that for now.
+        self.r_inv = np.zeros_like(self.r)
+        self.r_inv[1:] = 1 / self.r[1:]
         # set the coordinate system
         self.coordinate_system = "cartesian"
         if "coordinate_system" in grid_data:
@@ -614,9 +618,6 @@ class Grid:
         else:
             raise Exception('Coordinate system is undefined')
 
-        with np.errstate(divide='ignore'):
-            self.r_inv = 1 / self.r
-            self.r_inv[self.r_inv==np.inf] = 0
 
     def parse_grid_data(self):
         """
@@ -840,32 +841,6 @@ class Grid:
         self.inverse_interface_volumes[0] = self.inverse_cell_volumes[0]
         self.inverse_interface_volumes[1:-1] = 0.5 * (self.inverse_cell_volumes[1:] + self.inverse_cell_volumes[0:-1])
         self.inverse_interface_volumes[-1] = self.inverse_cell_volumes[-1]
-
-
-    def set_cartesian_areas(self):
-        """
-        This function sets the area values.
-
-        This function set the following volume-realted quantities:
-
-        interface_area(efge.size) - the area element associated with the cell edge
-        area_swept_out            - area swept out by changing grid
-
-        """
-        coordinate_system = self.coordinate_system
-        old_grid = self.cell_edges  # Old grid at beginning of time step
-        new_grid = self.cell_edges  # New grid at end of time step
-        fourthirds = 4.0/3.0
-        if coordinate_system == 'cartesian':
-            self.interface_areas = np.ones_like(new_grid)
-        elif coordinate_system == 'cylindrical':
-            self.interface_areas = np.pi*(old_grid+new_grid)
-        elif coordinate_system == 'spherical':
-            scrh = (old_grid + new_grid) * old_grid
-            self.interface_areas = 4./3.*np.pi*(scrh + new_grid * new_grid)
-        else:
-            raise Exception('Grid type not defined')
-        self.volume_swept_by_changing_grid = self.interface_areas * (new_grid - old_grid)
 
 
     def set_cartesian_areas(self):
