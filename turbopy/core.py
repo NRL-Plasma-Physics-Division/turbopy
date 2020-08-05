@@ -597,10 +597,10 @@ class Grid:
         self.cell_edges = self.r
         self.cell_centers = (self.r[1:] + self.r[:-1]) / 2
         self.cell_widths = (self.r[1:] - self.r[:-1])
-        # This will give a divide-by-zero warning.
-        # I'm ok with that for now.
-        self.r_inv = 1 / self.r
-        self.r_inv[0] = 0
+        with np.errstate(divide='ignore'):
+            self.r_inv = 1 / self.r
+            if self.r[0] == 0:
+                self.r_inv[0] = 0
 
     def parse_grid_data(self):
         """
