@@ -117,13 +117,13 @@ def grid_conf():
             "r_max": 0.1}
     return Grid(grid)
 
-  
+
 def test_grid_init(simple_grid):
     """Test initialization of the Grid class"""
     assert simple_grid.r_min == 0.0
     assert simple_grid.r_max == 0.1
 
-    
+
 def test_parse_grid_data(simple_grid):
     """Test parse_grid_data method in Grid class"""
     assert simple_grid.num_points == 8
@@ -136,7 +136,7 @@ def test_parse_grid_data(simple_grid):
     assert grid2.dr == 0.1/7
     assert grid2.num_points == 8
 
-    
+
 def test_set_value_from_keys(simple_grid):
     """Test set_value_from_keys method in Grid class"""
     assert simple_grid.r_min == 0
@@ -146,21 +146,21 @@ def test_set_value_from_keys(simple_grid):
     with pytest.raises(Exception):
         assert Grid(grid_conf1)
 
-        
+
 def test_generate_field(simple_grid):
     """Test generate_field method in Grid class"""
-    assert np.ndarray.all(simple_grid.generate_field() == np.zeros(8))
-    assert np.ndarray.all(simple_grid.generate_field(3) == np.zeros((8, 3)))
+    assert np.allclose(simple_grid.generate_field(), np.zeros(8))
+    assert np.allclose(simple_grid.generate_field(3), np.zeros((8, 3)))
 
-    
+
 def test_generate_linear(simple_grid):
     """Test generate_linear method in Grid class"""
     comp = []
     for i in range(simple_grid.num_points):
         comp.append(i/(simple_grid.num_points - 1))
-    assert np.ndarray.all(abs(simple_grid.generate_linear() - np.array(comp)) < 0.001)
+    assert np.allclose(simple_grid.generate_linear(), np.array(comp))
 
-    
+
 def test_create_interpolator(simple_grid):
     """Test create_interpolator method in Grid class"""
     field = simple_grid.generate_linear()
@@ -170,7 +170,110 @@ def test_create_interpolator(simple_grid):
     assert np.allclose(interp(field), linear_value)
 
 
-#SimulationClock class test methods
+def test_set_cartesian_volumes():
+    """Test that cell volumes are set properly."""
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "cartesian"}
+    grid2 = Grid(grid_conf2)
+    edges = grid2.cell_edges
+    volumes = edges[1:] - edges[0:-1]
+    assert grid2.cell_volumes.size == volumes.size
+    assert np.allclose(grid2.cell_volumes, volumes)
+    # Test edge-centered volumes
+    volumes = np.zeros_like(edges)
+    volumes[0] = edges[1] - edges[0]
+    for i in range(edges.size-2):
+        volumes[i+1] = 0.5 * (edges[i+2] - edges[i])
+    volumes[-1] = edges[-1] - edges[-2]
+    assert grid2.interface_volumes.size == volumes.size
+    assert np.allclose(grid2.interface_volumes, volumes)
+
+
+def test_set_cylindrical_volumes():
+    """Test that cell volumes are set properly."""
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "cylindrical"}
+    grid2 = Grid(grid_conf2)
+    edges = grid2.cell_edges
+    volumes = np.pi*(edges[1:]**2 - edges[0:-1]**2)
+    assert grid2.cell_volumes.size == volumes.size
+    assert np.allclose(grid2.cell_volumes, volumes)
+    # Test edge-centered volumes
+    volumes = np.zeros_like(edges)
+    volumes[0] = np.pi * (edges[1]**2 - edges[0]**2)
+    for i in range(edges.size-2):
+        volumes[i+1] = 0.5 * np.pi * (edges[i+2]**2 - edges[i]**2)
+    volumes[-1] = np.pi * (edges[-1]**2 - edges[-2]**2)
+
+    assert grid2.interface_volumes.size == volumes.size
+    assert np.allclose(grid2.interface_volumes, volumes)
+
+
+def test_set_spherical_volumes():
+    """Test that cell volumes are set properly."""
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "spherical"}
+    grid2 = Grid(grid_conf2)
+    edges = grid2.cell_edges
+    volumes = 4/3 * np.pi*(edges[1:]**3 - edges[0:-1]**3)
+    assert grid2.cell_volumes.size == volumes.size
+    assert np.allclose(grid2.cell_volumes, volumes)
+    # Test edge-centered volumes
+    volumes = np.zeros_like(edges)
+    volumes[0] = 4/3 * np.pi * (edges[1]**3 - edges[0]**3)
+    for i in range(edges.size-2):
+        volumes[i+1] = 0.5 * 4/3 * np.pi * (edges[i+2]**3 - edges[i]**3)
+    volumes[-1] = 4/3 * np.pi * (edges[-1]**3 - edges[-2]**3)
+
+    assert grid2.interface_volumes.size == volumes.size
+    assert np.allclose(grid2.interface_volumes, volumes)
+
+
+def test_set_cartesian_areas():
+    """Test that cell areas are set properly."""
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "cartesian"}
+    grid2 = Grid(grid_conf2)
+    areas = np.ones_like(grid2.interface_areas)
+    assert grid2.interface_areas.size == areas.size
+    assert np.allclose(grid2.interface_areas, areas)
+
+
+def test_set_cylindrical_areas():
+    """Test that cell areas are set properly."""
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "cylindrical"}
+    grid2 = Grid(grid_conf2)
+    edges = grid2.cell_edges
+    areas = 2.0*np.pi*edges
+    assert grid2.interface_areas.size == areas.size
+    assert np.allclose(grid2.interface_areas, areas)
+
+
+def test_set_spherical_areas():
+    """Test that cell areas are set properly."""
+    grid_conf2 = {"r_min": 0,
+                  "r_max": 1,
+                  "dr": 0.1,
+                  "coordinate_system": "spherical"}
+    grid2 = Grid(grid_conf2)
+    edges = grid2.cell_edges
+    areas = 4.0 * np.pi * edges * edges
+    assert grid2.interface_areas.size == areas.size
+    assert np.allclose(grid2.interface_areas, areas)
+
+
+# SimulationClock class test methods
 def test_integer_num_steps():
     """Tests for initialization of SimulationClock"""
     clock_config = {'start_time': 0.0,
@@ -206,4 +309,4 @@ def test_is_running():
     for i in range(clock2.num_steps):
         clock2.advance()
     assert not clock2.is_running()
-    
+
