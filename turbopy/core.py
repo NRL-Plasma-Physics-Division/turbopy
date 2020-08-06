@@ -279,8 +279,7 @@ class Simulation:
         return None
 
     def __repr__(self):
-        representation = f"{self.__class__.__name__}({self.input_data})"
-        return representation
+        return f"{self.__class__.__name__}({self.input_data})"
 
 class DynamicFactory(ABC):
     """Abstract class which provides dynamic factory functionality
@@ -423,9 +422,7 @@ class PhysicsModule(DynamicFactory):
         pass
 
     def __repr__(self):
-        representation = f"{self.__class__.__name__}({self.input_data})"
-        return representation
-
+        return f"{self.__class__.__name__}({self.input_data})"
 
 class ComputeTool(DynamicFactory):
     """This is the base class for compute tools
@@ -469,8 +466,7 @@ class ComputeTool(DynamicFactory):
         pass
 
     def __repr__(self):
-        representation = f"{self.__class__.__name__}({self.input_data})"
-        return representation
+        return f"{self.__class__.__name__}({self.input_data})"
 
 class SimulationClock:
     """
@@ -552,8 +548,7 @@ class SimulationClock:
         return self.this_step < self.num_steps
 
     def __repr__(self):
-        representation = f"{self.__class__.__name__}({self.clock_data})"
-        return representation
+        return f"{self.__class__.__name__}({self.clock_data})"
 
 class Grid:
     """Grid class
@@ -690,7 +685,7 @@ class Grid:
             Evenly spaced array.
          """
         return np.linspace(0, 1, self.num_points)
-    
+
     def create_interpolator(self, r0):
         """Return a function which linearly interpolates any field on
         this grid, to the point `r0`.
@@ -737,8 +732,7 @@ class Grid:
 
             return interpval
     def __repr__(self):
-        representation = f"{self.__class__.__name__}({self.grid_data})"
-        return representation
+        return f"{self.__class__.__name__}({self.grid_data})"
 
 class Diagnostic(DynamicFactory):
     """Base diagnostic class.
@@ -814,7 +808,6 @@ class Diagnostic(DynamicFactory):
         complete.
         """
         pass
-    
+
     def __repr__(self):
-        representation = f"{self.__class__.__name__}({self.input_data})"
-        return representation
+        return f"{self.__class__.__name__}({self.input_data})"
