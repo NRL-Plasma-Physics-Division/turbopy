@@ -249,6 +249,8 @@ class Simulation:
             if "directory" in params:
                 d = Path(params["directory"])
                 d.mkdir(parents=True, exist_ok=True)
+            else:
+                pass # Should implement a default  directory and filename is none is given
 
             for diag_type, d in diags.items():
                 diagnostic_class = Diagnostic.lookup(diag_type)
