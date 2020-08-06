@@ -518,6 +518,7 @@ class SimulationClock:
 
     def __init__(self, owner: Simulation, clock_data: dict):
         self.owner = owner
+        self.clock_data = clock_data
         self.start_time = clock_data["start_time"]
         self.time = self.start_time
         self.end_time = clock_data["end_time"]
@@ -551,12 +552,7 @@ class SimulationClock:
         return self.this_step < self.num_steps
 
     def __repr__(self):
-        clock_data = {
-            "start_time" : self.start_time,
-            "end_time" : self.end_time,
-            "num_steps" : self.num_steps,
-            "print_time" : self.print_time}
-        representation = f"{self.__class__.__name__}({clock_data})"
+        representation = f"{self.__class__.__name__}({self.clock_data})"
         return representation
 
 class Grid:
@@ -821,3 +817,4 @@ class Diagnostic(DynamicFactory):
     
     def __repr__(self):
         representation = f"{self.__class__.__name__}({self.input_data})"
+        return representation
