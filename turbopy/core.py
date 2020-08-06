@@ -249,27 +249,27 @@ class Simulation:
             if "directory" in params:
                 d = Path(params["directory"])
                 d.mkdir(parents=True, exist_ok=True)
-            else:
+            else: # Might not need this part?
                 d = Path("default_output/")
                 params = {**params, "directory": "default_output"}
                 d.mkdir(parents=True, exist_ok=True)
-
+            
+            
             for diag_type, d in diags.items():
                 diagnostic_class = Diagnostic.lookup(diag_type)
                 if not type(d) is list:
                     d = [d]
+                file_num = 0
                 for di in d:
                     # Values in di supersede values in params because
                     # of the order in which these are combined
                     di = {**params, **di, "type": diag_type}
-                    file_num = 0
+                    if "filename" not in di:
+                        di = {**di, "filename": f"{diag_type}{file_num}.out"}
+                        file_num += 1
                     if "directory" in di and "filename" in di:
                         di["filename"] = str(Path(di["directory"])
                                              / Path(di["filename"]))
-                    else: # Adds default filename if isn't provided
-                        di = {**di, "filename": str(Path(di["directory"])
-                                                    / Path(f"untitled{file_num}"))}
-                        file_num += 1
                     self.diagnostics.append(
                         diagnostic_class(owner=self, input_data=di))
 
