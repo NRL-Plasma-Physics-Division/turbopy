@@ -731,6 +731,7 @@ class Grid:
                                / (rvals[1] - rvals[0]))
 
             return interpval
+
     def __repr__(self):
         return f"{self.__class__.__name__}({self.grid_data})"
 
