@@ -265,7 +265,11 @@ class Simulation:
                     # of the order in which these are combined
                     di = {**params, **di, "type": diag_type}
                     if "filename" not in di:
-                        file_end = di["output_type"]
+                        if "output_type" in di:
+                            file_end = di["output_type"]
+                        else:
+                            di = {**di, "output_type": "out"}
+                            file_end = "out"
                         di = {**di, "filename": f"{diag_type}{file_num}.{file_end}"}
                         file_num += 1
                     if "directory" in di and "filename" in di:
