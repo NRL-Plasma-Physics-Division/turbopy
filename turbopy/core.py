@@ -265,7 +265,8 @@ class Simulation:
                     # of the order in which these are combined
                     di = {**params, **di, "type": diag_type}
                     if "filename" not in di:
-                        di = {**di, "filename": f"{diag_type}{file_num}.out"}
+                        file_end = di["output_type"]
+                        di = {**di, "filename": f"{diag_type}{file_num}.{file_end}"}
                         file_num += 1
                     if "directory" in di and "filename" in di:
                         di["filename"] = str(Path(di["directory"])
