@@ -251,7 +251,7 @@ class Simulation:
                 d.mkdir(parents=True, exist_ok=True)
             else: # Might not need this part?
                 d = Path("default_output/")
-                params = {**params, "directory": "default_output"}
+                params = {**params, "directory": d}
                 d.mkdir(parents=True, exist_ok=True)
             
             
