@@ -133,7 +133,8 @@ def test_read_diagnostics_from_input_should_set_diagnostics_attr_when_called(sim
     simple_sim.read_diagnostics_from_input()
     assert simple_sim.diagnostics[0].input_data["directory"] == Path("default_output/")
     assert simple_sim.diagnostics[0].input_data["output_type"] == "out"
-    assert simple_sim.diagnostics[0].input_data["filename"] == "default_output\\clock0.out"
+    assert simple_sim.diagnostics[0].input_data["filename"] == str(Path("default_output/") 
+                                                                    / Path("clock0.out"))
 
 
 #Grid class test methods
