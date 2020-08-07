@@ -14,6 +14,10 @@ class ExampleModule(PhysicsModule):
         pass
 
 
+class ExampleDiagnostic(Diagnostic):
+    """Example Diagnostic subclass for tests"""
+
+
 # Simulation class test methods
 @pytest.fixture(name='simple_sim')
 def sim_fixt():
@@ -24,6 +28,14 @@ def sim_fixt():
                      "num_steps": 100},
            "Tools": {"ExampleTool": {}},
            "PhysicsModules": {"ExampleModule": {}},
+           "Diagnostics": {
+               #default values come first
+               "clock": {},
+               "ExampleDiagnostic": [
+                   {},
+                   {}
+                   ]
+               }
            }
     return Simulation(dic)
 
@@ -41,7 +53,15 @@ def test_simulation_init_should_create_class_instance_when_called(simple_sim):
                      "end_time": 10,
                      "num_steps": 100},
            "Tools": {"ExampleTool": {}},
-           "PhysicsModules": {"ExampleModule": {}}
+           "PhysicsModules": {"ExampleModule": {}},
+           "Diagnostics": {
+               #default values come first
+               "clock": {},
+               "ExampleDiagnostic": [
+                   {},
+                   {}
+                   ]
+               }
            }
     assert simple_sim.input_data == dic
 
@@ -106,6 +126,14 @@ def test_read_modules_from_input_should_set_modules_attr_when_called(simple_sim)
     simple_sim.read_modules_from_input()
     assert simple_sim.physics_modules[0].owner == simple_sim
     assert simple_sim.physics_modules[0].input_data == {"name": "ExampleModule"}
+
+
+def test_read_diagnostics_from_input_should_set_diagnostics_attr_when_called(simple_sim):
+    """Test read_diagnostic_from_input method in Simulation class"""
+    simple_sim.read_diagnostics_from_input()
+    assert simple_sim.diagnostics[0].input_data["directory"] == Path("default_output/")
+    assert simple_sim.diagnostics[0].input_data["output_type"] == "out"
+    assert simple_sim.diagnostics[0].input_data["filename"] == "default_output\\clock0.out"
 
 
 #Grid class test methods
@@ -309,4 +337,3 @@ def test_is_running():
     for i in range(clock2.num_steps):
         clock2.advance()
     assert not clock2.is_running()
-
