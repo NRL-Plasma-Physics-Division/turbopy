@@ -9,7 +9,7 @@ class ExampleTool(ComputeTool):
 
 
 class ExampleModule(PhysicsModule):
-    """Example PhysicModule subclass for tests"""
+    """Example PhysicsModule subclass for tests"""
     def update(self):
         pass
     
@@ -19,6 +19,7 @@ class ExampleModule(PhysicsModule):
 
 
 class ExampleModule2(PhysicsModule):
+    """Example PHysicsModule subclass with additional attributes"""
     def __init__(self, owner, input_data):
         super().__init__(owner, input_data)
         self.x = 10
@@ -127,17 +128,19 @@ def test_read_modules_from_input_should_set_modules_attr_when_called(simple_sim)
 
 
 def test_exchange_resources(simple_sim):
+    """Test exchange_resources method in PhysicsModule"""
     simple_sim.prepare_simulation()
 
     a = simple_sim.physics_modules[0]
     b = simple_sim.physics_modules[1]
 
-    attrA = {attribute: a.__dict__[attribute] for attribute in a.__dict__
+    attr_a = {attribute: a.__dict__[attribute] for attribute in a.__dict__
              if not attribute.startswith('_')}
-    attrB = {attribute: b.__dict__[attribute] for attribute in b.__dict__
+    attr_b = {attribute: b.__dict__[attribute] for attribute in b.__dict__
              if not attribute.startswith('_')}
 
     assert attrA == attrB
+
 
 #Grid class test methods
 @pytest.fixture(name='simple_grid')
