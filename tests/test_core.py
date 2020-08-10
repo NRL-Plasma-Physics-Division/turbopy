@@ -16,6 +16,11 @@ class ExampleModule(PhysicsModule):
 
 class ExampleDiagnostic(Diagnostic):
     """Example Diagnostic subclass for tests"""
+    def diagnose(self):
+        pass
+
+
+Diagnostic.register("ExampleDiagnostic", ExampleDiagnostic)
 
 
 # Simulation class test methods
@@ -128,16 +133,30 @@ def test_read_modules_from_input_should_set_modules_attr_when_called(simple_sim)
     assert simple_sim.physics_modules[0].input_data == {"name": "ExampleModule"}
 
 
-def test_read_diagnostics_from_input_should_set_diagnostics_attr_when_called(simple_sim):
+def test_default_diagnostic_filename_is_generated_if_no_name_specified(simple_sim):
+    """Test read_diagnostic_from_input method in Simulation class"""
+    simple_sim.read_diagnostics_from_input()
+    input_data = simple_sim.diagnostics[0].input_data
+    assert input_data["directory"] == Path("default_output")
+    assert input_data["filename"] == str(Path("default_output")
+                                         / Path("clock0.out"))
+
+
+def test_default_diagnostic_filename_increments_for_multiple_diagnostics(simple_sim):
     """Test read_diagnostic_from_input method in Simulation class"""
     simple_sim.read_diagnostics_from_input()
     assert simple_sim.diagnostics[0].input_data["directory"] == Path("default_output/")
     assert simple_sim.diagnostics[0].input_data["output_type"] == "out"
-    assert simple_sim.diagnostics[0].input_data["filename"] == str(Path("default_output/") 
-                                                                    / Path("clock0.out"))
+    assert simple_sim.diagnostics[0].input_data["filename"] == str(Path("default_output/")
+                                                                   / Path("clock0.out"))
+    print(simple_sim.diagnostics)
+    input_data = simple_sim.diagnostics[2].input_data
+    assert input_data["directory"] == Path("default_output")
+    assert input_data["filename"] == str(Path("default_output")
+                                         / Path("ExampleDiagnostic1.out"))
 
 
-#Grid class test methods
+# Grid class test methods
 @pytest.fixture(name='simple_grid')
 def grid_conf():
     """Pytest fixture for grid configuration dictionary"""

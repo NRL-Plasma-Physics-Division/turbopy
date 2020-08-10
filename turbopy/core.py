@@ -245,16 +245,14 @@ class Simulation:
                       self.input_data["Diagnostics"].items()
                       if not Diagnostic.is_valid_name(k)}
 
-            # todo: implement a system for making default file names
             if "directory" in params:
                 d = Path(params["directory"])
-                d.mkdir(parents=True, exist_ok=True)
-            else: # Might not need this part?
-                d = Path("default_output/")
-                params = {**params, "directory": d}
-                d.mkdir(parents=True, exist_ok=True)
-            
-            
+            else:
+                # Set a default output directory
+                d = Path("default_output")
+                params["directory"] = d
+            d.mkdir(parents=True, exist_ok=True)
+
             for diag_type, d in diags.items():
                 diagnostic_class = Diagnostic.lookup(diag_type)
                 if not type(d) is list:
@@ -264,17 +262,16 @@ class Simulation:
                     # Values in di supersede values in params because
                     # of the order in which these are combined
                     di = {**params, **di, "type": diag_type}
+                    if "output_type" not in di:
+                        di = {**di, "output_type": "out"}
                     if "filename" not in di:
-                        if "output_type" in di:
-                            file_end = di["output_type"]
-                        else:
-                            di = {**di, "output_type": "out"}
-                            file_end = "out"
-                        di = {**di, "filename": f"{diag_type}{file_num}.{file_end}"}
+                        # Set a default output filename
+                        file_end = di.get("output_type", "out")
+                        di["filename"] = (f"{diag_type}{file_num}"
+                                          f".{file_end}")
                         file_num += 1
-                    if "directory" in di and "filename" in di:
-                        di["filename"] = str(Path(di["directory"])
-                                             / Path(di["filename"]))
+                    di["filename"] = str(Path(di["directory"])
+                                         / Path(di["filename"]))
                     self.diagnostics.append(
                         diagnostic_class(owner=self, input_data=di))
 
