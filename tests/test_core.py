@@ -12,7 +12,24 @@ class ExampleModule(PhysicsModule):
     """Example PhysicModule subclass for tests"""
     def update(self):
         pass
+    
+    def inspect_resource(self, resource: dict):
+        for attribute in resource:
+            self.__setattr__(attribute, resource[attribute])
 
+
+class ExampleModule2(PhysicsModule):
+    def __init__(self, owner, input_data):
+        super().__init__(owner, input_data)
+        self.x = 10
+        self.y = 5
+
+    def update(self):
+        pass
+    
+    def inspect_resource(self, resource: dict):
+        for attribute in resource:
+            self.__setattr__(attribute, resource[attribute])
 
 # Simulation class test methods
 @pytest.fixture(name='simple_sim')
@@ -23,7 +40,7 @@ def sim_fixt():
                      "end_time": 10,
                      "num_steps": 100},
            "Tools": {"ExampleTool": {}},
-           "PhysicsModules": {"ExampleModule": {}},
+           "PhysicsModules": {"ExampleModule": {}, 'ExampleModule2': {}},
            }
     return Simulation(dic)
 
@@ -41,7 +58,7 @@ def test_simulation_init_should_create_class_instance_when_called(simple_sim):
                      "end_time": 10,
                      "num_steps": 100},
            "Tools": {"ExampleTool": {}},
-           "PhysicsModules": {"ExampleModule": {}}
+           "PhysicsModules": {"ExampleModule": {}, "ExampleModule2": {}}
            }
     assert simple_sim.input_data == dic
 
@@ -96,6 +113,7 @@ def test_fundamental_cycle_should_advance_clock_when_called(simple_sim):
 def test_run_should_run_simulation_while_clock_is_running(simple_sim):
     """Test run method in Simulation class"""
     PhysicsModule.register("ExampleModule", ExampleModule)
+    PhysicsModule.register("ExampleModule2", ExampleModule2)
     simple_sim.run()
     assert simple_sim.clock.this_step == 100
     assert simple_sim.clock.time == 10
@@ -104,9 +122,22 @@ def test_run_should_run_simulation_while_clock_is_running(simple_sim):
 def test_read_modules_from_input_should_set_modules_attr_when_called(simple_sim):
     """Test read_modules_from_input method in Simulation calss"""
     simple_sim.read_modules_from_input()
-    assert simple_sim.physics_modules[0].owner == simple_sim
-    assert simple_sim.physics_modules[0].input_data == {"name": "ExampleModule"}
+    assert simple_sim.physics_modules[0]._owner == simple_sim
+    assert simple_sim.physics_modules[0]._input_data == {"name": "ExampleModule"}
 
+
+def test_exchange_resources(simple_sim):
+    simple_sim.prepare_simulation()
+
+    a = simple_sim.physics_modules[0]
+    b = simple_sim.physics_modules[1]
+
+    attrA = {attribute: a.__dict__[attribute] for attribute in a.__dict__
+             if not attribute.startswith('_')}
+    attrB = {attribute: b.__dict__[attribute] for attribute in b.__dict__
+             if not attribute.startswith('_')}
+
+    assert attrA == attrB
 
 #Grid class test methods
 @pytest.fixture(name='simple_grid')
