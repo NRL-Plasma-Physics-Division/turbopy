@@ -16,7 +16,7 @@ class BlockOnSpring(PhysicsModule):
         self.push = owner.find_tool_by_name(input_data["pusher"]).push
 
     def initialize(self):
-        self.position[:] = np.array(self.input_data["x0"])
+        self.position[:] = np.array(self._input_data["x0"])
 
     def exchange_resources(self):
         self.publish_resource({"Block:position": self.position})

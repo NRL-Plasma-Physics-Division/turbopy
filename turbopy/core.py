@@ -343,10 +343,6 @@ class PhysicsModule(DynamicFactory):
 
     Parameters
     ----------
-    _registry : dict
-        Registered derived ComputeTool classes.
-    _factory_type_name : str
-        Type of PhysicsModule child class
     owner : :class:`Simulation`
         Simulation class that PhysicsModule belongs to.
     input_data : dict
@@ -355,21 +351,25 @@ class PhysicsModule(DynamicFactory):
 
     Attributes
     ----------
-    owner : :class:`Simulation`
+    _owner : :class:`Simulation`
         Simulation class that PhysicsModule belongs to.
-    module_type : None
+    _module_type : None
         Module type.
-    input_data : dict
+    _input_data : dict
        Dictionary that contains user defined parameters about this
        object such as its name.
+    _registry : dict
+        Registered derived ComputeTool classes.
+    _factory_type_name : str
+        Type of PhysicsModule child class.
     """
     _factory_type_name = "Physics Module"
     _registry = {}
 
     def __init__(self, owner: Simulation, input_data: dict):
-        self.owner = owner
-        self.module_type = None
-        self.input_data = input_data
+        self._owner = owner
+        self._module_type = None
+        self._input_data = input_data
 
     def publish_resource(self, resource: dict):
         """
@@ -380,9 +380,9 @@ class PhysicsModule(DynamicFactory):
         resource : dict
             resource dictionary to be shared
         """
-        for physics_module in self.owner.physics_modules:
+        for physics_module in self._owner.physics_modules:
             physics_module.inspect_resource(resource)
-        for diagnostic in self.owner.diagnostics:
+        for diagnostic in self._owner.diagnostics:
             diagnostic.inspect_resource(resource)
 
     def inspect_resource(self, resource: dict):
@@ -403,7 +403,7 @@ class PhysicsModule(DynamicFactory):
         other physics modules about data you want to share.
         """
         self.publish_resource({attribute: self.__dict__[attribute] for attribute in self.__dict__
-                               if '_' != attribute[0] and attribute not in ['owner', 'module_type', 'input_data']})
+                               if not attribute.startswith('_')})
 
     def update(self):
         """Do the main work of the PhysicsModule
@@ -425,7 +425,7 @@ class PhysicsModule(DynamicFactory):
         pass
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.input_data})"
+        return f"{self.__class__.__name__}({self._input_data})"
 
 
 class ComputeTool(DynamicFactory):

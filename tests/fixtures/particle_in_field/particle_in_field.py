@@ -26,11 +26,11 @@ class EMWave(PhysicsModule):
         self.k = self.omega / self.c
     
     def initialize(self):
-        phase = - self.omega * 0 + self.k * (self.owner.grid.r - 0.5)
+        phase = - self.omega * 0 + self.k * (self._owner.grid.r - 0.5)
         self.E[:] = self.E0 * np.cos(2 * np.pi * phase)
 
     def update(self):
-        phase = - self.omega * self.owner.clock.time + self.k * (self.owner.grid.r - 0.5)
+        phase = - self.omega * self._owner.clock.time + self.k * (self._owner.grid.r - 0.5)
         self.E[:] = self.E0 * np.cos(2 * np.pi * phase)
         
     def exchange_resources(self):
