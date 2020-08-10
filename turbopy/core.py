@@ -402,7 +402,8 @@ class PhysicsModule(DynamicFactory):
         This is the function where you call publish_resource, to tell
         other physics modules about data you want to share.
         """
-        pass
+        self.publish_resource({attribute: self.__dict__[attribute] for attribute in self.__dict__
+                               if '_' != attribute[0] and attribute not in ['owner', 'module_type', 'input_data']})
 
     def update(self):
         """Do the main work of the PhysicsModule
