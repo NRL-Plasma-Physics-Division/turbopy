@@ -139,7 +139,7 @@ def test_exchange_resources(simple_sim):
     attr_b = {attribute: b.__dict__[attribute] for attribute in b.__dict__
              if not attribute.startswith('_')}
 
-    assert attrA == attrB
+    assert attr_a == attr_b
 
 
 #Grid class test methods
