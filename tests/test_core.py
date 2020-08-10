@@ -146,7 +146,6 @@ def test_default_diagnostic_filename_increments_for_multiple_diagnostics(simple_
     """Test read_diagnostic_from_input method in Simulation class"""
     simple_sim.read_diagnostics_from_input()
     assert simple_sim.diagnostics[0].input_data["directory"] == Path("default_output/")
-    assert simple_sim.diagnostics[0].input_data["output_type"] == "out"
     assert simple_sim.diagnostics[0].input_data["filename"] == str(Path("default_output/")
                                                                    / Path("clock0.out"))
     print(simple_sim.diagnostics)

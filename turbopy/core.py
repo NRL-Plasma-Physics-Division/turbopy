@@ -262,8 +262,6 @@ class Simulation:
                     # Values in di supersede values in params because
                     # of the order in which these are combined
                     di = {**params, **di, "type": diag_type}
-                    if "output_type" not in di:
-                        di = {**di, "output_type": "out"}
                     if "filename" not in di:
                         # Set a default output filename
                         file_end = di.get("output_type", "out")
