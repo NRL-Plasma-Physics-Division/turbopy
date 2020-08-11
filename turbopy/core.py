@@ -93,10 +93,11 @@ class Simulation:
             :class:`Diagnostic` constructors.
 
             If the directory and filename keys are not specified,
-            default values are created in the read_diagnostics_from_input method.
-            default directory is called default_output and the default
-            filename is the name of the DynamicFactory subclass followed
-            by a number.
+            default values are created in the 
+            :method:`read_diagnostics_from_input` method.
+            The default name for the directory is "default_output" and 
+            the default filename is the name of the Diagnostic subclass 
+            followed by a number.
 
         ``"Tools"`` : `dict` [`str`, `dict`], optional
             Dictionary of :class:`ComputeTool` items needed for the
