@@ -1,6 +1,5 @@
 """Tests for turbopy/core.py"""
 import pytest
-import numpy as np
 from turbopy.core import *
 
 
@@ -18,19 +17,9 @@ class ExampleModule(PhysicsModule):
             self.__setattr__(attribute, resource[attribute])
 
 
-class ExampleModule2(PhysicsModule):
-    """Example PHysicsModule subclass with additional attributes"""
-    def __init__(self, owner, input_data):
-        super().__init__(owner, input_data)
-        self.x = 10
-        self.y = 5
+PhysicsModule.register("ExampleModule", ExampleModule)
+ComputeTool.register("ExampleTool", ExampleTool)
 
-    def update(self):
-        pass
-    
-    def inspect_resource(self, resource: dict):
-        for attribute in resource:
-            self.__setattr__(attribute, resource[attribute])
 
 # Simulation class test methods
 @pytest.fixture(name='simple_sim')
@@ -41,7 +30,7 @@ def sim_fixt():
                      "end_time": 10,
                      "num_steps": 100},
            "Tools": {"ExampleTool": {}},
-           "PhysicsModules": {"ExampleModule": {}, 'ExampleModule2': {}},
+           "PhysicsModules": {"ExampleModule": {}, },
            }
     return Simulation(dic)
 
@@ -59,7 +48,7 @@ def test_simulation_init_should_create_class_instance_when_called(simple_sim):
                      "end_time": 10,
                      "num_steps": 100},
            "Tools": {"ExampleTool": {}},
-           "PhysicsModules": {"ExampleModule": {}, "ExampleModule2": {}}
+           "PhysicsModules": {"ExampleModule": {}, }
            }
     assert simple_sim.input_data == dic
 
@@ -97,7 +86,6 @@ def test_read_clock_from_input_should_set_clock_attr_when_called(simple_sim):
 
 def test_read_tools_from_input_should_set_tools_attr_when_called(simple_sim):
     """Test read_tools_from_input method in Simulation class"""
-    ComputeTool.register("ExampleTool", ExampleTool)
     simple_sim.read_tools_from_input()
     assert simple_sim.compute_tools[0].owner == simple_sim
     assert simple_sim.compute_tools[0].input_data == {"type": "ExampleTool"}
@@ -113,8 +101,6 @@ def test_fundamental_cycle_should_advance_clock_when_called(simple_sim):
 
 def test_run_should_run_simulation_while_clock_is_running(simple_sim):
     """Test run method in Simulation class"""
-    PhysicsModule.register("ExampleModule", ExampleModule)
-    PhysicsModule.register("ExampleModule2", ExampleModule2)
     simple_sim.run()
     assert simple_sim.clock.this_step == 100
     assert simple_sim.clock.time == 10
@@ -127,22 +113,7 @@ def test_read_modules_from_input_should_set_modules_attr_when_called(simple_sim)
     assert simple_sim.physics_modules[0]._input_data == {"name": "ExampleModule"}
 
 
-def test_exchange_resources(simple_sim):
-    """Test exchange_resources method in PhysicsModule"""
-    simple_sim.prepare_simulation()
-
-    a = simple_sim.physics_modules[0]
-    b = simple_sim.physics_modules[1]
-
-    attr_a = {attribute: a.__dict__[attribute] for attribute in a.__dict__
-             if not attribute.startswith('_')}
-    attr_b = {attribute: b.__dict__[attribute] for attribute in b.__dict__
-             if not attribute.startswith('_')}
-
-    assert attr_a == attr_b
-
-
-#Grid class test methods
+# Grid class test methods
 @pytest.fixture(name='simple_grid')
 def grid_conf():
     """Pytest fixture for grid configuration dictionary"""
