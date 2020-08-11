@@ -250,7 +250,7 @@ class Simulation:
             else:
                 # Set a default output directory
                 d = Path("default_output")
-                params["directory"] = d
+                params["directory"] = str(d)
             d.mkdir(parents=True, exist_ok=True)
 
             for diag_type, d in diags.items():

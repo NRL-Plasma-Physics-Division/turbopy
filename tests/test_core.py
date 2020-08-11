@@ -137,7 +137,7 @@ def test_default_diagnostic_filename_is_generated_if_no_name_specified(simple_si
     """Test read_diagnostic_from_input method in Simulation class"""
     simple_sim.read_diagnostics_from_input()
     input_data = simple_sim.diagnostics[0].input_data
-    assert input_data["directory"] == Path("default_output")
+    assert input_data["directory"] == str(Path("default_output"))
     assert input_data["filename"] == str(Path("default_output")
                                          / Path("clock0.out"))
 
@@ -145,11 +145,11 @@ def test_default_diagnostic_filename_is_generated_if_no_name_specified(simple_si
 def test_default_diagnostic_filename_increments_for_multiple_diagnostics(simple_sim):
     """Test read_diagnostic_from_input method in Simulation class"""
     simple_sim.read_diagnostics_from_input()
-    assert simple_sim.diagnostics[0].input_data["directory"] == Path("default_output")
+    assert simple_sim.diagnostics[0].input_data["directory"] == str(Path("default_output"))
     assert simple_sim.diagnostics[0].input_data["filename"] == str(Path("default_output")
                                                                    / Path("clock0.out"))
     input_data = simple_sim.diagnostics[2].input_data
-    assert input_data["directory"] == Path("default_output")
+    assert input_data["directory"] == str(Path("default_output"))
     assert input_data["filename"] == str(Path("default_output")
                                          / Path("ExampleDiagnostic1.out"))
 
