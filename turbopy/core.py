@@ -78,7 +78,7 @@ class Simulation:
 
         ``"Diagnostics"`` : `dict` [`str`, `dict`], optional
             Dictionary of :class:`Diagnostic` items needed for the
-            simulaiton.
+            simulation.
 
             Each key in the dictionary should map to a
             :class:`Diagnostic` subclass key in the :class:`Diagnostic`
