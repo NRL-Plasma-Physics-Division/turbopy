@@ -30,7 +30,7 @@ More Resources
 Install turboPy
 ---------------
 
-
+-   Install: `pip install turbopy`
 
 
 turboPy development environment
