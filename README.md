@@ -34,7 +34,7 @@ turboPy Conda environment
 -   Activate: `conda activate turbopy`
 -   Install turboPy into the environment (from the main folder where setup.py is): 
 	- Install turboPy in editable mode (i.e. setuptools "develop mode") if you are modifying turboPy itself: `pip install -e .` 
-	- If you just plan to develop a code using the existing turboPy framework: `pip install .` 
+	- If you just plan to develop a code using the existing turboPy framework: `pip install turbopy` 
 -   Run tests: `pytest`
 
 
