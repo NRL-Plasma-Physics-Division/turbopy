@@ -8,7 +8,7 @@ class ExampleTool(ComputeTool):
 
 
 class ExampleModule(PhysicsModule):
-    """Example PhysicModule subclass for tests"""
+    """Example PhysicsModule subclass for tests"""
     def update(self):
         pass
     
@@ -17,16 +17,14 @@ class ExampleModule(PhysicsModule):
             self.__setattr__(attribute, resource[attribute])
 
 
-PhysicsModule.register("ExampleModule", ExampleModule)
-ComputeTool.register("ExampleTool", ExampleTool)
-
-
 class ExampleDiagnostic(Diagnostic):
     """Example Diagnostic subclass for tests"""
     def diagnose(self):
         pass
 
 
+PhysicsModule.register("ExampleModule", ExampleModule)
+ComputeTool.register("ExampleTool", ExampleTool)
 Diagnostic.register("ExampleDiagnostic", ExampleDiagnostic)
 
 
