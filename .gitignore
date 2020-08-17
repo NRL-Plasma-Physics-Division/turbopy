@@ -19,3 +19,5 @@ _build/
 # tmp directory for test output, etc
 tmp/
 .idea
+build
+dist

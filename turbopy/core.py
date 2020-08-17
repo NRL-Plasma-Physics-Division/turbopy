@@ -78,7 +78,7 @@ class Simulation:
 
         ``"Diagnostics"`` : `dict` [`str`, `dict`], optional
             Dictionary of :class:`Diagnostic` items needed for the
-            simulaiton.
+            simulation.
 
             Each key in the dictionary should map to a
             :class:`Diagnostic` subclass key in the :class:`Diagnostic`
@@ -91,6 +91,13 @@ class Simulation:
             pair is interpreted as a default parameter value, and is
             added to dictionary of parameters for all of the
             :class:`Diagnostic` constructors.
+
+            If the directory and filename keys are not specified,
+            default values are created in the 
+            :method:`read_diagnostics_from_input` method.
+            The default name for the directory is "default_output" and 
+            the default filename is the name of the Diagnostic subclass 
+            followed by a number.
 
         ``"Tools"`` : `dict` [`str`, `dict`], optional
             Dictionary of :class:`ComputeTool` items needed for the
@@ -214,21 +221,21 @@ class Simulation:
         if "Tools" in self.input_data:
             for tool_name, params in self.input_data["Tools"].items():
                 tool_class = ComputeTool.lookup(tool_name)
-                params["type"] = tool_name
-                # TODO: somehow make tool names unique, or prevent
-                #  more than one each
-                self.compute_tools.append(tool_class(
-                    owner=self, input_data=params))
-
+                if not isinstance(params, list):
+                    params = [params]
+                for tool in params:
+                    tool["type"] = tool_name
+                    self.compute_tools.append(tool_class(owner=self, 
+                                                         input_data=tool)) 
+    
     def read_modules_from_input(self):
         """Construct :class:`PhysicsModule` instances based on input"""
         for physics_module_name, physics_module_data in \
                 self.input_data["PhysicsModules"].items():
-            physics_module_class = PhysicsModule.lookup(
-                                            physics_module_name)
+            physics_module_class = PhysicsModule.lookup(physics_module_name)
             physics_module_data["name"] = physics_module_name
             self.physics_modules.append(physics_module_class(
-                            owner=self, input_data=physics_module_data))
+                owner=self, input_data=physics_module_data))
         self.sort_modules()
 
     def read_diagnostics_from_input(self):
@@ -245,22 +252,31 @@ class Simulation:
                       self.input_data["Diagnostics"].items()
                       if not Diagnostic.is_valid_name(k)}
 
-            # todo: implement a system for making default file names
             if "directory" in params:
                 d = Path(params["directory"])
-                d.mkdir(parents=True, exist_ok=True)
+            else:
+                # Set a default output directory
+                d = Path("default_output")
+                params["directory"] = str(d)
+            d.mkdir(parents=True, exist_ok=True)
 
             for diag_type, d in diags.items():
                 diagnostic_class = Diagnostic.lookup(diag_type)
                 if not type(d) is list:
                     d = [d]
+                file_num = 0
                 for di in d:
                     # Values in di supersede values in params because
                     # of the order in which these are combined
                     di = {**params, **di, "type": diag_type}
-                    if "directory" in di and "filename" in di:
-                        di["filename"] = str(Path(di["directory"])
-                                             / Path(di["filename"]))
+                    if "filename" not in di:
+                        # Set a default output filename
+                        file_end = di.get("output_type", "out")
+                        di["filename"] = (f"{diag_type}{file_num}"
+                                          f".{file_end}")
+                        file_num += 1
+                    di["filename"] = str(Path(di["directory"])
+                                         / Path(di["filename"]))
                     self.diagnostics.append(
                         diagnostic_class(owner=self, input_data=di))
 
@@ -270,10 +286,11 @@ class Simulation:
         Unused stub for future implementation"""
         pass
 
-    def find_tool_by_name(self, tool_name: str):
+    def find_tool_by_name(self, tool_name: str, custom_name: str = None):
         """Returns the :class:`ComputeTool` associated with the
         given name"""
-        tools = [t for t in self.compute_tools if t.name == tool_name]
+        tools = [t for t in self.compute_tools if t.name == tool_name 
+                 and t.custom_name == custom_name]
         if len(tools) == 1:
             return tools[0]
         return None
@@ -457,6 +474,10 @@ class ComputeTool(DynamicFactory):
         object such as its name.
     name : str
         Type of ComputeTool.
+    custom_name: str
+        Name given to individual instance of tool, optional.
+        Used when multiple tools of the same type exist in one 
+        :class:`Simulation`.
     """
 
     _factory_type_name = "Compute Tool"
@@ -466,6 +487,9 @@ class ComputeTool(DynamicFactory):
         self.owner = owner
         self.input_data = input_data
         self.name = input_data["type"]
+        self.custom_name = None
+        if "custom_name" in input_data:
+            self.custom_name = input_data["custom_name"]
 
     def initialize(self):
         """Perform any initialization operations needed for this tool"""
@@ -533,8 +557,8 @@ class SimulationClock:
         if "num_steps" in clock_data:
             self.num_steps = clock_data["num_steps"]
             self.dt = (
-                    (clock_data["end_time"] - clock_data["start_time"])
-                    / clock_data["num_steps"])
+                (clock_data["end_time"] - clock_data["start_time"])
+                / clock_data["num_steps"])
         elif "dt" in clock_data:
             self.dt = clock_data["dt"]
             self.num_steps = (self.end_time - self.start_time) / self.dt
@@ -642,7 +666,7 @@ class Grid:
         else:
             self.set_value_from_keys("dr", {"dr", "dx"})
             self.num_points = 1 + (self.r_max - self.r_min) / self.dr
-            if not (self.num_points % 1 == 0):
+            if not self.num_points % 1 == 0:
                 raise (RuntimeError("Invalid grid spacing: "
                                     "configuration does not imply "
                                     "integer number of grid points"))
@@ -810,8 +834,7 @@ class Grid:
 
     def set_interface_volumes(self):
         self.interface_volumes = np.zeros_like(self.cell_edges)
-        self.inverse_interface_volumes = np.zeros_like(
-                                            self.interface_volumes)
+        self.inverse_interface_volumes = np.zeros_like(self.interface_volumes)
 
         self.interface_volumes[0] = self.cell_volumes[0]
         self.interface_volumes[1:-1] = 0.5 * (self.cell_volumes[1:]

@@ -1,20 +1,16 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-# Note: To use the 'upload' functionality of this file, you must:
-#   $ pip install twine
-
 import io
 import os
 import sys
 from shutil import rmtree
 
-from setuptools import find_packages, setup, Command
+from setuptools import find_namespace_packages, setup, Command
 
 # Package meta-data.
 NAME = 'turbopy'
-DESCRIPTION = 'A lightweight computational physics framework, which implements a "Simulation, PhysicsModule, ComputeTool" class hierarchy.'
-URL = ''
+DESCRIPTION = ('A lightweight computational physics framework, which '
+               'implements a "Simulation, PhysicsModule, ComputeTool" '
+               'class hierarchy.')
+URL = 'https://github.com/NRL-Plasma-Physics-Division/turbopy'
 EMAIL = 'steve.richardson@nrl.navy.mil'
 AUTHOR = 'Steve Richardson'
 REQUIRES_PYTHON = '>=3.7.0'
@@ -22,23 +18,24 @@ VERSION = None
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'numpy', 'scipy', 'qtoml'
+    'numpy', 'scipy', 'qtoml', 'xarray'
 ]
 
 # What packages are optional?
 EXTRAS = {
-    # 'fancy feature': ['django'],
 }
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------
 # Except, perhaps the License and Trove Classifiers!
-# If you do change the License, remember to change the Trove Classifier for that!
+# If you do change the License, remember to change the
+# Trove Classifier for that!
 
 here = os.path.abspath(os.path.dirname(__file__))
 
 # Import the README and use it as the long-description.
-# Note: this will only work if 'README.md' is present in your MANIFEST.in file!
+# Note: this will only work if 'README.md' is present
+# in your MANIFEST.in file!
 try:
     with io.open(os.path.join(here, 'README.md'), encoding='utf-8') as f:
         long_description = '\n' + f.read()
@@ -103,8 +100,7 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
-    # packages=find_packages(exclude=('tests',)),
-    # If your package is a single module, use this instead of 'packages':
+    packages=find_namespace_packages(),
     py_modules=['turbopy'],
 
     # entry_points={
