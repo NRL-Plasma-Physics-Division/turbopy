@@ -38,8 +38,7 @@ turboPy development environment
 
 -   Create a conda environment for turboPy: `conda env create -f environment.yml`
 -   Activate: `conda activate turbopy`
--   Install turboPy into the environment (from the main folder where setup.py is): 
-	- Install turboPy in editable mode (i.e. setuptools "develop mode") if you are modifying turboPy itself: `pip install -e .` 
+-   Install turboPy in editable mode (i.e. setuptools "develop mode") if you are modifying turboPy itself: `pip install -e .` 
 -   Run tests: `pytest`
 
 If using `pylint` (which you should!) add `variable-rgx=[a-z0-9_]{1,30}$` to your .pylintrc file to allow single character variable names.
