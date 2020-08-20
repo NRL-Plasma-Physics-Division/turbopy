@@ -467,9 +467,9 @@ class ComputeTool(DynamicFactory):
         Registered derived ComputeTool classes.
     _factory_type_name : str
         Type of ComputeTool child class
-    owner : :class:`Simulation`
+    _owner : :class:`Simulation`
         Simulation class that ComputeTool belongs to.
-    input_data : dict
+    _input_data : dict
         Dictionary that contains user defined parameters about this
         object such as its name.
     name : str
@@ -484,8 +484,8 @@ class ComputeTool(DynamicFactory):
     _registry = {}
 
     def __init__(self, owner: Simulation, input_data: dict):
-        self.owner = owner
-        self.input_data = input_data
+        self._owner = owner
+        self._input_data = input_data
         self.name = input_data["type"]
         self.custom_name = None
         if "custom_name" in input_data:
@@ -496,7 +496,7 @@ class ComputeTool(DynamicFactory):
         pass
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.input_data})"
+        return f"{self.__class__.__name__}({self._input_data})"
 
 
 class SimulationClock:
@@ -525,7 +525,7 @@ class SimulationClock:
 
     Attributes
     ----------
-    owner : :class:`Simulation`
+    _owner : :class:`Simulation`
         Simulation class that SimulationClock belongs to.
     start_time : float
         Clock start time.
@@ -544,7 +544,7 @@ class SimulationClock:
     """
 
     def __init__(self, owner: Simulation, clock_data: dict):
-        self.owner = owner
+        self._owner = owner
         self.clock_data = clock_data
         self.start_time = clock_data["start_time"]
         self.time = self.start_time
@@ -867,9 +867,9 @@ class Diagnostic(DynamicFactory):
         Type of DynamicFactory child class
     _registry: dict
         Registered derived Diagnostic classes
-    owner: Simulation
+    _owner: Simulation
         The Simulation object that contains this object
-    input_data: dict
+    _input_data: dict
         Dictionary that contains user defined parameters about this
         object such as its name.
     """
@@ -878,8 +878,8 @@ class Diagnostic(DynamicFactory):
     _registry = {}
 
     def __init__(self, owner: Simulation, input_data: dict):
-        self.owner = owner
-        self.input_data = input_data
+        self._owner = owner
+        self._input_data = input_data
 
     def inspect_resource(self, resource: dict):
         """Save references to data from other PhysicsModules
@@ -926,4 +926,4 @@ class Diagnostic(DynamicFactory):
         pass
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.input_data})"
+        return f"{self.__class__.__name__}({self._input_data})"

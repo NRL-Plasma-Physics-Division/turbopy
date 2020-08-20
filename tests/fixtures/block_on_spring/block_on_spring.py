@@ -47,14 +47,14 @@ class BlockDiagnostic(Diagnostic):
         functions = {"stdout": self.print_diagnose,
                      "csv": self.csv_diagnose,
                      }
-        self.output_function = functions[self.input_data["output_type"]]
-        if self.input_data["output_type"] == "csv":
-            diagnostic_size = (self.owner.clock.num_steps + 1, 3)
-            self.csv = CSVOutputUtility(self.input_data["filename"], diagnostic_size)
+        self.output_function = functions[self._input_data["output_type"]]
+        if self._input_data["output_type"] == "csv":
+            diagnostic_size = (self._owner.clock.num_steps + 1, 3)
+            self.csv = CSVOutputUtility(self._input_data["filename"], diagnostic_size)
 
     def finalize(self):
         self.diagnose()
-        if self.input_data["output_type"] == "csv":
+        if self._input_data["output_type"] == "csv":
             self.csv.finalize()
 
     def print_diagnose(self, data):
@@ -74,7 +74,7 @@ class ForwardEuler(ComputeTool):
         self.dt = None
 
     def initialize(self):
-        self.dt = self.owner.clock.dt
+        self.dt = self._owner.clock.dt
 
     def push(self, position, momentum, mass, spring_constant):
         p0 = momentum.copy()
@@ -98,7 +98,7 @@ class BackwardEuler(ComputeTool):
         self.dt = None
 
     def initialize(self):
-        self.dt = self.owner.clock.dt
+        self.dt = self._owner.clock.dt
 
     def push(self, position, momentum, mass, spring_constant):
         factor = 1.0 / (1 + self.dt ** 2 * spring_constant / mass)
@@ -117,7 +117,7 @@ class Leapfrog(ComputeTool):
         self.dt = None
 
     def initialize(self):
-        self.dt = self.owner.clock.dt
+        self.dt = self._owner.clock.dt
 
     def push(self, position, momentum, mass, spring_constant):
         position[:] = position + self.dt * momentum / mass

@@ -112,7 +112,7 @@ def test_setup_ddx(fin_diff):
     assert center(y).shape == (10,)
     assert np.allclose(center(y), fin_diff.centered_difference(y))
 
-    fin_diff.input_data['method'] = 'upwind_left'
+    fin_diff._input_data['method'] = 'upwind_left'
     upwind = fin_diff.setup_ddx()
     assert upwind == fin_diff.upwind_left
     assert upwind(y).shape == (10,)
@@ -121,8 +121,8 @@ def test_setup_ddx(fin_diff):
 
 def test_centered_difference(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's centered_difference method."""
-    dr = fin_diff.owner.grid.dr
-    f = fin_diff.owner.grid.generate_field()
+    dr = fin_diff._owner.grid.dr
+    f = fin_diff._owner.grid.generate_field()
     y = np.arange(0, 10)
 
     assert np.allclose(fin_diff.centered_difference(y),
@@ -131,8 +131,8 @@ def test_centered_difference(fin_diff):
 
 def test_upwind_left(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's upwind_left method."""
-    cell_widths = fin_diff.owner.grid.cell_widths
-    f = fin_diff.owner.grid.generate_field()
+    cell_widths = fin_diff._owner.grid.cell_widths
+    f = fin_diff._owner.grid.generate_field()
     y = np.arange(0, 10)
 
     assert np.allclose(fin_diff.upwind_left(y), np.append([f[0]], (y[1:] - y[:-1]) / cell_widths))
@@ -140,7 +140,7 @@ def test_upwind_left(fin_diff):
 
 def test_ddx(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's ddx method."""
-    N = fin_diff.owner.grid.num_points
+    N = fin_diff._owner.grid.num_points
     g = 1 / (2.0 * fin_diff.dr)
     d = fin_diff.ddx()
     assert d.shape == (N, N)
@@ -151,9 +151,9 @@ def test_ddx(fin_diff):
 def test_radial_curl(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's radial_curl method."""
     with np.errstate(divide='ignore'):
-        N = fin_diff.owner.grid.num_points
-        dr = fin_diff.owner.grid.dr
-        r = fin_diff.owner.grid.r
+        N = fin_diff._owner.grid.num_points
+        dr = fin_diff._owner.grid.dr
+        r = fin_diff._owner.grid.r
         g = 1 / (2.0 * dr)
         below = np.append(-g * (r[:-1] / r[1:])[:-1], [0.0, 0.0])
         diag = np.append(np.zeros(N - 1), [1 / dr])
@@ -167,9 +167,9 @@ def test_radial_curl(fin_diff):
 def test_del2_radial(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's del2_radial method."""
     with np.errstate(divide='ignore'):
-        N = fin_diff.owner.grid.num_points
-        dr = fin_diff.owner.grid.dr
-        r = fin_diff.owner.grid.r
+        N = fin_diff._owner.grid.num_points
+        dr = fin_diff._owner.grid.dr
+        r = fin_diff._owner.grid.r
         g1 = 1 / (2.0 * dr)
         g2 = 1 / (dr ** 2)
         below = np.append(-g1 / r[1:], [-g1]) + (g2 * np.ones(N))
@@ -189,8 +189,8 @@ def test_del2_radial(fin_diff):
 
 def test_del2(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's del2 method."""
-    N = fin_diff.owner.grid.num_points
-    dr = fin_diff.owner.grid.dr
+    N = fin_diff._owner.grid.num_points
+    dr = fin_diff._owner.grid.dr
     g = 1 / (dr ** 2)
 
     below = g * np.ones(N)
@@ -206,8 +206,8 @@ def test_del2(fin_diff):
 
 def test_ddr(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's ddr method."""
-    N = fin_diff.owner.grid.num_points
-    dr = fin_diff.owner.grid.dr
+    N = fin_diff._owner.grid.num_points
+    dr = fin_diff._owner.grid.dr
     g1 = 1 / (2.0 * dr)
 
     below = -g1 * np.ones(N)
@@ -222,7 +222,7 @@ def test_ddr(fin_diff):
 
 def test_BC_left_extrap(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's BC_left_extrap method."""
-    N = fin_diff.owner.grid.num_points
+    N = fin_diff._owner.grid.num_points
 
     diag = np.append(0, np.ones(N-1))
     above = np.append([0.0, 2.0], np.zeros(N-2))
@@ -236,7 +236,7 @@ def test_BC_left_extrap(fin_diff):
 
 def test_BC_left_avg(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's BC_left_avg method."""
-    N = fin_diff.owner.grid.num_points
+    N = fin_diff._owner.grid.num_points
 
     diag = np.append(0, np.ones(N - 1))
     above = np.append([0.0, 1.5], np.zeros(N - 2))
@@ -250,8 +250,8 @@ def test_BC_left_avg(fin_diff):
 
 def test_BC_left_quad(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's BC_left_quad method."""
-    N = fin_diff.owner.grid.num_points
-    r = fin_diff.owner.grid.r
+    N = fin_diff._owner.grid.num_points
+    r = fin_diff._owner.grid.r
     R = (r[1]**2 + r[2]**2)/(r[2]**2 - r[1]**2)/2
 
     diag = np.append(0, np.ones(N - 1))
@@ -266,7 +266,7 @@ def test_BC_left_quad(fin_diff):
 
 def test_BC_left_flat(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's BC_left_flat method."""
-    N = fin_diff.owner.grid.num_points
+    N = fin_diff._owner.grid.num_points
 
     diag = np.append(0, np.ones(N - 1))
     above = np.append([0.0, 1], np.zeros(N - 2))
@@ -278,7 +278,7 @@ def test_BC_left_flat(fin_diff):
 
 def test_BC_right_extrap(fin_diff):
     """Tests for turbopy.computetools.FiniteDifference's BC_right_extrap method."""
-    N = fin_diff.owner.grid.num_points
+    N = fin_diff._owner.grid.num_points
 
     below2 = np.append(np.zeros(N - 3), [-1.0, 0.0, 0.0])
     below = np.append(np.zeros(N - 2), [2.0, 0.0])

@@ -22,8 +22,8 @@ def field_fixt():
                  "filename": "output.csv",
                  "dump_interval": 1}
     field = FieldDiagnostic(Simulation(sim_dic), field_dic)
-    field.owner.read_clock_from_input()
-    field.owner.read_grid_from_input()
+    field._owner.read_clock_from_input()
+    field._owner.read_grid_from_input()
     return field
 
 #Test methods for FieldDiagnostic class
@@ -42,7 +42,7 @@ def test_check_step_should_update_last_dump_after_dump_interval_has_passed(simpl
     """Tests check_step method in FieldDiagnostic class"""
     simple_field.inspect_resource({"Field": np.linspace(0, 1, 2)})
     simple_field.initialize()
-    simple_field.owner.clock.time = 1
+    simple_field._owner.clock.time = 1
     simple_field.check_step()
     assert simple_field.last_dump == 1
 

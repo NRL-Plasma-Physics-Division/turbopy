@@ -46,8 +46,8 @@ class PoissonSolver1DRadial(ComputeTool):
         :class:`numpy.ndarray`
             Vector containing the finite difference solution
         """
-        r = self.owner.grid.r
-        dr = np.mean(self.owner.grid.cell_widths)
+        r = self._owner.grid.r
+        dr = np.mean(self._owner.grid.cell_widths)
         I1 = np.cumsum(r * sources * dr)
         integrand = I1 * dr / r
         # linearly extrapolate to r = 0
@@ -82,7 +82,7 @@ class FiniteDifference(ComputeTool):
     """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
-        self.dr = self.owner.grid.dr
+        self.dr = self._owner.grid.dr
     
     def setup_ddx(self):
         """Select between centered and upwind finite difference
@@ -94,11 +94,11 @@ class FiniteDifference(ComputeTool):
             :meth:`upwind_left`, based on the configuration option
             :attr:`input_data["method"]`
         """
-        assert (self.input_data["method"] in
+        assert (self._input_data["method"] in
                 ["centered", "upwind_left"])
-        if self.input_data["method"] == "centered":
+        if self._input_data["method"] == "centered":
             return self.centered_difference
-        if self.input_data["method"] == "upwind_left":
+        if self._input_data["method"] == "upwind_left":
             return self.upwind_left
     
     def centered_difference(self, y):
@@ -115,7 +115,7 @@ class FiniteDifference(ComputeTool):
             Estimate of the derivative dy/dx constructed using the
             centered finite difference method
         """
-        d = self.owner.grid.generate_field()
+        d = self._owner.grid.generate_field()
         d[1:-1] = (y[2:] - y[:-2]) / (2 * self.dr)
         return d
 
@@ -133,8 +133,8 @@ class FiniteDifference(ComputeTool):
             Estimate of the derivative dy/dx constructed using the
             left upwind finite difference method
         """
-        d = self.owner.grid.generate_field()
-        d[1:] = (y[1:] - y[:-1]) / self.owner.grid.cell_widths
+        d = self._owner.grid.generate_field()
+        d[1:] = (y[1:] - y[:-1]) / self._owner.grid.cell_widths
         return d
 
     def ddx(self):
@@ -146,7 +146,7 @@ class FiniteDifference(ComputeTool):
             Matrix which implements the centered finite difference
             approximation to df/dx
         """
-        N = self.owner.grid.num_points
+        N = self._owner.grid.num_points
         g = 1/(2.0 * self.dr)
         col_below = np.zeros(N) - g
         col_above = np.zeros(N) + g
@@ -163,15 +163,15 @@ class FiniteDifference(ComputeTool):
             Matrix which implements a finite difference approximation
             to (rf)'/r = (1/r)(d/dr)(rf)
         """
-        N = self.owner.grid.num_points
+        N = self._owner.grid.num_points
         g = 1/(2.0 * self.dr)
         col_below = np.zeros(N)
         col_diag = np.zeros(N)
         col_above = np.zeros(N)
-        col_below[:-1] = -g * (self.owner.grid.r[:-1]
-                               / self.owner.grid.r[1:])
-        col_above[1:] = g * (self.owner.grid.r[1:]
-                             / self.owner.grid.r[:-1])
+        col_below[:-1] = -g * (self._owner.grid.r[:-1]
+                               / self._owner.grid.r[1:])
+        col_above[1:] = g * (self._owner.grid.r[1:]
+                             / self._owner.grid.r[:-1])
 
         # Set boundary conditions
         # At r=0, use B~linear, and B=0.
@@ -194,13 +194,13 @@ class FiniteDifference(ComputeTool):
         :class:`scipy.sparse.dia_matrix`
             Matrix which implements a finite difference approximation
             to (1/r)(d/dr)(r (df/dr))"""
-        N = self.owner.grid.num_points
+        N = self._owner.grid.num_points
         g1 = 1/(2.0 * self.dr)
         col_below = -g1 * np.ones(N)
         col_above = g1 * np.ones(N)
         
-        col_above[1:] = col_above[1:] / self.owner.grid.r[:-1]
-        col_below[:-1] = col_below[:-1] / self.owner.grid.r[1:]
+        col_above[1:] = col_above[1:] / self._owner.grid.r[:-1]
+        col_below[:-1] = col_below[:-1] / self._owner.grid.r[1:]
         
         # BC at r=0
         col_above[1] = 0
@@ -230,7 +230,7 @@ class FiniteDifference(ComputeTool):
         :class:`scipy.sparse.dia_matrix`
             Matrix which implements a finite difference approximation
             to (d/dx)(df/dx)"""
-        N = self.owner.grid.num_points
+        N = self._owner.grid.num_points
         
         g2 = 1/(self.dr**2)
         col_below = g2 * np.ones(N)
@@ -252,7 +252,7 @@ class FiniteDifference(ComputeTool):
             Matrix which implements a finite difference approximation
             to df/dr
         """
-        N = self.owner.grid.num_points
+        N = self._owner.grid.num_points
         g1 = 1/(2.0 * self.dr)
         col_below = -g1 * np.ones(N)
         col_above = g1 * np.ones(N)
@@ -272,7 +272,7 @@ class FiniteDifference(ComputeTool):
             boundary such that the solution at the first two internal
             grid points is extrapolated to the boundary point.
         """
-        N = self.owner.grid.num_points
+        N = self._owner.grid.num_points
         col_diag = np.ones(N)
         col_above = np.zeros(N)
         col_above2 = np.zeros(N)
@@ -295,7 +295,7 @@ class FiniteDifference(ComputeTool):
             Matrix which implements a boundary condition for the left
             boundary.
         """
-        N = self.owner.grid.num_points
+        N = self._owner.grid.num_points
         col_diag = np.ones(N)
         col_above = np.zeros(N)
         col_above2 = np.zeros(N)
@@ -319,8 +319,8 @@ class FiniteDifference(ComputeTool):
             boundary such that the solution at the first two internal
             grid points is extrapolated to the boundary point.
         """
-        N = self.owner.grid.num_points
-        r = self.owner.grid.r
+        N = self._owner.grid.num_points
+        r = self._owner.grid.r
         col_diag = np.ones(N)
         col_above = np.zeros(N)
         col_above2 = np.zeros(N)
@@ -345,7 +345,7 @@ class FiniteDifference(ComputeTool):
             boundary such that the derivative of the solution is zero
             at the boundary.
         """
-        N = self.owner.grid.num_points
+        N = self._owner.grid.num_points
         col_diag = np.ones(N)
         col_above = np.zeros(N)
         # for col_above, the first element is dropped
@@ -366,7 +366,7 @@ class FiniteDifference(ComputeTool):
             boundary such that the solution at the first two internal
             grid points is extrapolated to the boundary point.
         """
-        N = self.owner.grid.num_points
+        N = self._owner.grid.num_points
         col_diag = np.ones(N)
         col_below = np.zeros(N)
         col_below2 = np.zeros(N)
@@ -424,7 +424,7 @@ class BorisPush(ComputeTool):
         B: :class:`numpy.ndarray`
             The value of the magnetic field at the particle
         """
-        dt = self.owner.clock.dt
+        dt = self._owner.clock.dt
 
         vminus = momentum + dt * E * charge / 2
         m1 = np.sqrt(mass**2 + np.sum(momentum*momentum, axis=-1)

@@ -58,6 +58,7 @@ class CSVOutputUtility:
         with open(self.filename, 'wb') as f:
             np.savetxt(f, self.buffer, delimiter=",")
 
+
 class PointDiagnostic(Diagnostic):
     """
     Parameters
@@ -130,19 +131,19 @@ class PointDiagnostic(Diagnostic):
         as an instance of the :class: 'CSVOuputUtility' class.
         """
         # set up function to interpolate the field value
-        self.get_value = self.owner.grid.create_interpolator(
+        self.get_value = self._owner.grid.create_interpolator(
                                 self.location)
 
         # setup output method
         functions = {"stdout": self.print_diagnose,
                      "csv": self.csv_diagnose,
                      }
-        self.output_function = functions[self.input_data["output_type"]]
+        self.output_function = functions[self._input_data["output_type"]]
 
-        if self.input_data["output_type"] == "csv":
-            diagnostic_size = (self.owner.clock.num_steps + 1, 1)
+        if self._input_data["output_type"] == "csv":
+            diagnostic_size = (self._owner.clock.num_steps + 1, 1)
             # Use composition to provide csv i/o functionality
-            self.csv = CSVOutputUtility(self.input_data["filename"],
+            self.csv = CSVOutputUtility(self._input_data["filename"],
                                         diagnostic_size)
 
     def csv_diagnose(self, data):
@@ -161,7 +162,7 @@ class PointDiagnostic(Diagnostic):
         Write the CSV data to file if CSV is the proper output type.
         """
         self.diagnose()
-        if self.input_data["output_type"] == "csv":
+        if self._input_data["output_type"] == "csv":
             self.csv.finalize()
 
 
@@ -217,9 +218,9 @@ class FieldDiagnostic(Diagnostic):
         Run diagnostic if dump_interval time has passed since last_dump
         and update last_dump with current time if run.
         """
-        if self.owner.clock.time >= self.last_dump + self.dump_interval:
+        if self._owner.clock.time >= self.last_dump + self.dump_interval:
             self.do_diagnostic()
-            self.last_dump = self.owner.clock.time
+            self.last_dump = self._owner.clock.time
 
     def do_diagnostic(self):
         """
@@ -264,23 +265,23 @@ class FieldDiagnostic(Diagnostic):
         if not self.field_was_found:
             raise (RuntimeError(f"Diagnostic field {self.field_name}"
                                 " was not found"))
-        self.diagnostic_size = (self.owner.clock.num_steps + 1,
+        self.diagnostic_size = (self._owner.clock.num_steps + 1,
                                 self.field.shape[0])
-        if "dump_interval" in self.input_data:
-            self.dump_interval = self.input_data["dump_interval"]
+        if "dump_interval" in self._input_data:
+            self.dump_interval = self._input_data["dump_interval"]
             self.diagnose = self.check_step
             self.last_dump = 0
             self.diagnostic_size = (int(np.ceil(
-                self.owner.clock.end_time / self.dump_interval) + 1),
+                self._owner.clock.end_time / self.dump_interval) + 1),
                 self.field.shape[0])
 
             # setup output method
         functions = {"stdout": self.print_diagnose,
                      "csv": self.csv_diagnose,
                      }
-        self.output_function = functions[self.input_data["output_type"]]
-        if self.input_data["output_type"] == "csv":
-            self.csv = CSVOutputUtility(self.input_data["filename"],
+        self.output_function = functions[self._input_data["output_type"]]
+        if self._input_data["output_type"] == "csv":
+            self.csv = CSVOutputUtility(self._input_data["filename"],
                                         self.diagnostic_size)
 
     def csv_diagnose(self, data):
@@ -299,7 +300,7 @@ class FieldDiagnostic(Diagnostic):
         Write the CSV data to file if CSV is the proper output type.
         """
         self.do_diagnostic()
-        if self.input_data["output_type"] == "csv":
+        if self._input_data["output_type"] == "csv":
             self.csv.finalize()
 
 
@@ -337,7 +338,7 @@ class GridDiagnostic(Diagnostic):
     def initialize(self):
         """Save grid data into CSV file"""
         with open(self.filename, 'wb') as f:
-            np.savetxt(f, self.owner.grid.r, delimiter=",")
+            np.savetxt(f, self._owner.grid.r, delimiter=",")
 
 
 class ClockDiagnostic(Diagnostic):
@@ -372,13 +373,13 @@ class ClockDiagnostic(Diagnostic):
 
     def diagnose(self):
         """Append time into the csv buffer."""
-        self.csv.append(self.owner.clock.time)
+        self.csv.append(self._owner.clock.time)
 
     def initialize(self):
         """Initialize 'self.csv' as an instance of the
         :class:'CSVOuputUtility' class."""
-        diagnostic_size = (self.owner.clock.num_steps + 1, 1)
-        self.csv = CSVOutputUtility(self.input_data["filename"],
+        diagnostic_size = (self._owner.clock.num_steps + 1, 1)
+        self.csv = CSVOutputUtility(self._input_data["filename"],
                                     diagnostic_size)
 
     def finalize(self):

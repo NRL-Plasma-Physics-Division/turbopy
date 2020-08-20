@@ -82,14 +82,14 @@ class ParticleDiagnostic(Diagnostic):
         functions = {"stdout": self.print_diagnose,
                      "csv": self.csv_diagnose,
                      }
-        self.output_function = functions[self.input_data["output_type"]]
-        if self.input_data["output_type"] == "csv":
-            diagnostic_size = (self.owner.clock.num_steps + 1, 3)
-            self.csv = CSVOutputUtility(self.input_data["filename"], diagnostic_size)
+        self.output_function = functions[self._input_data["output_type"]]
+        if self._input_data["output_type"] == "csv":
+            diagnostic_size = (self._owner.clock.num_steps + 1, 3)
+            self.csv = CSVOutputUtility(self._input_data["filename"], diagnostic_size)
 
     def finalize(self):
         self.diagnose()
-        if self.input_data["output_type"] == "csv":
+        if self._input_data["output_type"] == "csv":
             self.csv.finalize()
 
     def print_diagnose(self, data):
@@ -109,7 +109,7 @@ class ParticleDiagnostic(Diagnostic):
 #         super().do_diagnostic()
 #         plt.clf()
 #         self.field.plot()
-#         plt.title(f"Time: {self.owner.clock.time:0.3e} s")
+#         plt.title(f"Time: {self._owner.clock.time:0.3e} s")
 #         plt.pause(0.01)
 # 
 #     def finalize(self):
@@ -124,7 +124,7 @@ class ForwardEuler(ComputeTool):
         self.dt = None
         
     def initialize(self):
-        self.dt = self.owner.clock.dt
+        self.dt = self._owner.clock.dt
     
     def push(self, position, momentum, charge, mass, E, B):
         p0 = momentum.copy()
