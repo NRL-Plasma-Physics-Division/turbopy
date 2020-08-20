@@ -507,7 +507,7 @@ class SimulationClock:
     ----------
     owner : :class:`Simulation`
         Simulation class that SimulationClock belongs to.
-    clock_data : dict
+    input_data : dict
         Dictionary of parameters needed to define the simulation
         clock.
 
@@ -527,6 +527,10 @@ class SimulationClock:
     ----------
     _owner : :class:`Simulation`
         Simulation class that SimulationClock belongs to.
+    _input_data : dict
+        Dictionary of parameters needed to define the simulation
+        clock.
+    
     start_time : float
         Clock start time.
     time : float
@@ -543,24 +547,24 @@ class SimulationClock:
         Time passed at each increment.
     """
 
-    def __init__(self, owner: Simulation, clock_data: dict):
+    def __init__(self, owner: Simulation, input_data: dict):
         self._owner = owner
-        self.clock_data = clock_data
-        self.start_time = clock_data["start_time"]
+        self._input_data = input_data
+        self.start_time = input_data["start_time"]
         self.time = self.start_time
-        self.end_time = clock_data["end_time"]
+        self.end_time = input_data["end_time"]
         self.this_step = 0
         self.print_time = False
-        if "print_time" in clock_data:
-            self.print_time = clock_data["print_time"]
+        if "print_time" in input_data:
+            self.print_time = input_data["print_time"]
 
-        if "num_steps" in clock_data:
-            self.num_steps = clock_data["num_steps"]
+        if "num_steps" in input_data:
+            self.num_steps = input_data["num_steps"]
             self.dt = (
-                (clock_data["end_time"] - clock_data["start_time"])
-                / clock_data["num_steps"])
-        elif "dt" in clock_data:
-            self.dt = clock_data["dt"]
+                (input_data["end_time"] - input_data["start_time"])
+                / input_data["num_steps"])
+        elif "dt" in input_data:
+            self.dt = input_data["dt"]
             self.num_steps = (self.end_time - self.start_time) / self.dt
             if not np.isclose(self.num_steps, np.rint(self.num_steps)):
                 raise RuntimeError("Simulation interval is not an "
@@ -579,7 +583,7 @@ class SimulationClock:
         return self.this_step < self.num_steps
 
     def __repr__(self):
-        return f"{self.__class__.__name__}({self.clock_data})"
+        return f"{self.__class__.__name__}({self._input_data})"
 
 
 class Grid:
