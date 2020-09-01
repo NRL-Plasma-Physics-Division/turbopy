@@ -252,12 +252,8 @@ class Simulation:
                       self.input_data["Diagnostics"].items()
                       if not Diagnostic.is_valid_name(k)}
 
-            if "directory" in params:
-                d = Path(params["directory"])
-            else:
-                # Set a default output directory
-                d = Path("default_output")
-                params["directory"] = str(d)
+            if "directory" not in params:
+                params["directory"] = str(Path("default_output"))
 
             for diag_type, d in diags.items():
                 diagnostic_class = Diagnostic.lookup(diag_type)
