@@ -2,6 +2,7 @@
 Tests for the diagonstics.py file
 """
 import pytest
+import shutil
 import numpy as np
 from turbopy.core import Simulation
 from turbopy.diagnostics import FieldDiagnostic
@@ -38,15 +39,16 @@ def test_init_should_create_class_instance_when_called(simple_field):
     assert simple_field.diagnostic_size is None
     assert simple_field.field_was_found is False
 
-def test_check_step_should_update_last_dump_after_dump_interval_has_passed(simple_field):
+def test_check_step_should_update_last_dump_after_dump_interval_has_passed(simple_field, tmp_path):
     """Tests check_step method in FieldDiagnostic class"""
     simple_field.inspect_resource({"Field": np.linspace(0, 1, 2)})
     simple_field.initialize()
     simple_field._owner.clock.time = 1
     simple_field.check_step()
     assert simple_field.last_dump == 1
+    shutil.move("default_output", tmp_path)
 
-def test_initialize_should_set_remaining_parameters_when_called(simple_field):
+def test_initialize_should_set_remaining_parameters_when_called(simple_field, tmp_path):
     """Tests initialize method in FieldDiagnostic class"""
     with pytest.raises(RuntimeError):
         assert simple_field.initialize()
@@ -59,6 +61,7 @@ def test_initialize_should_set_remaining_parameters_when_called(simple_field):
     assert simple_field.csv.filename == "output.csv"
     assert np.allclose(simple_field.csv.buffer, np.zeros((11, 2)))
     assert simple_field.csv.buffer_index == 0
+    shutil.move("default_output", tmp_path)
 
 def test_inspect_resource_should_assign_field_attribute_if_field_name_in_resource(simple_field):
     """Tests inspect_resource method in FieldDiagnostic class"""
@@ -67,7 +70,7 @@ def test_inspect_resource_should_assign_field_attribute_if_field_name_in_resourc
     assert simple_field.field_was_found is True
     assert simple_field.field is array_to_share
 
-def test_csv_diagnose_should_append_data_to_csv_when_called(simple_field):
+def test_csv_diagnose_should_append_data_to_csv_when_called(simple_field, tmp_path):
     """Tests csv_diagnose method in FieldDiagnostic class"""
     simple_field.inspect_resource({"Field": np.linspace(0, 1, 2)})
     simple_field.initialize()
@@ -75,3 +78,4 @@ def test_csv_diagnose_should_append_data_to_csv_when_called(simple_field):
     assert np.allclose(simple_field.csv.buffer[simple_field.csv.buffer_index-1, :],
                        simple_field.field)
     assert simple_field.csv.buffer_index == 1
+    shutil.move("default_output", tmp_path)
