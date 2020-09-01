@@ -6,6 +6,7 @@ They are called every time step, or every N steps.
 They can write to file, cache for later, update plots, etc, and they
 can halt the simulation if conditions require.
 """
+from pathlib import Path
 import numpy as np
 
 from .core import Diagnostic, Simulation
@@ -131,6 +132,13 @@ class PointDiagnostic(Diagnostic):
         as an instance of the :class:`CSVOuputUtility` class.
         """
         # set up function to interpolate the field value
+        if "directory" in self._input_data:
+            d = Path(self._input_data["directory"])
+        else:
+            # Set a default output directory
+            d = Path("default_output")
+            self._input_data["directory"] = str(d)
+        d.mkdir(parents=True, exist_ok=True)
         self.get_value = self._owner.grid.create_interpolator(
                                 self.location)
 
@@ -262,6 +270,13 @@ class FieldDiagnostic(Diagnostic):
         csv, and self.csv as an instance of the
         :class:`CSVOutputUtility` class.
         """
+        if "directory" in self._input_data:
+            d = Path(self._input_data["directory"])
+        else:
+            # Set a default output directory
+            d = Path("default_output")
+            self._input_data["directory"] = str(d)
+        d.mkdir(parents=True, exist_ok=True)
         if not self.field_was_found:
             raise (RuntimeError(f"Diagnostic field {self.field_name}"
                                 " was not found"))
@@ -337,6 +352,13 @@ class GridDiagnostic(Diagnostic):
 
     def initialize(self):
         """Save grid data into CSV file"""
+        if "directory" in self._input_data:
+            d = Path(self._input_data["directory"])
+        else:
+            # Set a default output directory
+            d = Path("default_output")
+            self._input_data["directory"] = str(d)
+        d.mkdir(parents=True, exist_ok=True)
         with open(self.filename, 'wb') as f:
             np.savetxt(f, self._owner.grid.r, delimiter=",")
 
@@ -378,6 +400,13 @@ class ClockDiagnostic(Diagnostic):
     def initialize(self):
         """Initialize `self.csv` as an instance of the
         :class:`CSVOuputUtility` class."""
+        if "directory" in self._input_data:
+            d = Path(self._input_data["directory"])
+        else:
+            # Set a default output directory
+            d = Path("default_output")
+            self._input_data["directory"] = str(d)
+        d.mkdir(parents=True, exist_ok=True)
         diagnostic_size = (self._owner.clock.num_steps + 1, 1)
         self.csv = CSVOutputUtility(self._input_data["filename"],
                                     diagnostic_size)

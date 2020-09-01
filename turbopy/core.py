@@ -258,7 +258,6 @@ class Simulation:
                 # Set a default output directory
                 d = Path("default_output")
                 params["directory"] = str(d)
-            d.mkdir(parents=True, exist_ok=True)
 
             for diag_type, d in diags.items():
                 diagnostic_class = Diagnostic.lookup(diag_type)
@@ -942,7 +941,13 @@ class Diagnostic(DynamicFactory):
 
         This gets called once before the main simulation loop.
         """
-        pass
+        if "directory" in self._input_data:
+            d = Path(self._input_data["directory"])
+        else:
+            # Set a default output directory
+            d = Path("default_output")
+            self._input_data["directory"] = str(d)
+        d.mkdir(parents=True, exist_ok=True)
 
     def finalize(self):
         """Perform any finalization operations
