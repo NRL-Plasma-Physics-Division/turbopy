@@ -935,14 +935,11 @@ class Diagnostic(DynamicFactory):
     def initialize(self):
         """Perform any initialization operations
 
-        This gets called once before the main simulation loop.
+        This gets called once before the main simulation loop. Base class
+        definition creates output directory if it does not already exist. If
+        subclass overrides this function, call `super().initialize()`
         """
-        if "directory" in self._input_data:
-            d = Path(self._input_data["directory"])
-        else:
-            # Set a default output directory
-            d = Path("default_output")
-            self._input_data["directory"] = str(d)
+        d = Path(self._input_data["directory"])
         d.mkdir(parents=True, exist_ok=True)
 
     def finalize(self):
