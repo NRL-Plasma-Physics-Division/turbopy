@@ -171,6 +171,9 @@ class Simulation:
         """
         print("Reading Grid...")
         self.read_grid_from_input()
+        
+        print("Initializing Simulation Clock...")
+        self.read_clock_from_input()
 
         print("Reading Tools...")
         self.read_tools_from_input()
@@ -180,9 +183,6 @@ class Simulation:
 
         print("Reading Diagnostics...")
         self.read_diagnostics_from_input()
-
-        print("Initializing Simulation Clock...")
-        self.read_clock_from_input()
 
         print("Initializing Tools...")
         for t in self.compute_tools:
