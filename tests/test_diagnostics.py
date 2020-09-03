@@ -30,9 +30,9 @@ def field_fixt(tmp_path):
                }
     sim = Simulation(sim_dic)
     sim.read_diagnostics_from_input()
+    sim.read_clock_from_input()
+    sim.read_grid_from_input()
     field = sim.diagnostics[0]
-    field._owner.read_clock_from_input()
-    field._owner.read_grid_from_input()
     return field
 
 
