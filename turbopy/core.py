@@ -593,6 +593,13 @@ class SimulationClock:
         self.time = self.start_time + self.dt * self.this_step
         if self.print_time:
             print(f"t = {self.time}")
+    
+    def turn_back(self, num_steps=1):
+        """Set the time back `num_steps` time steps"""
+        self.this_step = self.this_step - num_steps
+        self.time = self.start_time + self.dt * self.this_step
+        if self.print_time:
+            print(f"t = {self.time}")        
 
     def is_running(self):
         """Check if time is less than end time"""

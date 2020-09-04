@@ -136,11 +136,23 @@ def test_run_should_run_simulation_while_clock_is_running(simple_sim):
     assert simple_sim.clock.time == 10
 
 
+def test_turn_back_should_turn_back_time_when_called(simple_sim):
+    """Test fundamental_cycle method in Simulation class"""
+    simple_sim.read_clock_from_input()
+    simple_sim.fundamental_cycle()
+    assert simple_sim.clock.this_step == 1
+    assert simple_sim.clock.time == 0.1
+    simple_sim.clock.turn_back()
+    assert simple_sim.clock.this_step == 0
+    assert simple_sim.clock.time == 0
+
+
 def test_read_modules_from_input_should_set_modules_attr_when_called(simple_sim):
     """Test read_modules_from_input method in Simulation calss"""
     simple_sim.read_modules_from_input()
     assert simple_sim.physics_modules[0]._owner == simple_sim
     assert simple_sim.physics_modules[0]._input_data == {"name": "ExampleModule"}
+
 
 def test_find_tool_by_name_should_identify_one_tool(simple_sim):
     simple_sim.read_tools_from_input()
