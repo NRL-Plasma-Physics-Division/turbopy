@@ -86,7 +86,8 @@ class PointDiagnostic(Diagnostic):
     csv : :class:`numpy.ndarray`, None
         numpy.ndarray being written as a csv file.
     interval : int, None
-        
+        Optional: Interval in seconds on which data will be written to the output
+        files while the program is running.
     """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
@@ -379,6 +380,9 @@ class ClockDiagnostic(Diagnostic):
         File name for CSV time file
     csv : :class:`numpy.ndarray`
         Array to store values to be written into a CSV file
+    interval : int, None
+        Optional: Interval in seconds on which data will be written to the output
+        files while the program is running.
     """
 
     def __init__(self, owner: Simulation, input_data: dict):
