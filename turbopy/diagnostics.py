@@ -85,6 +85,8 @@ class PointDiagnostic(Diagnostic):
         Function for assigned output method: standard output or csv.
     csv : :class:`numpy.ndarray`, None
         numpy.ndarray being written as a csv file.
+    interval : int, None
+        
     """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
@@ -95,12 +97,15 @@ class PointDiagnostic(Diagnostic):
         self.field = None
         self.output_function = None
         self.csv = None
+        self.interval = None
 
     def diagnose(self):
         """
         Run output function given the value of the field.
         """
         self.output_function(self.get_value(self.field))
+        if self._owner.clock.time % self.interval == 0:
+            self.csv.finalize()
 
     def inspect_resource(self, resource):
         """
@@ -146,7 +151,10 @@ class PointDiagnostic(Diagnostic):
             # Use composition to provide csv i/o functionality
             self.csv = CSVOutputUtility(self._input_data["filename"],
                                         diagnostic_size)
-
+        
+        if "interval" in self._input_data:
+            self.interval = self._input_data["interval"]
+            
     def csv_diagnose(self, data):
         """
         Adds 'data' into csv output buffer.
@@ -285,6 +293,8 @@ class FieldDiagnostic(Diagnostic):
         if self._input_data["output_type"] == "csv":
             self.csv = CSVOutputUtility(self._input_data["filename"],
                                         self.diagnostic_size)
+        if "interval" in self._input_data:
+            self.interval = self._input_data["interval"]
 
     def csv_diagnose(self, data):
         """
@@ -342,6 +352,8 @@ class GridDiagnostic(Diagnostic):
         super().initialize()
         with open(self.filename, 'wb') as f:
             np.savetxt(f, self._owner.grid.r, delimiter=",")
+        if "interval" in self._input_data:
+            self.interval = self._input_data["interval"]
 
 
 class ClockDiagnostic(Diagnostic):
@@ -373,10 +385,13 @@ class ClockDiagnostic(Diagnostic):
         super().__init__(owner, input_data)
         self.filename = input_data["filename"]
         self.csv = None
+        self.interval = None
 
     def diagnose(self):
         """Append time into the csv buffer."""
         self.csv.append(self._owner.clock.time)
+        if self._owner.clock.time % self.interval == 0:
+            self.csv.finalize()
 
     def initialize(self):
         """Initialize `self.csv` as an instance of the
@@ -385,6 +400,8 @@ class ClockDiagnostic(Diagnostic):
         diagnostic_size = (self._owner.clock.num_steps + 1, 1)
         self.csv = CSVOutputUtility(self._input_data["filename"],
                                     diagnostic_size)
+        if "interval" in self._input_data:
+            self.interval = self._input_data["interval"]
 
     def finalize(self):
         """Write time into self.csv and saves as a CSV file."""
