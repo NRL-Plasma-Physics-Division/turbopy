@@ -152,7 +152,7 @@ class PointDiagnostic(Diagnostic):
             # Use composition to provide csv i/o functionality
             self.csv = CSVOutputUtility(self._input_data["filename"],
                                         diagnostic_size)
-        
+
         if "interval" in self._input_data:
             self.interval = self._input_data["interval"]
         else:
