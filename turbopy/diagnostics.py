@@ -155,6 +155,8 @@ class PointDiagnostic(Diagnostic):
         
         if "interval" in self._input_data:
             self.interval = self._input_data["interval"]
+        else:
+            self.interval = self._owner.clock.end_time
             
     def csv_diagnose(self, data):
         """
@@ -296,6 +298,8 @@ class FieldDiagnostic(Diagnostic):
                                         self.diagnostic_size)
         if "interval" in self._input_data:
             self.interval = self._input_data["interval"]
+        else:
+            self.interval = self._owner.clock.end_time
 
     def csv_diagnose(self, data):
         """
@@ -355,6 +359,8 @@ class GridDiagnostic(Diagnostic):
             np.savetxt(f, self._owner.grid.r, delimiter=",")
         if "interval" in self._input_data:
             self.interval = self._input_data["interval"]
+        else:
+            self.interval = self._owner.clock.end_time
 
 
 class ClockDiagnostic(Diagnostic):
@@ -406,6 +412,8 @@ class ClockDiagnostic(Diagnostic):
                                     diagnostic_size)
         if "interval" in self._input_data:
             self.interval = self._input_data["interval"]
+        else:
+            self.interval = self._owner.clock.end_time
 
     def finalize(self):
         """Write time into self.csv and saves as a CSV file."""
