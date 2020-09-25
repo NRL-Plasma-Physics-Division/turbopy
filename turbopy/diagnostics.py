@@ -209,6 +209,9 @@ class FieldDiagnostic(Diagnostic):
         number of time points. Second value is number of spatial points.
     field_was_found : bool
         Boolean representing if field was found in inspect_resource.
+    interval : int, None
+        Optional: Interval in seconds on which data will be written to the output
+        files while the program is running.
     """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
@@ -222,6 +225,7 @@ class FieldDiagnostic(Diagnostic):
         self.last_dump = None
         self.diagnose = self.do_diagnostic
         self.diagnostic_size = None
+        self.interval = None
 
         self.field_was_found = False
 
@@ -357,10 +361,6 @@ class GridDiagnostic(Diagnostic):
         super().initialize()
         with open(self.filename, 'wb') as f:
             np.savetxt(f, self._owner.grid.r, delimiter=",")
-        if "interval" in self._input_data:
-            self.interval = self._input_data["interval"]
-        else:
-            self.interval = self._owner.clock.end_time
 
 
 class ClockDiagnostic(Diagnostic):
