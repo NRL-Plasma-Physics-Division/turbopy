@@ -7,11 +7,45 @@ They can write to file, cache for later, update plots, etc, and they
 can halt the simulation if conditions require.
 """
 import numpy as np
+from abc import ABC, abstractmethod
 
 from .core import Diagnostic, Simulation
 
 
-class CSVOutputUtility:
+class OutputUtility(ABC):
+    """Abstract base class for output utility
+
+    An instance of an OutputUtility can (optionally) be used by diagnostic
+    classes to assist with the implementation details needed for outputing
+    the diagnostic information.
+    """
+    def __init__(self, input_data):
+        pass
+
+    @abstractmethod
+    def diagnose(self, data):
+        pass
+
+    @abstractmethod
+    def finalize(self):
+        pass
+
+
+class PrintOutputUtility(OutputUtility):
+    """OutputUtility which writes to the screen"""
+    def diagnose(self, data):
+        """
+        Prints out data to standard output.
+
+        Parameters
+        ----------
+        data : :class:`numpy.ndarray`
+            1D numpy array of values.
+        """
+        print(data)
+
+
+class CSVOutputUtility(OutputUtility):
     """Comma separated value (CSV) diagnostic output helper class
 
     Provides routines for writing data to a file in CSV format. This
@@ -36,12 +70,28 @@ class CSVOutputUtility:
         Position in buffer.
     """
 
-    def __init__(self, filename, diagnostic_size):
-        self.filename = filename
-        self.buffer = np.zeros(diagnostic_size)
-        self.buffer_index = 0
+    def __init__(self, filename, diagnostic_size, **kwargs):
+        self._filename = filename
+        self._buffer = np.zeros(diagnostic_size)
+        self._buffer_index = 0
 
-    def append(self, data):
+    def diagnose(self, data):
+        """
+        Adds 'data' into csv output buffer.
+
+        Parameters
+        ----------
+        data : :class:`numpy.ndarray`
+            1D numpy array of values to be added to the buffer.
+        """
+        self._append(data)
+    
+    def finalize(self):
+        """Write the CSV data to file.
+        """
+        self._write_buffer()
+
+    def _append(self, data):
         """Append data to the buffer.
 
         Parameters
@@ -49,14 +99,14 @@ class CSVOutputUtility:
         data : :class:`numpy.ndarray`
             1D numpy array of values to be added to the buffer.
         """
-        self.buffer[self.buffer_index, :] = data
-        self.buffer_index += 1
+        self._buffer[self._buffer_index, :] = data
+        self._buffer_index += 1
 
-    def finalize(self):
+    def _write_buffer(self):
         """Write the CSV data to file.
         """
-        with open(self.filename, 'wb') as f:
-            np.savetxt(f, self.buffer, delimiter=",")
+        with open(self._filename, 'wb') as f:
+            np.savetxt(f, self._buffer, delimiter=",")
 
 
 class PointDiagnostic(Diagnostic):
@@ -93,14 +143,13 @@ class PointDiagnostic(Diagnostic):
         self.output = input_data["output_type"]  # "stdout"
         self.get_value = None
         self.field = None
-        self.output_function = None
-        self.csv = None
+        self.outputter = None
 
     def diagnose(self):
         """
         Run output function given the value of the field.
         """
-        self.output_function(self.get_value(self.field))
+        self.outputter.diagnose(self.get_value(self.field))
 
     def inspect_resource(self, resource):
         """
@@ -114,17 +163,6 @@ class PointDiagnostic(Diagnostic):
         if self.field_name in resource:
             self.field = resource[self.field_name]
 
-    def print_diagnose(self, data):
-        """
-        Prints out data to standard output.
-
-        Parameters
-        ----------
-        data : :class:`numpy.ndarray`
-            1D numpy array of values.
-        """
-        print(data)
-
     def initialize(self):
         """
         Initialize output function if provided as csv, and self.csv
@@ -136,35 +174,21 @@ class PointDiagnostic(Diagnostic):
                                 self.location)
 
         # setup output method
-        functions = {"stdout": self.print_diagnose,
-                     "csv": self.csv_diagnose,
+        diagnostic_size = (self._owner.clock.num_steps + 1, 1)
+        self._input_data["diagnostic_size"] = diagnostic_size
+
+        utilities = {"stdout": PrintOutputUtility,
+                     "csv": CSVOutputUtility,
                      }
-        self.output_function = functions[self._input_data["output_type"]]
-
-        if self._input_data["output_type"] == "csv":
-            diagnostic_size = (self._owner.clock.num_steps + 1, 1)
-            # Use composition to provide csv i/o functionality
-            self.csv = CSVOutputUtility(self._input_data["filename"],
-                                        diagnostic_size)
-
-    def csv_diagnose(self, data):
-        """
-        Adds 'data' into csv output buffer.
-
-        Parameters
-        ----------
-        data : :class:`numpy.ndarray`
-            1D numpy array of values.
-        """
-        self.csv.append(data)
+        # Use composition to provide i/o functionality
+        self.outputter = utilities[self._input_data["output_type"]](**self._input_data)
 
     def finalize(self):
         """
         Write the CSV data to file if CSV is the proper output type.
         """
         self.diagnose()
-        if self._input_data["output_type"] == "csv":
-            self.csv.finalize()
+        self.outputter.finalize()
 
 
 class FieldDiagnostic(Diagnostic):
@@ -214,6 +238,8 @@ class FieldDiagnostic(Diagnostic):
 
         self.field_was_found = False
 
+        self.outputter = None
+
     def check_step(self):
         """
         Run diagnostic if dump_interval time has passed since last_dump
@@ -228,9 +254,9 @@ class FieldDiagnostic(Diagnostic):
         Run output_function depending on field.shape.
         """
         if len(self.field.shape) > 1:
-            self.output_function(self.field[:, self.component])
+            self.outputter.diagnose(self.field[:, self.component])
         else:
-            self.output_function(self.field)
+            self.outputter.diagnose(self.field)
 
     def inspect_resource(self, resource):
         """
@@ -277,33 +303,20 @@ class FieldDiagnostic(Diagnostic):
                 self._owner.clock.end_time / self.dump_interval) + 1),
                 self.field.shape[0])
 
-        # setup output method
-        functions = {"stdout": self.print_diagnose,
-                     "csv": self.csv_diagnose,
+        self._input_data['diagnostic_size'] = self.diagnostic_size
+
+        utilities = {"stdout": PrintOutputUtility,
+                     "csv": CSVOutputUtility,
                      }
-        self.output_function = functions[self._input_data["output_type"]]
-        if self._input_data["output_type"] == "csv":
-            self.csv = CSVOutputUtility(self._input_data["filename"],
-                                        self.diagnostic_size)
-
-    def csv_diagnose(self, data):
-        """
-        Adds 'data' into csv output buffer.
-
-        Parameters
-        ----------
-        data : :class:`numpy.ndarray`
-            1D numpy array of values.
-        """
-        self.csv.append(data)
+        # Use composition to provide i/o functionality
+        self.outputter = utilities[self._input_data["output_type"]](**self._input_data)
 
     def finalize(self):
         """
         Write the CSV data to file if CSV is the proper output type.
         """
         self.do_diagnostic()
-        if self._input_data["output_type"] == "csv":
-            self.csv.finalize()
+        self.outputter.finalize()
 
 
 class GridDiagnostic(Diagnostic):
@@ -376,7 +389,7 @@ class ClockDiagnostic(Diagnostic):
 
     def diagnose(self):
         """Append time into the csv buffer."""
-        self.csv.append(self._owner.clock.time)
+        self.csv.diagnose(self._owner.clock.time)
 
     def initialize(self):
         """Initialize `self.csv` as an instance of the
