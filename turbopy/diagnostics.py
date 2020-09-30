@@ -443,10 +443,7 @@ class HistoryDiagnostic(Diagnostic):
 
         # set up the history traces
         for trace in self._input_data['traces']:
-            print(f'Setting up history trace: {trace["name"]}')
-            print(f'Using options: {trace}')
             trace_data = self._data[trace['name']]
-            print(trace_data)
             # Convert data into DataArray
             if not isinstance(trace_data, xr.DataArray):
                 trace_data = xr.DataArray(trace_data, dims=trace['coords'])

@@ -17,4 +17,3 @@ def test_pif(pif_sim, tmp_path):
         tmp_data = np.genfromtxt(f'{tmp_path}/{filename}.csv',
                                  delimiter=',')
         assert (np.allclose(ref_data, tmp_data, rtol=1e-05, atol=1e-08))
-    assert False
