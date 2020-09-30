@@ -32,36 +32,23 @@ class BlockDiagnostic(Diagnostic):
         super().__init__(owner, input_data)
         self.data = None
         self.component = input_data.get("component", 1)
-        self.output_function = None
-        self.csv = None
+        self.outputter = None
 
     def inspect_resource(self, resource):
         if "Block:" + self.component in resource:
             self.data = resource["Block:" + self.component]
 
     def diagnose(self):
-        self.output_function(self.data[0, :])
+        self.outputter.diagnose(self.data[0, :])
 
     def initialize(self):
-        # setup output method
-        functions = {"stdout": self.print_diagnose,
-                     "csv": self.csv_diagnose,
-                     }
-        self.output_function = functions[self._input_data["output_type"]]
-        if self._input_data["output_type"] == "csv":
-            diagnostic_size = (self._owner.clock.num_steps + 1, 3)
-            self.csv = CSVOutputUtility(self._input_data["filename"], diagnostic_size)
+        diagnostic_size = (self._owner.clock.num_steps + 1, 3)
+        self.outputter = CSVOutputUtility(self._input_data["filename"],
+            diagnostic_size)
 
     def finalize(self):
         self.diagnose()
-        if self._input_data["output_type"] == "csv":
-            self.csv.finalize()
-
-    def print_diagnose(self, data):
-        print(data)
-
-    def csv_diagnose(self, data):
-        self.csv.append(data)
+        self.outputter.finalize()
 
 
 class ForwardEuler(ComputeTool):

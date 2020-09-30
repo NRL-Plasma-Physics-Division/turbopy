@@ -69,34 +69,28 @@ class ParticleDiagnostic(Diagnostic):
         self.data = None
         self.component = input_data["component"]
         self.output_function = None
-        
+        self.outputter = None
+
     def inspect_resource(self, resource):
         if "ChargedParticle:" + self.component in resource:
             self.data = resource["ChargedParticle:" + self.component]
     
     def diagnose(self):
-        self.output_function(self.data[0, :])
+        self.outputter.diagnose(self.data[0, :])
 
     def initialize(self):
         # setup output method
-        functions = {"stdout": self.print_diagnose,
-                     "csv": self.csv_diagnose,
-                     }
-        self.output_function = functions[self._input_data["output_type"]]
-        if self._input_data["output_type"] == "csv":
-            diagnostic_size = (self._owner.clock.num_steps + 1, 3)
-            self.csv = CSVOutputUtility(self._input_data["filename"], diagnostic_size)
+        diagnostic_size = (self._owner.clock.num_steps + 1, 3)
+        self.outputter = CSVOutputUtility(self._input_data["filename"],
+            diagnostic_size)
 
     def finalize(self):
         self.diagnose()
-        if self._input_data["output_type"] == "csv":
-            self.csv.finalize()
+        self.outputter.finalize()
 
     def print_diagnose(self, data):
         print(data)
 
-    def csv_diagnose(self, data):
-        self.csv.append(data)
 
 
 # TODO: add tests for plotting

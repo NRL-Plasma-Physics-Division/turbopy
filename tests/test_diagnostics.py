@@ -69,13 +69,12 @@ def test_initialize_should_set_remaining_parameters_when_called(simple_field):
     assert simple_field.diagnostic_size == (11, 2)
     
 
-def test_initialize_should_set_output_funtion_parameters_when_called(simple_field, tmp_path):
+def test_initialize_should_set_outputter_parameters_when_called(simple_field, tmp_path):
     simple_field.inspect_resource({"Field": np.linspace(0, 1, 2)})
     simple_field.initialize()
-    assert simple_field.output_function == simple_field.csv_diagnose
-    assert simple_field.csv.filename == f"{tmp_path}/default_output/output.csv"
-    assert np.allclose(simple_field.csv.buffer, np.zeros((11, 2)))
-    assert simple_field.csv.buffer_index == 0
+    assert simple_field.outputter._filename == f"{tmp_path}/default_output/output.csv"
+    assert np.allclose(simple_field.outputter._buffer, np.zeros((11, 2)))
+    assert simple_field.outputter._buffer_index == 0
 
 
 def test_inspect_resource_should_assign_field_attribute_if_field_name_in_resource(simple_field):
@@ -90,7 +89,8 @@ def test_csv_diagnose_should_append_data_to_csv_when_called(simple_field):
     """Tests csv_diagnose method in FieldDiagnostic class"""
     simple_field.inspect_resource({"Field": np.linspace(0, 1, 2)})
     simple_field.initialize()
-    simple_field.csv.append(simple_field.field)
-    assert np.allclose(simple_field.csv.buffer[simple_field.csv.buffer_index - 1, :],
+    simple_field.do_diagnostic()
+    assert np.allclose(simple_field.outputter._buffer[
+                            simple_field.outputter._buffer_index - 1, :],
                        simple_field.field)
-    assert simple_field.csv.buffer_index == 1
+    assert simple_field.outputter._buffer_index == 1

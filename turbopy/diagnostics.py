@@ -272,17 +272,6 @@ class FieldDiagnostic(Diagnostic):
             self.field_was_found = True
             self.field = resource[self.field_name]
 
-    def print_diagnose(self, data):
-        """
-        Print field_name and data onto standard output.
-
-        Parameters
-        ----------
-        data : :class:`numpy.ndarray`
-            1D numpy array of values.
-        """
-        print(self.field_name, data)
-
     def initialize(self):
         """
         Initialize diagnostic_size and output function if provided as
