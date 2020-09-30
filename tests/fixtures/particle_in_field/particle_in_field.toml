@@ -56,3 +56,20 @@ filename = "particle_p.csv"
 component = "position"
 filename = "particle_x.csv"
 
+[Diagnostics.histories]
+filename = "history.nc"
+
+[[Diagnostics.histories.traces]]
+name = 'ChargedParticle:momentum'
+units = 'kg m/s'
+coords = ["dim0", "vector component"]
+long_name = 'Particle Momentum'
+
+[[Diagnostics.histories.traces]]
+name = 'ChargedParticle:position'
+units = 'm'
+coords = ["dim0", "vector component"]
+long_name = 'Particle Position'
+
+[[Diagnostics.histories.traces]]
+name = 'EMField:E'

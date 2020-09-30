@@ -1,11 +1,13 @@
+from dataclasses import dataclass
 import numpy as np
+from numpy.lib.twodim_base import diag
 import xarray as xr
 # TODO: add tests for plotting
 # import matplotlib.pyplot as plt
 import pytest
 
 from turbopy import Simulation, PhysicsModule, Diagnostic
-from turbopy import CSVOutputUtility, ComputeTool #, FieldDiagnostic
+from turbopy import CSVOutputUtility, ComputeTool
 from turbopy import construct_simulation_from_toml
 
 
@@ -93,25 +95,6 @@ class ParticleDiagnostic(Diagnostic):
 
 
 
-# TODO: add tests for plotting
-# class FieldPlottingDiagnostic(FieldDiagnostic):
-#     """Extend the FieldDiagnostic to also create plots of the data"""
-#     def __init__(self, owner: Simulation, input_data: dict):
-#         super().__init__(owner, input_data)
-# 
-#     def do_diagnostic(self):
-#         super().do_diagnostic()
-#         plt.clf()
-#         self.field.plot()
-#         plt.title(f"Time: {self._owner.clock.time:0.3e} s")
-#         plt.pause(0.01)
-# 
-#     def finalize(self):
-#         super().finalize()
-#         # Call show to keep the plot open
-#         plt.show()
-
-
 class ForwardEuler(ComputeTool):
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
@@ -135,4 +118,6 @@ def pif_sim():
     ComputeTool.register("ForwardEuler", ForwardEuler)
     input_file = "tests/fixtures/particle_in_field/particle_in_field.toml"
     sim = construct_simulation_from_toml(input_file)
+    
+    # print(sim.input_data['Diagnostics'])
     return sim

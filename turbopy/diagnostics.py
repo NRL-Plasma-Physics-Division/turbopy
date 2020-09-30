@@ -6,8 +6,9 @@ They are called every time step, or every N steps.
 They can write to file, cache for later, update plots, etc, and they
 can halt the simulation if conditions require.
 """
-import numpy as np
 from abc import ABC, abstractmethod
+import numpy as np
+import xarray as xr
 
 from .core import Diagnostic, Simulation
 
@@ -109,6 +110,23 @@ class CSVOutputUtility(OutputUtility):
             np.savetxt(f, self._buffer, delimiter=",")
 
 
+
+class NetCDFOutputUtility(OutputUtility):
+    """Diagnostic output utility that writes to NetCDF files
+    """
+    def __init__(self, filename, diagnostic_size, **kwargs):
+        self._filename = filename
+        self._buffer = np.zeros(diagnostic_size)
+        self._buffer_index = 0
+
+
+utilities = {"stdout": PrintOutputUtility,
+             "csv": CSVOutputUtility,
+             "netcdf": NetCDFOutputUtility,
+            }
+
+
+
 class PointDiagnostic(Diagnostic):
     """
     Parameters
@@ -177,9 +195,6 @@ class PointDiagnostic(Diagnostic):
         diagnostic_size = (self._owner.clock.num_steps + 1, 1)
         self._input_data["diagnostic_size"] = diagnostic_size
 
-        utilities = {"stdout": PrintOutputUtility,
-                     "csv": CSVOutputUtility,
-                     }
         # Use composition to provide i/o functionality
         self.outputter = utilities[self._input_data["output_type"]](**self._input_data)
 
@@ -294,9 +309,6 @@ class FieldDiagnostic(Diagnostic):
 
         self._input_data['diagnostic_size'] = self.diagnostic_size
 
-        utilities = {"stdout": PrintOutputUtility,
-                     "csv": CSVOutputUtility,
-                     }
         # Use composition to provide i/o functionality
         self.outputter = utilities[self._input_data["output_type"]](**self._input_data)
 
@@ -394,7 +406,118 @@ class ClockDiagnostic(Diagnostic):
         self.csv.finalize()
 
 
+
+class HistoryDiagnostic(Diagnostic):
+    """Outputs histories/traces as functions of time
+
+    This diagnostic assists in outputting 1D history traces. Multiple time-
+    dependant quantities can be selected, and are output to a NetCDF file
+    using the xarray python package.
+
+    References
+    ----------
+    [1] C. Birdsall and A. Langdon. Plasma Physics via Computer Simulation.
+    Institute of Physics Series in Plasma Physics and Fluid Dynamics. 
+    Taylor & Francis, 2004. Page 382.
+    """
+    def __init__(self, owner: Simulation, input_data: dict) -> None:
+        super().__init__(owner, input_data)
+        self._filename = input_data['filename']
+        self._data = {}
+        self._traces = xr.Dataset()
+        self._history_key_list = [t['name'] for t in input_data['traces']]
+
+    def diagnose(self):
+        this_step = self._owner.clock.this_step
+        self._traces['time'][this_step] = self._owner.clock.time
+
+        for name in self._history_key_list:
+            # Note, use the ellipsis here to handle multidimensional data
+            self._traces[name][this_step, ...] = self._data[name]
+
+    def initialize(self):
+        # set up the time coordinate
+        self._traces.coords['time'] = ('timestep', np.zeros(self._owner.clock.num_steps))
+        self._traces.coords['time'].attrs['units'] = 's'
+        self._traces.coords['time'].attrs['long_name'] = 'Time'
+
+        # set up the history traces
+        for trace in self._input_data['traces']:
+            print(f'Setting up history trace: {trace["name"]}')
+            print(f'Using options: {trace}')
+            trace_data = self._data[trace['name']]
+            print(trace_data)
+            # Convert data into DataArray
+            if not isinstance(trace_data, xr.DataArray):
+                trace_data = xr.DataArray(trace_data, dims=trace['coords'])
+
+            # use the xarray API to add this to the dataset
+            self._traces[trace['name']] = trace_data.expand_dims(
+                {'timestep': self._traces.coords['timestep']}).copy(deep=True)
+
+            # add attributes
+            if 'units' in trace:
+                self._traces[trace['name']].attrs['units'] = trace['units']
+            if 'long_name' in trace:
+                self._traces[trace['name']].attrs['long_name'] = trace['long_name']
+
+    def finalize(self):
+        self._traces.to_netcdf(self._filename, 'w')
+
+    def inspect_resource(self, resource: dict):
+        for item in self._history_key_list:
+            if item in resource:
+                self._data[item] = resource[item]
+
+
+
 Diagnostic.register("point", PointDiagnostic)
 Diagnostic.register("field", FieldDiagnostic)
 Diagnostic.register("grid", GridDiagnostic)
 Diagnostic.register("clock", ClockDiagnostic)
+Diagnostic.register("histories", HistoryDiagnostic)
+
+
+
+# TODO: add tests for plotting
+# class FieldPlottingDiagnostic(FieldDiagnostic):
+#     """Extend the FieldDiagnostic to also create plots of the data"""
+#     def __init__(self, owner: Simulation, input_data: dict):
+#         super().__init__(owner, input_data)
+# 
+#     def do_diagnostic(self):
+#         super().do_diagnostic()
+#         plt.clf()
+#         self.field.plot()
+#         plt.title(f"Time: {self._owner.clock.time:0.3e} s")
+#         plt.pause(0.01)
+# 
+#     def finalize(self):
+#         super().finalize()
+#         # Call show to keep the plot open
+#         plt.show()
+
+
+
+# sample = {"Diagnostics": {
+#         # default values come first
+#         "directory": "block_on_spring/output_leapfrog/",
+#         "output_type": "netcdf",
+#         "histories": {
+#             "filename": "test.nc",
+#             "traces": [
+#             {'name': 'ChargedParticle:momentum',
+#              'units': 'kg m/s',
+#              'coords': ["vector component"],
+#              'long_name': 'Particle Momentum'
+#             },
+#             {'name': 'ChargedParticle:position', 
+#              'units': 'm',
+#              'coords': ["vector component"],
+#              'long_name': 'Particle Position'
+#             },
+#             {'name': 'EMField:E'}
+#             ]
+#         }
+#     }
+# }
