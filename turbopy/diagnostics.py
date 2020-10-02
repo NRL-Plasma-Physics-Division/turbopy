@@ -414,10 +414,69 @@ class HistoryDiagnostic(Diagnostic):
     dependant quantities can be selected, and are output to a NetCDF file
     using the xarray python package.
 
+    Examples
+    --------
+    When using a python dictionary to define the turboPy simulation, the
+    history diagnostics can be added as in this example. Each item in the
+    "traces" list has several key: value pairs. The "name" key corresponds
+    to a turboPy resource that is shared by another module. The "coords"
+    key is used in cases where the shared resource is more than just a
+    scalar quantitiy. In this example, the position and momentum are
+    length-3 vectors, with the three entries corresponding to the three
+    vector components. In the case where a resources is a quantity on the
+    grid, then something like ``'coords': ['x'], 'units': 'm'`` might be
+    appropriate.
+
+    Note that the 'coords' list has two items, because the shape of the
+    shared numpy array is ``(1, 3)`` in this example. The first item is
+    basically just a placeholder, and is called "dim0".
+
+    >>> simulation_parameters = {"Diagnostics": {
+                "histories": {
+                    "filename": "output.nc",
+                    "traces": [
+                        {'name': 'EMField:E'},
+                        {'name': 'ChargedParticle:momentum',
+                        'units': 'kg m/s',
+                        'coords': ["dim0", "vector component"],
+                        'long_name': 'Particle Momentum'
+                        },
+                        {'name': 'ChargedParticle:position',
+                        'units': 'm',
+                        'coords': ["dim0", "vector component"],
+                        'long_name': 'Particle Position'
+                        },
+                    ]
+                }
+            }
+        }
+
+    This is another example of a similar history setup, but in the format
+    expected for a ``toml`` input file. ::
+
+        [Diagnostics.histories]
+        filename = "history.nc"
+
+        [[Diagnostics.histories.traces]]
+        name = 'ChargedParticle:momentum'
+        units = 'kg m/s'
+        coords = ["dim0", "vector component"]
+        long_name = 'Particle Momentum'
+
+        [[Diagnostics.histories.traces]]
+        name = 'ChargedParticle:position'
+        units = 'm'
+        coords = ["dim0", "vector component"]
+        long_name = 'Particle Position'
+
+        [[Diagnostics.histories.traces]]
+        name = 'EMField:E'
+
+
     References
     ----------
     [1] C. Birdsall and A. Langdon. Plasma Physics via Computer Simulation.
-    Institute of Physics Series in Plasma Physics and Fluid Dynamics. 
+    Institute of Physics Series in Plasma Physics and Fluid Dynamics.
     Taylor & Francis, 2004. Page 382.
     """
     def __init__(self, owner: Simulation, input_data: dict) -> None:
@@ -440,6 +499,13 @@ class HistoryDiagnostic(Diagnostic):
         self._traces.coords['time'] = ('timestep', np.zeros(self._owner.clock.num_steps))
         self._traces.coords['time'].attrs['units'] = 's'
         self._traces.coords['time'].attrs['long_name'] = 'Time'
+
+        # set up the grid coordinate
+        # print(self._owner.grid.r)
+        self._traces.coords['r'] = ('grid', self._owner.grid.r)
+        # print(self._traces.coords['r'])
+        self._traces.coords['r'].attrs['units'] = 'm'
+        self._traces.coords['r'].attrs['long_name'] = 'Radius'
 
         # set up the history traces
         for trace in self._input_data['traces']:
