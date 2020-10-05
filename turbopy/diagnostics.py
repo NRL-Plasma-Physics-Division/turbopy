@@ -25,10 +25,17 @@ class OutputUtility(ABC):
 
     @abstractmethod
     def diagnose(self, data):
+        """Perform the diagnostic"""
         pass
 
     @abstractmethod
     def finalize(self):
+        """Perform any finalization steps when the simulation is complete"""
+        pass
+
+    @abstractmethod
+    def write_data(self):
+        """Optional function for writting buffer to file etc."""
         pass
 
 
@@ -92,6 +99,10 @@ class CSVOutputUtility(OutputUtility):
         """
         self._write_buffer()
 
+    def write_data(self):
+        """Write buffer to file"""
+        self._write_buffer()
+
     def _append(self, data):
         """Append data to the buffer.
 
@@ -111,18 +122,8 @@ class CSVOutputUtility(OutputUtility):
 
 
 
-class NetCDFOutputUtility(OutputUtility):
-    """Diagnostic output utility that writes to NetCDF files
-    """
-    def __init__(self, filename, diagnostic_size, **kwargs):
-        self._filename = filename
-        self._buffer = np.zeros(diagnostic_size)
-        self._buffer_index = 0
-
-
 utilities = {"stdout": PrintOutputUtility,
              "csv": CSVOutputUtility,
-             "netcdf": NetCDFOutputUtility,
             }
 
 
