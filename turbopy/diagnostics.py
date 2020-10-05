@@ -525,6 +525,7 @@ class HistoryDiagnostic(Diagnostic):
                 self._traces[trace['name']].attrs['long_name'] = trace['long_name']
 
     def finalize(self):
+        self._traces = self._traces.squeeze()  # remove unused dimensions
         self._traces.to_netcdf(self._filename, 'w')
 
     def inspect_resource(self, resource: dict):
