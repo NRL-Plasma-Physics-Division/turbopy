@@ -103,6 +103,15 @@ class CSVOutputUtility(OutputUtility):
         """Write buffer to file"""
         self._write_buffer()
 
+    def append(self, data):
+        """Append data to the buffer.
+
+        .. deprecated::
+            `append` has been removed from the public API. Use `diagnose`
+            instead.
+        """
+        self._append(data)
+
     def _append(self, data):
         """Append data to the buffer.
 
