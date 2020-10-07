@@ -136,6 +136,44 @@ utilities = {"stdout": PrintOutputUtility,
             }
 
 
+class IntervalHandler:
+    """Calls a function (action) if a given interval has passed
+
+    Parameters
+    ----------
+    interval : float, None
+        The time interval to wait in between actions. If interval is None,
+        then the action will be called every time.
+    action : callable
+        The function to call when the interval has passed
+    """
+    def __init__(self, interval, action):
+        self._interval = interval
+        self._action = action
+        self._last_action = None
+        self.current_step = 0
+
+        if interval is None:
+            self.perform_action = self._action_every_time
+    
+    def _action_every_time(self, time):
+        self._action()
+        self.current_step += 1
+    
+    def perform_action(self, time):
+        """Perform the action if an interval has passed"""
+        if self._check_step(time):
+            self._action()
+            self._last_action = time
+            self.current_step += 1
+
+    def _check_step(self, time):
+        """Check if an interval has passed since last action"""
+        if self._last_action is None:
+            # Always run the action the first time
+            return True
+        return time >= self._last_action + self._interval
+
 
 class PointDiagnostic(Diagnostic):
     """
@@ -495,9 +533,22 @@ class HistoryDiagnostic(Diagnostic):
         self._data = {}
         self._traces = xr.Dataset()
         self._history_key_list = [t['name'] for t in input_data['traces']]
+        self._handler = None
+
+        # set up the interval handler
+        self._interval = self._input_data.get('interval', None)
+        self._handler = IntervalHandler(self._interval,
+                                        self.do_diagnostic)
+        self._num_outputs = self._owner.clock.num_steps
+        if self._interval:
+            self._num_outputs = int(np.ceil(
+                self._owner.clock.end_time / self._interval))
 
     def diagnose(self):
-        this_step = self._owner.clock.this_step
+        self._handler.perform_action(self._owner.clock.time)
+
+    def do_diagnostic(self):
+        this_step = self._handler.current_step
         self._traces['time'][this_step] = self._owner.clock.time
 
         for name in self._history_key_list:
@@ -506,7 +557,7 @@ class HistoryDiagnostic(Diagnostic):
 
     def initialize(self):
         # set up the time coordinate
-        self._traces.coords['time'] = ('timestep', np.zeros(self._owner.clock.num_steps))
+        self._traces.coords['time'] = ('timestep', np.zeros(self._num_outputs))
         self._traces.coords['time'].attrs['units'] = 's'
         self._traces.coords['time'].attrs['long_name'] = 'Time'
 
