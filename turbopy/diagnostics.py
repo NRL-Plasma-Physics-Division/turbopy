@@ -562,28 +562,36 @@ class HistoryDiagnostic(Diagnostic):
         self._traces.coords['time'].attrs['long_name'] = 'Time'
 
         # set up the grid coordinate
-        # print(self._owner.grid.r)
         self._traces.coords['r'] = ('grid', self._owner.grid.r)
-        # print(self._traces.coords['r'])
         self._traces.coords['r'].attrs['units'] = 'm'
         self._traces.coords['r'].attrs['long_name'] = 'Radius'
 
         # set up the history traces
         for trace in self._input_data['traces']:
             trace_data = self._data[trace['name']]
-            # Convert data into DataArray
-            if not isinstance(trace_data, xr.DataArray):
-                trace_data = xr.DataArray(trace_data, dims=trace['coords'])
 
-            # use the xarray API to add this to the dataset
-            self._traces[trace['name']] = trace_data.expand_dims(
-                {'timestep': self._traces.coords['timestep']}).copy(deep=True)
+            if isinstance(trace_data, xr.Dataset):
+                for item in trace_data:
+                    # use the xarray API to add this to the dataset
+                    self._traces[item] = trace_data[item].expand_dims(
+                        {'timestep': self._traces.coords['timestep']}).copy(deep=True)
+                    self._data[item] = trace_data[item]
+                    self._history_key_list.append(item)
+                self._history_key_list.remove(trace['name'])
+            else:
+                # Convert data into DataArray
+                if not isinstance(trace_data, xr.DataArray):
+                    trace_data = xr.DataArray(trace_data, dims=trace['coords'])
 
-            # add attributes
-            if 'units' in trace:
-                self._traces[trace['name']].attrs['units'] = trace['units']
-            if 'long_name' in trace:
-                self._traces[trace['name']].attrs['long_name'] = trace['long_name']
+                # use the xarray API to add this to the dataset
+                self._traces[trace['name']] = trace_data.expand_dims(
+                    {'timestep': self._traces.coords['timestep']}).copy(deep=True)
+
+                # add attributes
+                if 'units' in trace:
+                    self._traces[trace['name']].attrs['units'] = trace['units']
+                if 'long_name' in trace:
+                    self._traces[trace['name']].attrs['long_name'] = trace['long_name']
 
     def finalize(self):
         self._traces = self._traces.squeeze()  # remove unused dimensions
