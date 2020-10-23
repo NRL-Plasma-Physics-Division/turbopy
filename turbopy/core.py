@@ -3,14 +3,15 @@ Core base classes of the turboPy framework
 
 Notes
 -----
-A preprint of the paper describing this code is available on
-the arxiv [1]_.
+The published paper for Turbopy: A lightweight python framework for computational physics \
+ can be found in the link below [1]_.
 
 References
 ----------
-.. [1] A. S. Richardson et al., "TurboPy: A Lightweight Python Framework
-       for Computational Physics." Preprint available online:
-       https://arxiv.org/abs/2002.08842
+.. [1] 1 A.S. Richardson, D.F. Gordon, S.B. Swanekamp, I.M. Rittersdorf, P.E. Adamson, \
+O.S. Grannis, G.T. Morgan, A. Ostenfeld, K.L. Phlips, C.G. Sun, G. Tang, and D.J. Watkins, \
+Comput. Phys. Commun. 258, 107607 (2021). \
+https://doi.org/10.1016/j.cpc.2020.107607
 
 """
 from pathlib import Path
