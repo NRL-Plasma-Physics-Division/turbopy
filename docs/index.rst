@@ -9,7 +9,7 @@ TurboPy: a framework for computational physics
    api
 
 
-For more details about the turboPy framework, see `this preprint <https://arxiv.org/abs/2002.08842>`_ on the arxiv.
+For more details about the turboPy framework, see `the published paper <https://doi.org/10.1016/j.cpc.2020.107607>`_ in Computer Physics Communications.
 
 Follow along with development at https://github.com/NRL-Plasma-Physics-Division/turbopy
 
