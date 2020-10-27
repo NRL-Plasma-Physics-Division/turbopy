@@ -25,7 +25,7 @@ More Resources
 -   [Official turboWAVE Repo](https://github.com/USNavalResearchLaboratory/turboWAVE)
 -   [TurboWAVE Documentation](https://turbowave.readthedocs.io)
 -   The current html turboPy documentation can be found [here](https://turbopy.readthedocs.io/en/latest)
--   The preprint of the turboPy paper can be found [here](https://arxiv.org/pdf/2002.08842.pdf)
+-   The published turboPy paper can be found [here](https://doi.org/10.1016/j.cpc.2020.107607)
 
 
 Install turboPy
