@@ -618,11 +618,11 @@ class HistoryDiagnostic(Diagnostic):
 
     def do_diagnostic(self):
         this_step = self._handler.current_step
-        self._traces['time'][this_step] = self._owner.clock.time
+        self._traces['time']._variable._data[this_step] = self._owner.clock.time
 
         for name in self._history_key_list:
             # Note, use the ellipsis here to handle multidimensional data
-            self._traces[name][this_step, ...] = self._data[name]
+            self._traces[name]._variable._data[this_step, ...] = self._data[name]
 
     def initialize(self):
         # set up the time coordinate
