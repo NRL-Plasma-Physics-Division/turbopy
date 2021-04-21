@@ -148,15 +148,15 @@ class Simulation:
         self.prepare_simulation()
         print("Initialization complete")
 
-        self.create_graph()
+        print("Simulation is started")
+        while self.clock.is_running():
+            self.fundamental_cycle()
+
+        self.finalize_simulation()
+        print("Simulation complete")
+
         print("Graph is displayed")
-
-        # print("Simulation is started")
-        # while self.clock.is_running():
-        #     self.fundamental_cycle()
-
-        # self.finalize_simulation()
-        # print("Simulation complete")
+        self.create_graph()
     
     def create_graph(self): 
         G = nx.DiGraph()
@@ -218,8 +218,7 @@ class Simulation:
             window_width = POINTS[point][0] + len(point) * 5 + 10 if POINTS[point][0] >= window_width else window_width
         
         path = os.path.abspath(__file__)
-        dir_path = os.path.dirname(path)
-        print(dir_path)
+        dir_path = f"{os.path.dirname(path)}/web"
 
         self.output_graph(G, dir_path)
         eel.init(dir_path)
