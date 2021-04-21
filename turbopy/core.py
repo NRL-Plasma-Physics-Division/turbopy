@@ -18,7 +18,6 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 import eel
 import os
-import sys
 import networkx as nx
 import numpy as np
 import warnings
