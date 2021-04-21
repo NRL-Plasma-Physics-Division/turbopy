@@ -16,6 +16,10 @@ https://doi.org/10.1016/j.cpc.2020.107607
 """
 from pathlib import Path
 from abc import ABC, abstractmethod
+import eel
+import os
+import sys
+import networkx as nx
 import numpy as np
 import warnings
 
@@ -144,12 +148,91 @@ class Simulation:
         self.prepare_simulation()
         print("Initialization complete")
 
-        print("Simulation is started")
-        while self.clock.is_running():
-            self.fundamental_cycle()
+        self.create_graph()
+        print("Graph is displayed")
 
-        self.finalize_simulation()
-        print("Simulation complete")
+        # print("Simulation is started")
+        # while self.clock.is_running():
+        #     self.fundamental_cycle()
+
+        # self.finalize_simulation()
+        # print("Simulation complete")
+    
+    def create_graph(self): 
+        G = nx.DiGraph()
+
+        #name of simulation
+        simulation_name = self.__class__.__name__ 
+
+        #name of node to id
+        NAME_TO_ID = {simulation_name: 0}
+
+        #dictionary of modules and what they own
+        modules = {self: self.physics_modules + self.compute_tools + self.diagnostics} 
+        #add simulation node to graph
+        G.add_node(simulation_name, title=simulation_name, id=0, type='Simulation')
+
+        #add nodes
+        for mod in modules[self]:
+            name = mod.__class__.__name__
+            base = mod.__class__.__base__.__name__
+
+            #key node to id
+            NAME_TO_ID[name] = len(modules)
+            #add node to graph
+            G.add_node(name, title=name, id=len(modules), type=base)
+            #add node to dictionary
+            modules[mod] = []
+
+            #for variables in module
+            for m in mod.__dict__: 
+                #if private
+                if m.startswith("_"): 
+                    continue
+                if m not in modules:
+                    NAME_TO_ID[m] = len(modules)
+                    G.add_node(m, title=m, id=len(modules), type=mod.__dict__[m].__class__.__name__)
+                modules[mod] += [m]
+                modules[m] = []
+        
+        #add edges
+        for mod in modules:
+            name = mod.__class__.__name__
+            if name == 'Simulation': 
+                for m in modules[mod]:
+                    G.add_edge(m.__class__.__name__, name, source=NAME_TO_ID[m.__class__.__name__], target=NAME_TO_ID[name])
+                continue
+            for m in modules[mod]:
+                G.add_edge(m, name, source=NAME_TO_ID[m], target=NAME_TO_ID[name])
+        
+        #calculate x, y coordinates
+        POINTS = nx.drawing.nx_pydot.graphviz_layout(G, prog='dot')
+        window_width = 0
+        window_height = 0
+
+        for point in POINTS: 
+            G.nodes[point]['x'] = POINTS[point][0]
+            G.nodes[point]['y'] = POINTS[point][1]
+
+            window_height = POINTS[point][1] + 50 if POINTS[point][1] >= window_height else window_height
+            window_width = POINTS[point][0] + len(point) * 5 + 10 if POINTS[point][0] >= window_width else window_width
+        
+        path = os.path.abspath(__file__)
+        dir_path = os.path.dirname(path)
+        print(dir_path)
+
+        self.output_graph(G, dir_path)
+        eel.init(dir_path)
+        eel.start('index.html', size=(window_width, window_height))
+
+    def output_graph(self, G, dir_path):
+        f = open(f"{dir_path}/data.js", "w")
+        f.write("var mydata = {\n\t")
+        nodeString = ", ".join(str(G.nodes[point]) for point in G.nodes)
+        f.write(f'"nodes": [{nodeString}], \n\t')
+        edgeString = ", ".join(str(G.edges[edge]) for edge in G.edges)
+        f.write(f'"edges":[{edgeString}]\n')
+        f.write("};\nmodule.exports = {mydata};")
 
     def fundamental_cycle(self):
         """
