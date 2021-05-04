@@ -221,7 +221,14 @@ class Simulation:
 
         self.output_graph(G, dir_path)
         eel.init(dir_path)
-        eel.start('index.html', size=(window_width, window_height))
+        eel.start('index.html', size=(window_width, window_height), close_callback=self.close_callback)
+
+    def close_callback(self, route, websockets):
+        if not websockets:
+            path = os.path.abspath(__file__)
+            dir_path = f"{os.path.dirname(path)}/web"
+            os.remove(f'{dir_path}/data.js')
+            exit()
 
     def output_graph(self, G, dir_path):
         f = open(f"{dir_path}/data.js", "w")
