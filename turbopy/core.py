@@ -154,8 +154,8 @@ class Simulation:
         self.finalize_simulation()
         print("Simulation complete")
 
-        print("Graph is displayed")
-        self.create_graph()
+        # print("Graph is displayed")
+        # self.create_graph()
     
     def create_graph(self): 
         G = nx.DiGraph()
