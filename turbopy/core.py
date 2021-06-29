@@ -264,7 +264,7 @@ class Simulation:
 
             for diag_type, d in diags.items():
                 diagnostic_class = Diagnostic.lookup(diag_type)
-                if not type(d) is list:
+                if type(d) is not list:
                     d = [d]
                 file_num = 0
                 for di in d:
@@ -807,7 +807,7 @@ class Grid:
                                     "in the grid")
         if len(i) == 1:
             return lambda y: y[i]
-        if len(i) == 2:
+        else:
             # linearly interpolate
             def interpval(yvec):
                 """A function which takes a grid quantity ``y`` and

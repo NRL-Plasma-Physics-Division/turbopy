@@ -275,6 +275,12 @@ def test_create_interpolator(simple_grid):
     interp = simple_grid.create_interpolator(r_val)
     linear_value = r_val / (simple_grid.r_max - simple_grid.r_min)
     assert np.allclose(interp(field), linear_value)
+    r_val = -0.1
+    with pytest.raises(AssertionError):
+        interp = simple_grid.create_interpolator(r_val)
+    r_val = 0.2
+    with pytest.raises(AssertionError):
+        interp = simple_grid.create_interpolator(r_val)
 
 
 def test_set_cartesian_volumes():
