@@ -247,40 +247,43 @@ class Simulation:
 
     def read_diagnostics_from_input(self):
         """Construct :class:`Diagnostic` instances based on input"""
-        if "Diagnostics" in self.input_data:
-            # This dictionary has two types of keys:
-            #    keys that are valid diagnostic types
-            #    other keys, which should be passed along
-            #    as "default" parameters
-            diags = {k: v for k, v in
-                     self.input_data["Diagnostics"].items()
-                     if Diagnostic.is_valid_name(k)}
-            params = {k: v for k, v in
-                      self.input_data["Diagnostics"].items()
-                      if not Diagnostic.is_valid_name(k)}
+        diagnostics, default_params = self.parse_diagnostic_input_dictionary()
 
-            if "directory" not in params:
-                params["directory"] = str(Path("default_output"))
+        diagnostics = make_values_into_lists(diagnostics)
+        default_params.setdefault('directory', 'default_output')
 
-            for diag_type, d in diags.items():
-                diagnostic_class = Diagnostic.lookup(diag_type)
-                if not type(d) is list:
-                    d = [d]
-                file_num = 0
-                for di in d:
-                    # Values in di supersede values in params because
-                    # of the order in which these are combined
-                    di = {**params, **di, "type": diag_type}
-                    if "filename" not in di:
-                        # Set a default output filename
-                        file_end = di.get("output_type", "out")
-                        di["filename"] = (f"{diag_type}{file_num}"
-                                          f".{file_end}")
-                        file_num += 1
-                    di["filename"] = str(Path(di["directory"])
-                                         / Path(di["filename"]))
-                    self.diagnostics.append(
-                        diagnostic_class(owner=self, input_data=di))
+        for diag_type, diag_params in diagnostics.items():
+            diagnostic_class = Diagnostic.lookup(diag_type)
+
+            file_num = 0
+            for diag_item in diag_params:
+                # Values in di supersede values in params because
+                # of the order in which these are combined
+                diag_item = {**default_params, **diag_item, "type": diag_type}
+                if "filename" not in diag_item:
+                    # Set a default output filename
+                    file_end = diag_item.get("output_type", "out")
+                    diag_item["filename"] = (f"{diag_type}{file_num}"
+                                        f".{file_end}")
+                    file_num += 1
+                diag_item["filename"] = str(Path(diag_item["directory"])
+                                        / Path(diag_item["filename"]))
+                self.diagnostics.append(
+                    diagnostic_class(owner=self, input_data=diag_item))
+
+
+    def parse_diagnostic_input_dictionary(self):
+        # The input_data["Diagnostics"] dictionary has two types of keys:
+        #    1) keys that are valid diagnostic types
+        #    2) other keys, which should be passed along
+        #    as "default" parameters
+        diagnostics = {k: v for k, v in
+                    self.input_data["Diagnostics"].items()
+                    if Diagnostic.is_valid_name(k)}
+        default_params = {k: v for k, v in
+                    self.input_data["Diagnostics"].items()
+                    if not Diagnostic.is_valid_name(k)}
+        return diagnostics, default_params
 
     def sort_modules(self):
         """Sort :class:`Simulation.physics_modules` by some logic
@@ -968,3 +971,12 @@ class Diagnostic(DynamicFactory):
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._input_data})"
+
+def wrap_item_in_list(item):
+    if type(item) is list:
+        return item
+    else:
+        return [item]
+
+def make_values_into_lists(dictionary):
+    return {k: wrap_item_in_list(v) for k, v in dictionary.items()}
