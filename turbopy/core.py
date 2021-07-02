@@ -133,6 +133,10 @@ class Simulation:
 
         self.input_data = input_data
 
+        # set default values for optional
+        self.input_data.setdefault('Tools', {})
+        self.input_data.setdefault('Diagnostics', {})
+
     def run(self):
         """
         Runs the simulation
@@ -224,15 +228,14 @@ class Simulation:
 
     def read_tools_from_input(self):
         """Construct :class:`ComputeTools` based on input"""
-        if "Tools" in self.input_data:
-            for tool_name, params in self.input_data["Tools"].items():
-                tool_class = ComputeTool.lookup(tool_name)
-                if not isinstance(params, list):
-                    params = [params]
-                for tool in params:
-                    tool["type"] = tool_name
-                    self.compute_tools.append(tool_class(owner=self, 
-                                                         input_data=tool)) 
+        for tool_name, params in self.input_data["Tools"].items():
+            tool_class = ComputeTool.lookup(tool_name)
+            if not isinstance(params, list):
+                params = [params]
+            for tool in params:
+                tool["type"] = tool_name
+                self.compute_tools.append(tool_class(owner=self, 
+                                                        input_data=tool)) 
 
     def read_modules_from_input(self):
         """Construct :class:`PhysicsModule` instances based on input"""
@@ -252,25 +255,28 @@ class Simulation:
         diagnostics = make_values_into_lists(diagnostics)
         default_params.setdefault('directory', 'default_output')
 
-        for diag_type, diag_params in diagnostics.items():
+        for diag_type, list_of_diagnostics in diagnostics.items():
             diagnostic_class = Diagnostic.lookup(diag_type)
 
             file_num = 0
-            for diag_item in diag_params:
-                # Values in di supersede values in params because
-                # of the order in which these are combined
-                diag_item = {**default_params, **diag_item, "type": diag_type}
-                if "filename" not in diag_item:
+            for params in list_of_diagnostics:
+                params['type'] = diag_type
+                params = self.combine_dictionaries(default_params, params)
+                if "filename" not in params:
                     # Set a default output filename
-                    file_end = diag_item.get("output_type", "out")
-                    diag_item["filename"] = (f"{diag_type}{file_num}"
-                                        f".{file_end}")
+                    file_end = params.get("output_type", "out")
+                    params["filename"] = (f"{diag_type}{file_num}"
+                                             f".{file_end}")
                     file_num += 1
-                diag_item["filename"] = str(Path(diag_item["directory"])
-                                        / Path(diag_item["filename"]))
+                params["filename"] = str(Path(params["directory"])
+                                          / Path(params["filename"]))
                 self.diagnostics.append(
-                    diagnostic_class(owner=self, input_data=diag_item))
+                    diagnostic_class(owner=self, input_data=params))
 
+    def combine_dictionaries(self, defaults, custom):
+        # Values in "custom" dictionary supersede "defaults" because of
+        # the order in which they are combined here
+        return {**defaults, **custom}
 
     def parse_diagnostic_input_dictionary(self):
         # The input_data["Diagnostics"] dictionary has two types of keys:
