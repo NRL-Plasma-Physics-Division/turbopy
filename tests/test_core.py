@@ -139,7 +139,7 @@ def sim_fixt():
 def test_that_simulation_is_created(share_sim):
     assert share_sim.physics_modules == []
 
-def test_that_sim_is_prepared_correctly(share_sim):
+def test_that_shared_resource_is_available_in_initialize(share_sim):
     share_sim.prepare_simulation()
     assert len(share_sim.physics_modules) == 2
     assert len(share_sim.physics_modules[0].data) == 1
