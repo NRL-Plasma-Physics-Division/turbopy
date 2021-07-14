@@ -89,6 +89,61 @@ def test_read_grid_from_input_should_set_grid_attr_when_called(simple_sim):
     assert simple_sim.grid.r_min == 0
     assert simple_sim.grid.r_max == 1
 
+class ReceivingModule(PhysicsModule):
+    """Example PhysicsModule subclass for tests"""
+    def __init__(self, owner: Simulation, input_data: dict):
+        super().__init__(owner, input_data)
+        self.data = None
+
+    def inspect_resource(self, resource: dict):
+        if 'shared' in resource:
+            self.data = resource['shared']
+    
+    def initialize(self):
+        # if resources are shared correctly, then this list will be accessible
+        print(f'The first data item is {self.data[0]}')
+
+    def update(self):
+        pass
+
+class SharingModule(PhysicsModule):
+    """Example PhysicsModule subclass for tests"""
+    def __init__(self, owner: Simulation, input_data: dict):
+        super().__init__(owner, input_data)
+        self.data = ['test']
+
+    def exchange_resources(self):
+        self.publish_resource({'shared': self.data})
+
+    def update(self):
+        pass
+
+PhysicsModule.register("Receiving", ReceivingModule)
+PhysicsModule.register("Sharing", SharingModule)
+
+# Simulation class test methods
+@pytest.fixture(name='share_sim')
+def sim_fixt():
+    """Pytest fixture for basic simulation class"""
+    dic = {"Grid": {"N": 2, "r_min": 0, "r_max": 1},
+           "Clock": {"start_time": 0,
+                     "end_time": 10,
+                     "num_steps": 1},
+           "PhysicsModules": {
+               "Receiving": {},
+               "Sharing": {}
+           },
+           }
+    return Simulation(dic)
+
+def test_that_simulation_is_created(share_sim):
+    assert share_sim.physics_modules == []
+
+def test_that_shared_resource_is_available_in_initialize(share_sim):
+    share_sim.prepare_simulation()
+    assert len(share_sim.physics_modules) == 2
+    assert len(share_sim.physics_modules[0].data) == 1
+    assert id(share_sim.physics_modules[0].data) == id(share_sim.physics_modules[1].data)
 
 def test_gridless_simulation(tmp_path):
     """Test a gridless simulation"""
