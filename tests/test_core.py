@@ -123,7 +123,7 @@ PhysicsModule.register("Sharing", SharingModule)
 
 # Simulation class test methods
 @pytest.fixture(name='share_sim')
-def sim_fixt():
+def shared_simulation_fixture():
     """Pytest fixture for basic simulation class"""
     dic = {"Grid": {"N": 2, "r_min": 0, "r_max": 1},
            "Clock": {"start_time": 0,
