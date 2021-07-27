@@ -1,7 +1,15 @@
 """Tests for turbopy/core.py"""
 import pytest
 import warnings
-from turbopy.core import *
+from pathlib import Path
+import numpy as np
+from turbopy.core import (
+    ComputeTool,
+    PhysicsModule,
+    Diagnostic,
+    Simulation,
+    Grid,
+    SimulationClock)
 
 
 class ExampleTool(ComputeTool):
@@ -12,7 +20,7 @@ class ExampleModule(PhysicsModule):
     """Example PhysicsModule subclass for tests"""
     def update(self):
         pass
-    
+
     def inspect_resource(self, resource: dict):
         for attribute in resource:
             self.__setattr__(attribute, resource[attribute])
@@ -42,7 +50,7 @@ def sim_fixt(tmp_path):
                         {"custom_name": "example2"}]},
            "PhysicsModules": {"ExampleModule": {}},
            "Diagnostics": {
-               #default values come first
+               # default values come first
                "directory": f"{tmp_path}/default_output",
                "clock": {},
                "ExampleDiagnostic": [
@@ -89,6 +97,7 @@ def test_read_grid_from_input_should_set_grid_attr_when_called(simple_sim):
     assert simple_sim.grid.r_min == 0
     assert simple_sim.grid.r_max == 1
 
+
 class ReceivingModule(PhysicsModule):
     """Example PhysicsModule subclass for tests"""
     def __init__(self, owner: Simulation, input_data: dict):
@@ -98,13 +107,14 @@ class ReceivingModule(PhysicsModule):
     def inspect_resource(self, resource: dict):
         if 'shared' in resource:
             self.data = resource['shared']
-    
+
     def initialize(self):
         # if resources are shared correctly, then this list will be accessible
         print(f'The first data item is {self.data[0]}')
 
     def update(self):
         pass
+
 
 class SharingModule(PhysicsModule):
     """Example PhysicsModule subclass for tests"""
@@ -118,8 +128,10 @@ class SharingModule(PhysicsModule):
     def update(self):
         pass
 
+
 PhysicsModule.register("Receiving", ReceivingModule)
 PhysicsModule.register("Sharing", SharingModule)
+
 
 # Simulation class test methods
 @pytest.fixture(name='share_sim')
@@ -136,14 +148,17 @@ def shared_simulation_fixture():
            }
     return Simulation(dic)
 
+
 def test_that_simulation_is_created(share_sim):
     assert share_sim.physics_modules == []
+
 
 def test_that_shared_resource_is_available_in_initialize(share_sim):
     share_sim.prepare_simulation()
     assert len(share_sim.physics_modules) == 2
     assert len(share_sim.physics_modules[0].data) == 1
     assert id(share_sim.physics_modules[0].data) == id(share_sim.physics_modules[1].data)
+
 
 def test_gridless_simulation(tmp_path):
     """Test a gridless simulation"""
@@ -263,7 +278,7 @@ def test_default_diagnostic_filename_increments_for_multiple_diagnostics(simple_
     simple_sim.read_diagnostics_from_input()
     assert simple_sim.diagnostics[0]._input_data["directory"] == str(Path(f"{tmp_path}/default_output"))
     assert simple_sim.diagnostics[0]._input_data["filename"] == str(Path(f"{tmp_path}/default_output")
-                                                                   / Path("clock0.out"))
+                                                                    / Path("clock0.out"))
     input_data = simple_sim.diagnostics[2]._input_data
     assert input_data["directory"] == str(Path(f"{tmp_path}/default_output"))
     assert input_data["filename"] == str(Path(f"{tmp_path}/default_output")
