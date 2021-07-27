@@ -816,7 +816,7 @@ class Grid:
                                     "in the grid")
         if len(i) == 1:
             return lambda y: y[i]
-        if len(i) == 2:
+        else:
             # linearly interpolate
             def interpval(yvec):
                 """A function which takes a grid quantity ``y`` and
