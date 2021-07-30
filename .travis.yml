@@ -13,6 +13,7 @@ install:
     - conda info -a
     - conda env create -f environment.yml
     - conda activate turbopy
+    # Install turbopy into this environment
     - pip install -e .
     #- pip install pylint-exit
     - pip install anybadge
