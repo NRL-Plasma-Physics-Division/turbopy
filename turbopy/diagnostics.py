@@ -371,10 +371,10 @@ class FieldDiagnostic(Diagnostic):
         self.output = input_data["output_type"]  # "stdout"
         self.field = None
 
-        self.dump_interval = None
-        self.last_dump = None
-        self.diagnose = self.do_diagnostic
-        self.diagnostic_size = None
+        #self.dump_interval = None
+        #self.last_dump = None
+        #self.diagnose = self.do_diagnostic
+        #self.diagnostic_size = None
 
         self.field_was_found = False
 
@@ -382,14 +382,14 @@ class FieldDiagnostic(Diagnostic):
         self.handler = None
         self.interval = self._input_data.get('write_interval', None)
 
-    def check_step(self):
+    #def check_step(self):
         """
         Run diagnostic if dump_interval time has passed since last_dump
         and update last_dump with current time if run.
         """
-        if self._owner.clock.time >= self.last_dump + self.dump_interval:
-            self.do_diagnostic()
-            self.last_dump = self._owner.clock.time
+        #if self._owner.clock.time >= self.last_dump + self.dump_interval:
+            #self.do_diagnostic()
+            #self.last_dump = self._owner.clock.time
 
     def do_diagnostic(self):
         """
@@ -426,17 +426,17 @@ class FieldDiagnostic(Diagnostic):
         if not self.field_was_found:
             raise (RuntimeError(f"Diagnostic field {self.field_name}"
                                 " was not found"))
-        self.diagnostic_size = (self._owner.clock.num_steps + 1,
-                                self.field.shape[0])
-        if "dump_interval" in self._input_data:
-            self.dump_interval = self._input_data["dump_interval"]
-            self.diagnose = self.check_step
-            self.last_dump = 0
-            self.diagnostic_size = (int(np.ceil(
-                self._owner.clock.end_time / self.dump_interval) + 1),
-                self.field.shape[0])
+        #self.diagnostic_size = (self._owner.clock.num_steps + 1,
+                                #self.field.shape[0])
+        #if "dump_interval" in self._input_data:
+            #self.dump_interval = self._input_data["dump_interval"]
+            #self.diagnose = self.check_step
+            #self.last_dump = 0
+            #self.diagnostic_size = (int(np.ceil(
+                #self._owner.clock.end_time / self.dump_interval) + 1),
+                #self.field.shape[0])
 
-        self._input_data['diagnostic_size'] = self.diagnostic_size
+        #self._input_data['diagnostic_size'] = self.diagnostic_size
 
         # Use composition to provide i/o functionality
         self.outputter = utilities[self._input_data["output_type"]](**self._input_data)
