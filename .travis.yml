@@ -13,7 +13,7 @@ install:
     - conda info -a
     - conda env create -f environment.yml
     - conda activate turbopy
-    #- pip install codecov
+    # Install turbopy into this environment
     - pip install -e .
     #- pip install pylint-exit
     - pip install anybadge
@@ -24,25 +24,3 @@ script:
 
 after_success:
     - bash <(curl -s https://codecov.io/bash)
-
-      #after_success:
-      # - codecov # submit coverage
-      # test
-      # - pytest --cov=turbopy tests/ | tee pytest.txt
-      # - score=$(cat pytest.txt | grep TOTAL | grep -o -P '[0-9]*(\.[0-9]*)?(?=%)')
-      # - echo "test coverage is ${score}%"
-      #- anybadge --label=pytest --value=$score --suffix='%' --file=pytest.svg 50=red 60=orange 80=yellow 100=green
-      # docs
-      #- cd docs
-      #- make html
-      #- rsync -rl _build/html/ /srv/shiny-server/nepc/doc/ --delete
-      #- cd ..
-      #- docstr-coverage nepc | tee docstr.txt || true
-      #- score=$(cat docstr.txt | tail -n 1 | grep -Eo '[+-]?[0-9]+([.][0-9]+)?')
-      #- echo "docstr-coverage score was ${score}%"
-      #- anybadge --label=doc --value=$score --suffix='%' --file=sphinx.svg 50=red 60=orange 80=yellow 100=green
-      # lint
-      #- pylint --output-format=text nepc/ | tee pylint.txt || pylint-exit $?
-      #- score=$(sed -n 's/^Your code has been rated at \([-0-9.]*\)\/.*/\1/p' pylint.txt)
-      #- echo "Pylint score was $score"
-      #- anybadge --value=$score --file=pylint.svg pylint
