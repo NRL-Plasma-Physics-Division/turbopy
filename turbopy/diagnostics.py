@@ -93,7 +93,7 @@ class CSVOutputUtility(OutputUtility):
             1D numpy array of values to be added to the buffer.
         """
         self._append(data)
-    
+
     def finalize(self):
         """Write the CSV data to file.
         """
@@ -180,7 +180,6 @@ class NPYOutputUtility(OutputUtility):
         """Write buffer to file"""
         self._write_buffer()
 
-
     def _append(self, data):
         """Append data to the buffer.
 
@@ -199,10 +198,11 @@ class NPYOutputUtility(OutputUtility):
             np.save(f, self._buffer)
 
 
-utilities = {"stdout": PrintOutputUtility,
-             "csv": CSVOutputUtility,
-             "npy": NPYOutputUtility
-            }
+utilities = {
+    "stdout": PrintOutputUtility,
+    "csv": CSVOutputUtility,
+    "npy": NPYOutputUtility
+}
 
 
 class IntervalHandler:
@@ -224,11 +224,11 @@ class IntervalHandler:
 
         if interval is None:
             self.perform_action = self._action_every_time
-    
+
     def _action_every_time(self, time):
         self._action()
         self.current_step += 1
-    
+
     def perform_action(self, time):
         """Perform the action if an interval has passed"""
         if self._check_step(time):
@@ -318,7 +318,7 @@ class PointDiagnostic(Diagnostic):
 
         # Use composition to provide i/o functionality
         self.outputter = utilities[self._input_data["output_type"]](**self._input_data)
-        
+
         # set up interval handler
         if self.interval:
             self.handler = IntervalHandler(self.interval, self.outputter.write_data)
@@ -350,13 +350,14 @@ class FieldDiagnostic(Diagnostic):
         Output type.
     field : str, None
         Field as dictated by resource.
-    dump_interval : SimulationClock, None
-        Time interval between two diagnostic runs.
-    last_dump : SimulationClock, None
-        Time of last diagnostic run.
+    dump_interval : int, None
+        Time interval at which the diagnostic is run.
+    write_interval : int, None
+        Time interval at which the diagnostic buffer is written to file. If
+        this is None, then the buffer is not written out until the end of
+        the simulation.
     diagnose : method
-        Run `do_diagnostic` or `check_step` method depending on
-        configuration parameters.
+        Uses the dump and write handlers to perform the diagnostic actions.
     diagnostic_size : (int, int), None
         Size of data set to be written to CSV file. First value is the
         number of time points. Second value is number of spatial points.
@@ -371,25 +372,21 @@ class FieldDiagnostic(Diagnostic):
         self.output = input_data["output_type"]  # "stdout"
         self.field = None
 
-        #self.dump_interval = None
-        #self.last_dump = None
-        #self.diagnose = self.do_diagnostic
-        #self.diagnostic_size = None
+        # Set up handler for the diagnostic interval
+        self.dump_handler = None
+        self.dump_interval = self._input_data.get('dump_interval', None)
 
         self.field_was_found = False
-
         self.outputter = None
-        self.handler = None
-        self.interval = self._input_data.get('write_interval', None)
+        self.diagnostic_size = None
 
-    #def check_step(self):
-        """
-        Run diagnostic if dump_interval time has passed since last_dump
-        and update last_dump with current time if run.
-        """
-        #if self._owner.clock.time >= self.last_dump + self.dump_interval:
-            #self.do_diagnostic()
-            #self.last_dump = self._owner.clock.time
+        self.write_handler = None
+        self.write_interval = self._input_data.get('write_interval', None)
+
+    def diagnose(self):
+        self.dump_handler.perform_action(self._owner.clock.time)
+        if self.handler:
+            self.write_handler.perform_action(self._owner.clock.time)
 
     def do_diagnostic(self):
         """
@@ -399,8 +396,6 @@ class FieldDiagnostic(Diagnostic):
             self.outputter.diagnose(self.field[:, self.component])
         else:
             self.outputter.diagnose(self.field)
-        if self.handler:
-            self.handler.perform_action(self._owner.clock.time)
 
     def inspect_resource(self, resource):
         """
@@ -426,24 +421,30 @@ class FieldDiagnostic(Diagnostic):
         if not self.field_was_found:
             raise (RuntimeError(f"Diagnostic field {self.field_name}"
                                 " was not found"))
-        #self.diagnostic_size = (self._owner.clock.num_steps + 1,
-                                #self.field.shape[0])
-        #if "dump_interval" in self._input_data:
-            #self.dump_interval = self._input_data["dump_interval"]
-            #self.diagnose = self.check_step
-            #self.last_dump = 0
-            #self.diagnostic_size = (int(np.ceil(
-                #self._owner.clock.end_time / self.dump_interval) + 1),
-                #self.field.shape[0])
+        self.diagnostic_size = (self._owner.clock.num_steps + 1,
+                                self.field.shape[0])
 
-        #self._input_data['diagnostic_size'] = self.diagnostic_size
+        if "dump_interval" in self._input_data:
+            dump_interval = self._input_data["dump_interval"]
+            self.diagnostic_size = (int(np.ceil(
+                self._owner.clock.end_time / dump_interval) + 1),
+                self.field.shape[0])
+
+        self._input_data['diagnostic_size'] = self.diagnostic_size
 
         # Use composition to provide i/o functionality
         self.outputter = utilities[self._input_data["output_type"]](**self._input_data)
-        
-        # Set up interval handler
-        if self.interval:
-            self.handler = IntervalHandler(self.interval, self.outputter.write_data)
+
+        # Set up write interval handler
+        if self.write_interval:
+            self.write_handler = IntervalHandler(
+                self.write_interval,
+                self.outputter.write_data)
+
+        # Set up the dump handler:
+        self.dump_handler = IntervalHandler(
+            self.dump_interval,
+            self.do_diagnostic)
 
     def finalize(self):
         """
@@ -549,7 +550,6 @@ class ClockDiagnostic(Diagnostic):
         """Write time into self.csv and saves as a CSV file."""
         self.diagnose()
         self.csv.finalize()
-
 
 
 class HistoryDiagnostic(Diagnostic):
