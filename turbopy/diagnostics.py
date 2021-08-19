@@ -232,7 +232,6 @@ class IntervalHandler:
     def perform_action(self, time):
         """Perform the action if an interval has passed"""
         if self._check_step(time):
-            print(time) #This line is just for testing, remove when ready to merge
             self._action()
             self._last_action = time
             self.current_step += 1
@@ -322,7 +321,7 @@ class PointDiagnostic(Diagnostic):
         
         # set up interval handler
         if self.interval:
-            self.handler = IntervalHandler(self.interval, self.csv.write_data)
+            self.handler = IntervalHandler(self.interval, self.outputter.write_data)
 
     def finalize(self):
         """
@@ -444,7 +443,7 @@ class FieldDiagnostic(Diagnostic):
         
         # Set up interval handler
         if self.interval:
-            self.handler = IntervalHandler(self.interval, self.csv.write_data)
+            self.handler = IntervalHandler(self.interval, self.outputter.write_data)
 
     def finalize(self):
         """
