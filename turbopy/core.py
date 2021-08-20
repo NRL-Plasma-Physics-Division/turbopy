@@ -133,7 +133,7 @@ class Simulation:
         self.units = None
 
         self.input_data = input_data
-        
+
         self.all_shared_resources = {}
 
         # set default values for optional
@@ -479,7 +479,9 @@ class PhysicsModule(DynamicFactory):
                 warnings.warn(f"Module {self.__class__.__name__} can't find"
                               f"needed resource {shared_name}")
             else:
-                self.__dict__[var_name] = self._owner.all_shared_resources[shared_name]
+                self.__dict__[var_name] = self._owner.all_shared_resources[
+                                              shared_name
+                                          ]
 
     def exchange_resources(self):
         """Main method for sharing resources with other
@@ -1007,7 +1009,9 @@ class Diagnostic(DynamicFactory):
                 warnings.warn(f"Diagnostic {self.__class__.__name__} can't "
                               f"find needed resource {shared_name}")
             else:
-                self.__dict__[var_name] = self._owner.all_shared_resources[shared_name]
+                self.__dict__[var_name] = self._owner.all_shared_resources[
+                                              shared_name
+                                          ]
 
     def diagnose(self):
         """Perform diagnostic step

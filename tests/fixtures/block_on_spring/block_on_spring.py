@@ -41,7 +41,7 @@ class BlockDiagnostic(Diagnostic):
     def initialize(self):
         diagnostic_size = (self._owner.clock.num_steps + 1, 3)
         self.outputter = CSVOutputUtility(self._input_data["filename"],
-            diagnostic_size)
+                                          diagnostic_size)
 
     def finalize(self):
         self.diagnose()
@@ -134,7 +134,7 @@ def bos_run():
         "Tools": {
             "Leapfrog": {},
             "BlockForwardEuler": {},
-            "BackwardEuler":{}
+            "BackwardEuler": {}
         },
         "Diagnostics": {
             # default values come first

@@ -98,6 +98,7 @@ def test_read_grid_from_input_should_set_grid_attr_when_called(simple_sim):
     assert simple_sim.grid.r_max == 1
 
 
+# Test the old sharing API
 class ReceivingModule(PhysicsModule):
     """Example PhysicsModule subclass for tests"""
     def __init__(self, owner: Simulation, input_data: dict):
@@ -157,7 +158,63 @@ def test_that_shared_resource_is_available_in_initialize(share_sim):
     share_sim.prepare_simulation()
     assert len(share_sim.physics_modules) == 2
     assert len(share_sim.physics_modules[0].data) == 1
-    assert id(share_sim.physics_modules[0].data) == id(share_sim.physics_modules[1].data)
+    assert (id(share_sim.physics_modules[0].data)
+            == id(share_sim.physics_modules[1].data))
+
+
+# Test the new sharing API
+class ReceivingModuleV2(PhysicsModule):
+    """Example PhysicsModule subclass for tests"""
+    def __init__(self, owner: Simulation, input_data: dict):
+        super().__init__(owner, input_data)
+        self.data = None
+        self._needed_resources = {'shared': 'data'}
+
+    def initialize(self):
+        # if resources are shared correctly, then this list will be accessible
+        print(f'The first data item is {self.data[0]}')
+
+    def update(self):
+        pass
+
+
+class SharingModuleV2(PhysicsModule):
+    """Example PhysicsModule subclass for tests"""
+    def __init__(self, owner: Simulation, input_data: dict):
+        super().__init__(owner, input_data)
+        self.data = ['test']
+        self._resources_to_share = {'shared': self.data}
+
+    def update(self):
+        pass
+
+
+PhysicsModule.register("ReceivingV2", ReceivingModuleV2)
+PhysicsModule.register("SharingV2", SharingModuleV2)
+
+
+# Simulation class test methods
+@pytest.fixture(name='share_sim_V2')
+def shared_simulation_V2_fixture():
+    """Pytest fixture for basic simulation class"""
+    dic = {"Grid": {"N": 2, "r_min": 0, "r_max": 1},
+           "Clock": {"start_time": 0,
+                     "end_time": 10,
+                     "num_steps": 1},
+           "PhysicsModules": {
+               "ReceivingV2": {},
+               "SharingV2": {}
+           },
+           }
+    return Simulation(dic)
+
+
+def test_that_V2_shared_resource_is_available_in_initialize(share_sim_V2):
+    share_sim_V2.prepare_simulation()
+    assert len(share_sim_V2.physics_modules) == 2
+    assert len(share_sim_V2.physics_modules[0].data) == 1
+    assert (id(share_sim_V2.physics_modules[0].data)
+            == id(share_sim_V2.physics_modules[1].data))
 
 
 def test_gridless_simulation(tmp_path):
