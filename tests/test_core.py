@@ -1,7 +1,15 @@
 """Tests for turbopy/core.py"""
 import pytest
 import warnings
-from turbopy.core import *
+from pathlib import Path
+import numpy as np
+from turbopy.core import (
+    ComputeTool,
+    PhysicsModule,
+    Diagnostic,
+    Simulation,
+    Grid,
+    SimulationClock)
 
 
 class ExampleTool(ComputeTool):
@@ -12,7 +20,7 @@ class ExampleModule(PhysicsModule):
     """Example PhysicsModule subclass for tests"""
     def update(self):
         pass
-    
+
     def inspect_resource(self, resource: dict):
         for attribute in resource:
             self.__setattr__(attribute, resource[attribute])
@@ -42,7 +50,7 @@ def sim_fixt(tmp_path):
                         {"custom_name": "example2"}]},
            "PhysicsModules": {"ExampleModule": {}},
            "Diagnostics": {
-               #default values come first
+               # default values come first
                "directory": f"{tmp_path}/default_output",
                "clock": {},
                "ExampleDiagnostic": [
@@ -88,6 +96,68 @@ def test_read_grid_from_input_should_set_grid_attr_when_called(simple_sim):
     assert simple_sim.grid.num_points == 2
     assert simple_sim.grid.r_min == 0
     assert simple_sim.grid.r_max == 1
+
+
+class ReceivingModule(PhysicsModule):
+    """Example PhysicsModule subclass for tests"""
+    def __init__(self, owner: Simulation, input_data: dict):
+        super().__init__(owner, input_data)
+        self.data = None
+
+    def inspect_resource(self, resource: dict):
+        if 'shared' in resource:
+            self.data = resource['shared']
+
+    def initialize(self):
+        # if resources are shared correctly, then this list will be accessible
+        print(f'The first data item is {self.data[0]}')
+
+    def update(self):
+        pass
+
+
+class SharingModule(PhysicsModule):
+    """Example PhysicsModule subclass for tests"""
+    def __init__(self, owner: Simulation, input_data: dict):
+        super().__init__(owner, input_data)
+        self.data = ['test']
+
+    def exchange_resources(self):
+        self.publish_resource({'shared': self.data})
+
+    def update(self):
+        pass
+
+
+PhysicsModule.register("Receiving", ReceivingModule)
+PhysicsModule.register("Sharing", SharingModule)
+
+
+# Simulation class test methods
+@pytest.fixture(name='share_sim')
+def shared_simulation_fixture():
+    """Pytest fixture for basic simulation class"""
+    dic = {"Grid": {"N": 2, "r_min": 0, "r_max": 1},
+           "Clock": {"start_time": 0,
+                     "end_time": 10,
+                     "num_steps": 1},
+           "PhysicsModules": {
+               "Receiving": {},
+               "Sharing": {}
+           },
+           }
+    return Simulation(dic)
+
+
+def test_that_simulation_is_created(share_sim):
+    assert share_sim.physics_modules == []
+
+
+def test_that_shared_resource_is_available_in_initialize(share_sim):
+    share_sim.prepare_simulation()
+    assert len(share_sim.physics_modules) == 2
+    assert len(share_sim.physics_modules[0].data) == 1
+    assert id(share_sim.physics_modules[0].data) == id(share_sim.physics_modules[1].data)
 
 
 def test_gridless_simulation(tmp_path):
@@ -224,7 +294,7 @@ def test_default_diagnostic_filename_increments_for_multiple_diagnostics(simple_
     simple_sim.read_diagnostics_from_input()
     assert simple_sim.diagnostics[0]._input_data["directory"] == str(Path(f"{tmp_path}/default_output"))
     assert simple_sim.diagnostics[0]._input_data["filename"] == str(Path(f"{tmp_path}/default_output")
-                                                                   / Path("clock0.out"))
+                                                                    / Path("clock0.out"))
     input_data = simple_sim.diagnostics[2]._input_data
     assert input_data["directory"] == str(Path(f"{tmp_path}/default_output"))
     assert input_data["filename"] == str(Path(f"{tmp_path}/default_output")
@@ -291,6 +361,12 @@ def test_create_interpolator(simple_grid):
     interp = simple_grid.create_interpolator(r_val)
     linear_value = r_val / (simple_grid.r_max - simple_grid.r_min)
     assert np.allclose(interp(field), linear_value)
+    r_val = -0.1
+    with pytest.raises(AssertionError):
+        interp = simple_grid.create_interpolator(r_val)
+    r_val = 0.2
+    with pytest.raises(AssertionError):
+        interp = simple_grid.create_interpolator(r_val)
 
 
 def test_set_cartesian_volumes():
