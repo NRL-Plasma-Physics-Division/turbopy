@@ -474,7 +474,18 @@ class PhysicsModule(DynamicFactory):
             print(f"Module {self.__class__.__name__} is sharing {k}")
 
         self._owner.gather_shared_resources(self._resources_to_share)
+        
+    def publish_resource(self, resource: dict):
+        """Method for accepting resources shared by other PhysicsModules
+        If your subclass needs the data described by the key, now's
+        their chance to save a pointer to the data.
 
+        Parameters
+        ----------
+        resource : `dict`
+            resource dictionary to be shared
+        """
+        pass
 
     def update(self):
         """Do the main work of the :class:`PhysicsModule`

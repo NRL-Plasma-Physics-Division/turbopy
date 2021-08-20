@@ -34,10 +34,10 @@ class EMWave(PhysicsModule):
     def update(self):
         phase = - self.omega * self._owner.clock.time + self.k * (self._owner.grid.r - 0.5)
         self.E[:] = self.E0 * np.cos(2 * np.pi * phase)
-    """        
+        
     def exchange_resources(self):
         self.publish_resource({"EMField:E": self.E})
-    """
+    
 
 class ChargedParticle(PhysicsModule):
     def __init__(self, owner: Simulation, input_data: dict):

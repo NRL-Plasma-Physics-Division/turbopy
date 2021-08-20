@@ -121,10 +121,10 @@ class SharingModule(PhysicsModule):
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
         self.data = ['test']
-    """
+    
     def exchange_resources(self):
         self.publish_resource({'shared': self.data})
-    """
+    
     def update(self):
         pass
 
