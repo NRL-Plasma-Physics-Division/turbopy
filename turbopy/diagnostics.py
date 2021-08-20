@@ -380,6 +380,7 @@ class FieldDiagnostic(Diagnostic):
         self.outputter = None
         self.diagnostic_size = None
 
+        # Set up handler for writing to file during the simulation
         self.write_handler = None
         self.write_interval = self._input_data.get('write_interval', None)
 
