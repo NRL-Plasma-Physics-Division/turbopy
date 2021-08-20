@@ -192,6 +192,9 @@ PhysicsModule.register("ReceivingV2", ReceivingModuleV2)
 PhysicsModule.register("SharingV2", SharingModuleV2)
 
 
+# Still need to add tests for the Diagnostics with the new API
+
+
 @pytest.fixture(name='share_sim_V2')
 def shared_simulation_V2_fixture():
     """Pytest fixture for basic simulation class"""
@@ -285,15 +288,6 @@ def test_subclass(simple_sim):
     assert issubclass(ExampleModule, PhysicsModule)
     assert issubclass(ExampleDiagnostic, Diagnostic)
     assert issubclass(ExampleTool, ComputeTool)
-
-
-def test_resources_in_inspect_resource_when_modules_and_diagnostics_are_cycled(simple_sim):
-    """Calls in the Example Physics Module or Diagnostic and checks the resources in the resource dictionary"""
-    # Stuck on this
-    # resources_in_physics_module = ExampleModule.inspect_resource(simple_sim, resource: dict):
-    # resources_in_diagnostic = ExampleDiagnostic.inspect_resource(simple_sim, resource: dict):
-    # assert resources_in_physics_module is not None
-    # assert resources_in_diagnostic is not None
 
 
 def test_read_clock_from_input_should_set_clock_attr_when_called(simple_sim):
