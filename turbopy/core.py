@@ -978,6 +978,18 @@ class Diagnostic(DynamicFactory):
         # For example: {"Fields:E": "E"} will make self.E
         self._needed_resources = {}
 
+    def inspect_resource(self, resource: dict):
+        """Save references to data from other PhysicsModules
+        If your subclass needs the data described by the key, now's
+        their chance to save a reference to the data
+        Parameters
+        ----------
+        resource: `dict`
+            A dictionary containing references to data shared by other
+            PhysicsModules.
+        """
+        pass
+
     def inspect_resources(self):
         """Method for accepting resources shared by other PhysicsModules
         If your subclass needs the data described by the key, now's
