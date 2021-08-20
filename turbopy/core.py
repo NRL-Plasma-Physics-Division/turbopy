@@ -315,7 +315,7 @@ class Simulation:
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self.input_data})"
-    
+
     def gather_shared_resources(self, shared):
         for k, v in shared.items():
             if k in self.all_shared_resources:
@@ -436,6 +436,32 @@ class PhysicsModule(DynamicFactory):
         # For example: {"Fields:E": "E"} will make self.E
         self._needed_resources = {}
 
+    def publish_resource(self, resource: dict):
+        """
+        Method which implements the details of sharing resources
+        Parameters
+        ----------
+        resource : `dict`
+            resource dictionary to be shared
+        """
+        for k in resource.keys():
+            print(f"Module {self.__class__.__name__} is sharing {k}")
+        for physics_module in self._owner.physics_modules:
+            physics_module.inspect_resource(resource)
+        for diagnostic in self._owner.diagnostics:
+            diagnostic.inspect_resource(resource)
+
+    def inspect_resource(self, resource: dict):
+        """Method for accepting resources shared by other PhysicsModules
+        If your subclass needs the data described by the key, now's
+        their chance to save a pointer to the data.
+        Parameters
+        ----------
+        resource : `dict`
+            resource dictionary to be shared
+        """
+        pass
+
     def inspect_resources(self):
         """Method for accepting resources shared by other PhysicsModules
         If your subclass needs the data described by the key, now's
@@ -449,7 +475,7 @@ class PhysicsModule(DynamicFactory):
             resource dictionary to be shared
         """
         for shared_name, var_name in self._needed_resources.items():
-            if not shared_name in self._owner.all_shared_resources:
+            if shared_name not in self._owner.all_shared_resources:
                 warnings.warn(f"Module {self.__class__.__name__} can't find"
                               f"needed resource {shared_name}")
             else:
