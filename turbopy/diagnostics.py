@@ -281,6 +281,7 @@ class PointDiagnostic(Diagnostic):
         self.outputter = None
         self.interval = self._input_data.get('write_interval', None)
         self.handler = None
+        self._needed_resources = {self.field_name: "field"}
 
     def diagnose(self):
         """
@@ -289,18 +290,6 @@ class PointDiagnostic(Diagnostic):
         self.outputter.diagnose(self.get_value(self.field))
         if self.handler:
             self.handler.perform_action(self._owner.clock.time)
-
-    def inspect_resource(self, resource):
-        """
-        Assign attribute field if field_name given in resource.
-
-        Parameters
-        ----------
-        resource : dict
-            Dictionary containing information of field_name to resource.
-        """
-        if self.field_name in resource:
-            self.field = resource[self.field_name]
 
     def initialize(self):
         """
@@ -361,8 +350,6 @@ class FieldDiagnostic(Diagnostic):
     diagnostic_size : (int, int), None
         Size of data set to be written to CSV file. First value is the
         number of time points. Second value is number of spatial points.
-    field_was_found : bool
-        Boolean representing if field was found in inspect_resource.
     """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
@@ -376,13 +363,15 @@ class FieldDiagnostic(Diagnostic):
         self.dump_handler = None
         self.dump_interval = self._input_data.get('dump_interval', None)
 
-        self.field_was_found = False
         self.outputter = None
         self.diagnostic_size = None
 
         # Set up handler for writing to file during the simulation
         self.write_handler = None
         self.write_interval = self._input_data.get('write_interval', None)
+
+        # Set up resource sharing
+        self._needed_resources = {self.field_name: "field"}
 
     def diagnose(self):
         self.dump_handler.perform_action(self._owner.clock.time)
@@ -398,20 +387,6 @@ class FieldDiagnostic(Diagnostic):
         else:
             self.outputter.diagnose(self.field)
 
-    def inspect_resource(self, resource):
-        """
-        Assign attribute field if field_name given in resource and
-        update boolean if field was found.
-
-        Parameters
-        ----------
-        resource : dict
-            Dictionary containing information of field_name to resource.
-        """
-        if self.field_name in resource:
-            self.field_was_found = True
-            self.field = resource[self.field_name]
-
     def initialize(self):
         """
         Initialize diagnostic_size and output function if provided as
@@ -419,9 +394,6 @@ class FieldDiagnostic(Diagnostic):
         :class:`CSVOutputUtility` class.
         """
         super().initialize()
-        if not self.field_was_found:
-            raise (RuntimeError(f"Diagnostic field {self.field_name}"
-                                " was not found"))
         self.diagnostic_size = (self._owner.clock.num_steps + 1,
                                 self.field.shape[0])
 
@@ -628,7 +600,6 @@ class HistoryDiagnostic(Diagnostic):
     def __init__(self, owner: Simulation, input_data: dict) -> None:
         super().__init__(owner, input_data)
         self._filename = input_data['filename']
-        self._data = {}
         self._traces = xr.Dataset()
         self._history_key_list = [t['name'] for t in input_data['traces']]
         self._handler = None
@@ -642,6 +613,9 @@ class HistoryDiagnostic(Diagnostic):
             self._num_outputs = int(np.ceil(
                 self._owner.clock.end_time / self._interval))
 
+        # get shared resources
+        self._needed_resources = {k: f'_data_{k}' for k in self._history_key_list}
+
     def diagnose(self):
         self._handler.perform_action(self._owner.clock.time)
 
@@ -651,7 +625,7 @@ class HistoryDiagnostic(Diagnostic):
 
         for name in self._history_key_list:
             # Note, use the ellipsis here to handle multidimensional data
-            self._traces[name]._variable._data[this_step, ...] = self._data[name]
+            self._traces[name]._variable._data[this_step, ...] = self.__dict__[f'_data_{name}']
 
     def initialize(self):
         # set up the time coordinate
@@ -666,14 +640,14 @@ class HistoryDiagnostic(Diagnostic):
 
         # set up the history traces
         for trace in self._input_data['traces']:
-            trace_data = self._data[trace['name']]
+            trace_data = self.__dict__[f'_data_{trace["name"]}']
 
             if isinstance(trace_data, xr.Dataset):
                 for item in trace_data:
                     # use the xarray API to add this to the dataset
                     self._traces[item] = trace_data[item].expand_dims(
                         {'timestep': self._traces.coords['timestep']}).copy(deep=True)
-                    self._data[item] = trace_data[item]
+                    self.__dict__[f'_data_{item}'] = trace_data[item]
                     self._history_key_list.append(item)
                 self._history_key_list.remove(trace['name'])
             else:
@@ -694,12 +668,6 @@ class HistoryDiagnostic(Diagnostic):
     def finalize(self):
         self._traces = self._traces.squeeze()  # remove unused dimensions
         self._traces.to_netcdf(self._filename, 'w')
-
-    def inspect_resource(self, resource: dict):
-        for item in self._history_key_list:
-            if item in resource:
-                self._data[item] = resource[item]
-
 
 
 Diagnostic.register("point", PointDiagnostic)
