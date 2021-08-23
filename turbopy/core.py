@@ -405,6 +405,17 @@ class PhysicsModule(DynamicFactory):
         Registered derived ComputeTool classes.
     _factory_type_name : `str`
         Type of PhysicsModule child class.
+    _needed_resources: `dict`
+        Dictionary that lists shared resources that this module
+        needs. Format is `{shared_key: variable_name}`, where
+        `shared_key` is a string with the name of needed resource,
+        and `variable_name` is a string to use when saving this
+        variable. For example: {"Fields:E": "E"} will make `self.E`.
+    _resources_to_share: `dict`
+        Dictionary that lists shared resources that this module
+        is sharing to others. Format is `{shared_key: variable}`, where
+        `shared_key` is a string with the name of resource to share,
+        and `variable` is the data to be shared.
 
     Notes
     -----
@@ -437,7 +448,11 @@ class PhysicsModule(DynamicFactory):
         self._needed_resources = {}
 
     def publish_resource(self, resource: dict):
-        """
+        """**Deprecated**
+
+        *This method is only here for backwards compatability. New
+        code should use the ``_resources_to_share`` dictionary.*
+
         Method which implements the details of sharing resources
         Parameters
         ----------
@@ -456,7 +471,12 @@ class PhysicsModule(DynamicFactory):
             diagnostic.inspect_resource(resource)
 
     def inspect_resource(self, resource: dict):
-        """Method for accepting resources shared by other PhysicsModules
+        """**Deprecated**
+
+        *This method is only here for backwards compatability. New
+        code should use the ``_needed_resources`` dictionary.*
+
+        Method for accepting resources shared by other PhysicsModules
         If your subclass needs the data described by the key, now's
         their chance to save a pointer to the data.
         Parameters
@@ -970,6 +990,12 @@ class Diagnostic(DynamicFactory):
     _input_data: `dict`
         Dictionary that contains user defined parameters about this
         object such as its name.
+    _needed_resources: `dict`
+        Dictionary that lists shared resources that this module
+        needs. Format is `{shared_key: variable_name}`, where
+        `shared_key` is a string with the name of needed resource,
+        and `variable_name` is a string to use when saving this
+        variable. For example: {"Fields:E": "E"} will make `self.E`.
     """
 
     _factory_type_name = "Diagnostic"
@@ -985,7 +1011,12 @@ class Diagnostic(DynamicFactory):
         self._needed_resources = {}
 
     def inspect_resource(self, resource: dict):
-        """Save references to data from other PhysicsModules
+        """**Deprecated**
+
+        *This method is only here for backwards compatability. New
+        code should use the ``_needed_resources`` dictionary.*
+
+        Save references to data from other PhysicsModules
         If your subclass needs the data described by the key, now's
         their chance to save a reference to the data
         Parameters
