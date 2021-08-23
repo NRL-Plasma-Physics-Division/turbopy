@@ -444,6 +444,10 @@ class PhysicsModule(DynamicFactory):
         resource : `dict`
             resource dictionary to be shared
         """
+        warnings.warn("The resource-sharing API has changed. "
+                      "Add to `self._resources_to_share` instead of "
+                      "calling `publish_resource`.",
+                      DeprecationWarning)
         for k in resource.keys():
             print(f"Module {self.__class__.__name__} is sharing {k}")
         for physics_module in self._owner.physics_modules:

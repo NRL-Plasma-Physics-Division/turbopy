@@ -153,6 +153,11 @@ def test_that_simulation_is_created(share_sim):
     assert share_sim.physics_modules == []
 
 
+def test_that_v1_sharing_is_deprecated(share_sim):
+    with pytest.deprecated_call():
+        share_sim.prepare_simulation()
+
+
 def test_that_shared_resource_is_available_in_initialize(share_sim):
     share_sim.prepare_simulation()
     assert len(share_sim.physics_modules) == 2
