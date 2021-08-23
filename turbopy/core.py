@@ -487,17 +487,6 @@ class PhysicsModule(DynamicFactory):
         pass
 
     def inspect_resources(self):
-        """Method for accepting resources shared by other PhysicsModules
-        If your subclass needs the data described by the key, now's
-        their chance to save a pointer to the data.
-
-        Parameters
-        ----------
-        all_shared_resource : `dict`
-            global dictionary for all shared resources
-        resource : `dict`
-            resource dictionary to be shared
-        """
         for shared_name, var_name in self._needed_resources.items():
             if shared_name not in self._owner.all_shared_resources:
                 warnings.warn(f"Module {self.__class__.__name__} can't find"
@@ -1028,17 +1017,6 @@ class Diagnostic(DynamicFactory):
         pass
 
     def inspect_resources(self):
-        """Method for accepting resources shared by other PhysicsModules
-        If your subclass needs the data described by the key, now's
-        their chance to save a pointer to the data.
-
-        Parameters
-        ----------
-        all_shared_resource : `dict`
-            global dictionary for all shared resources
-        resource : `dict`
-            resource dictionary to be shared
-        """
         for shared_name, var_name in self._needed_resources.items():
             if shared_name not in self._owner.all_shared_resources:
                 warnings.warn(f"Diagnostic {self.__class__.__name__} can't "
