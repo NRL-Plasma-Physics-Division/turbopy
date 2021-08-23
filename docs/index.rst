@@ -6,6 +6,7 @@ TurboPy: a framework for computational physics
    :caption: Contents
 
    getting_started
+   sharing_data
    api
 
 
