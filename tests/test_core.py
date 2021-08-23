@@ -218,43 +218,6 @@ def test_that_V2_shared_resource_is_available_in_initialize(share_sim_V2):
             == id(share_sim_V2.physics_modules[1].data))
 
 
-# Test V1/V2 interaction
-def test_that_V1V2_shared_resource_is_available_in_initialize():
-    config = {
-        "Grid": {"N": 2, "r_min": 0, "r_max": 1},
-        "Clock": {"start_time": 0,
-                  "end_time": 10,
-                  "num_steps": 1},
-        "PhysicsModules": {
-            "ReceivingV2": {},
-            "Sharing": {}
-            },
-        }
-    sim = Simulation(config)
-    sim.prepare_simulation()
-    assert len(sim.physics_modules) == 2
-    assert len(sim.physics_modules[0].data) == 1
-    assert (id(sim.physics_modules[0].data) == id(sim.physics_modules[1].data))
-
-
-def test_that_V2V1_shared_resource_is_available_in_initialize():
-    config = {
-        "Grid": {"N": 2, "r_min": 0, "r_max": 1},
-        "Clock": {"start_time": 0,
-                  "end_time": 10,
-                  "num_steps": 1},
-        "PhysicsModules": {
-            "Receiving": {},
-            "SharingV2": {}
-            },
-        }
-    sim = Simulation(config)
-    sim.prepare_simulation()
-    assert len(sim.physics_modules) == 2
-    assert len(sim.physics_modules[0].data) == 1
-    assert (id(sim.physics_modules[0].data) == id(sim.physics_modules[1].data))
-
-
 def test_gridless_simulation(tmp_path):
     """Test a gridless simulation"""
     dic = {"Clock": {"start_time": 0,
