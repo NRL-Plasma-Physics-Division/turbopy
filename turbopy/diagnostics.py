@@ -375,7 +375,7 @@ class FieldDiagnostic(Diagnostic):
 
     def diagnose(self):
         self.dump_handler.perform_action(self._owner.clock.time)
-        if self.handler:
+        if self.write_handler:
             self.write_handler.perform_action(self._owner.clock.time)
 
     def do_diagnostic(self):
