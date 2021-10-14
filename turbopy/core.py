@@ -489,7 +489,7 @@ class PhysicsModule(DynamicFactory):
     def inspect_resources(self):
         for shared_name, var_name in self._needed_resources.items():
             if shared_name not in self._owner.all_shared_resources:
-                warnings.warn(f"Module {self.__class__.__name__} can't find"
+                warnings.warn(f"Module {self.__class__.__name__} can't find "
                               f"needed resource {shared_name}")
             else:
                 self.__dict__[var_name] = self._owner.all_shared_resources[
@@ -662,7 +662,7 @@ class SimulationClock:
             if not np.isclose(self.num_steps, np.rint(self.num_steps)):
                 raise RuntimeError("Simulation interval is not an "
                                    "integer multiple of timestep dt")
-            self.num_steps = np.int(np.rint(self.num_steps))
+            self.num_steps = np.int64(np.rint(self.num_steps))
 
     def advance(self):
         """Increment the time"""
