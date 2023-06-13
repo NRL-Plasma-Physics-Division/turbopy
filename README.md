@@ -3,7 +3,7 @@ turboPy
 [![DOI](https://zenodo.org/badge/268071520.svg)](https://zenodo.org/badge/latestdoi/268071520)
 [![PyPI version](https://badge.fury.io/py/turbopy.svg)](https://badge.fury.io/py/turbopy)
 [![Documentation Status](https://readthedocs.org/projects/turbopy/badge/?version=latest)](https://turbopy.readthedocs.io/en/latest/?badge=latest)
-[![Build Status](https://travis-ci.org/NRL-Plasma-Physics-Division/turbopy.svg?branch=main)](https://travis-ci.org/NRL-Plasma-Physics-Division/turbopy)
+[![Build Status](https://travis-ci.com/NRL-Plasma-Physics-Division/turbopy.svg?branch=main)](https://travis-ci.com/NRL-Plasma-Physics-Division/turbopy)
 [![codecov](https://codecov.io/gh/NRL-Plasma-Physics-Division/turbopy/branch/main/graph/badge.svg)](https://codecov.io/gh/NRL-Plasma-Physics-Division/turbopy)
 ![GitHub](https://img.shields.io/github/license/NRL-Plasma-Physics-Division/turbopy)
 
