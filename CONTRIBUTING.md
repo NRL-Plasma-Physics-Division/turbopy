@@ -34,6 +34,14 @@ and we encourage the same style for those contributing to the project. The
 documentation is then automatically generated and hosted 
 [at ReadTheDocs](https://turbopy.readthedocs.io).
 
+To generate the sphinx documentation 
+```console
+$ cd docs
+$ make html
+$ make latexpdf
+```
+
+
 Testing
 -------
 
