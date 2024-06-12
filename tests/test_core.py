@@ -315,6 +315,12 @@ def test_turn_back_should_turn_back_time_when_called(simple_sim):
     assert simple_sim.clock.this_step == 0
     assert simple_sim.clock.time == 0
 
+def test_total_time_of_simulation(simple_sim):
+    """Test the"""
+    simple_sim.read_clock_from_input()
+    simple_sim.fundamental_cycle()
+
+
 
 def test_read_modules_from_input_should_set_modules_attr_when_called(simple_sim):
     """Test read_modules_from_input method in Simulation class"""
