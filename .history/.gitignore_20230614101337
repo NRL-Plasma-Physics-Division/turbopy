@@ -21,6 +21,3 @@ tmp/
 .idea
 build
 dist
-
-# claude
-CLAUDE.md

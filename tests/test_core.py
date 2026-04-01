@@ -9,6 +9,9 @@ from turbopy.core import (
     Diagnostic,
     Simulation,
     Grid,
+    GridBase,
+    Grid2DCartesian,
+    Grid2DCylindrical,
     SimulationClock)
 
 
@@ -562,3 +565,359 @@ def test_is_running():
     for i in range(clock2.num_steps):
         clock2.advance()
     assert not clock2.is_running()
+
+
+# ---------------------------------------------------------------------------
+# Grid2DCartesian tests
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(name='cart2d_grid')
+def cart2d_grid_fixture():
+    """2D Cartesian grid fixture: 5 x 4 points"""
+    return Grid2DCartesian({
+        "coordinate_system": "cartesian2d",
+        "Nx": 5, "x_min": 0.0, "x_max": 1.0,
+        "Ny": 4, "y_min": -1.0, "y_max": 1.0,
+    })
+
+
+def test_grid2d_cartesian_init(cart2d_grid):
+    assert cart2d_grid.Nx == 5
+    assert cart2d_grid.Ny == 4
+    assert cart2d_grid.x_min == pytest.approx(0.0)
+    assert cart2d_grid.x_max == pytest.approx(1.0)
+    assert cart2d_grid.y_min == pytest.approx(-1.0)
+    assert cart2d_grid.y_max == pytest.approx(1.0)
+    assert cart2d_grid.num_points == (5, 4)
+    assert cart2d_grid.shape == (5, 4)
+    assert cart2d_grid.dx == pytest.approx(0.25)
+    assert cart2d_grid.dy == pytest.approx(2.0 / 3)
+
+
+def test_grid2d_cartesian_axes(cart2d_grid):
+    assert cart2d_grid.x.shape == (5,)
+    assert cart2d_grid.y.shape == (4,)
+    assert cart2d_grid.x_centers.shape == (4,)
+    assert cart2d_grid.y_centers.shape == (3,)
+    assert cart2d_grid.x_widths.shape == (4,)
+    assert cart2d_grid.y_widths.shape == (3,)
+    assert np.allclose(cart2d_grid.x, np.linspace(0, 1, 5))
+    assert np.allclose(cart2d_grid.y, np.linspace(-1, 1, 4))
+    assert cart2d_grid.x_edges is cart2d_grid.x
+    assert cart2d_grid.y_edges is cart2d_grid.y
+
+
+def test_grid2d_cartesian_meshgrid(cart2d_grid):
+    assert cart2d_grid.XX.shape == (5, 4)
+    assert cart2d_grid.YY.shape == (5, 4)
+    assert cart2d_grid.XX[0, 0] == pytest.approx(0.0)
+    assert cart2d_grid.YY[0, 0] == pytest.approx(-1.0)
+    assert cart2d_grid.XX[-1, 0] == pytest.approx(1.0)
+    assert cart2d_grid.YY[0, -1] == pytest.approx(1.0)
+
+
+def test_grid2d_cartesian_cell_volumes(cart2d_grid):
+    assert cart2d_grid.cell_volumes.shape == (4, 3)
+    expected = 0.25 * (2.0 / 3)
+    assert np.allclose(cart2d_grid.cell_volumes, expected)
+    assert np.allclose(cart2d_grid.inverse_cell_volumes, 1.0 / expected)
+
+
+def test_grid2d_cartesian_generate_field_edge_centered(cart2d_grid):
+    f = cart2d_grid.generate_field()
+    assert f.shape == (5, 4)
+    assert np.allclose(f, 0.0)
+
+
+def test_grid2d_cartesian_generate_field_cell_centered(cart2d_grid):
+    f = cart2d_grid.generate_field(placement_of_points="cell-centered")
+    assert f.shape == (4, 3)
+
+
+def test_grid2d_cartesian_generate_field_staggered(cart2d_grid):
+    fx = cart2d_grid.generate_field(placement_of_points="x-edge-y-cell")
+    fy = cart2d_grid.generate_field(placement_of_points="x-cell-y-edge")
+    assert fx.shape == (5, 3)
+    assert fy.shape == (4, 4)
+
+
+def test_grid2d_cartesian_generate_field_with_components(cart2d_grid):
+    f = cart2d_grid.generate_field(num_components=3)
+    assert f.shape == (5, 4, 3)
+
+
+def test_grid2d_cartesian_generate_field_unknown_placement_raises(cart2d_grid):
+    with pytest.raises(ValueError):
+        cart2d_grid.generate_field(placement_of_points="unknown")
+
+
+def test_grid2d_cartesian_create_interpolator(cart2d_grid):
+    """Bilinear interpolation of f(x,y) = x + y should be exact on a uniform grid."""
+    f = cart2d_grid.generate_field()
+    for i, xv in enumerate(cart2d_grid.x):
+        for j, yv in enumerate(cart2d_grid.y):
+            f[i, j] = xv + yv
+    interp = cart2d_grid.create_interpolator((0.5, 0.0))
+    assert np.isclose(interp(f), 0.5 + 0.0)
+
+
+def test_grid2d_cartesian_interpolator_at_corner(cart2d_grid):
+    f = cart2d_grid.generate_field()
+    for i, xv in enumerate(cart2d_grid.x):
+        for j, yv in enumerate(cart2d_grid.y):
+            f[i, j] = xv + yv
+    interp = cart2d_grid.create_interpolator((1.0, 1.0))
+    assert np.isclose(interp(f), 2.0)
+
+
+def test_grid2d_cartesian_interpolator_out_of_bounds(cart2d_grid):
+    with pytest.raises(AssertionError):
+        cart2d_grid.create_interpolator((-0.1, 0.0))
+    with pytest.raises(AssertionError):
+        cart2d_grid.create_interpolator((0.5, 2.0))
+
+
+def test_grid2d_cartesian_is_gridbase(cart2d_grid):
+    assert isinstance(cart2d_grid, GridBase)
+    assert not isinstance(cart2d_grid, Grid)
+
+
+def test_grid2d_cartesian_from_dx_dy():
+    g = Grid2DCartesian({
+        "coordinate_system": "cartesian2d",
+        "dx": 0.25, "x_min": 0.0, "x_max": 1.0,
+        "dy": 0.5,  "y_min": 0.0, "y_max": 1.0,
+    })
+    assert g.Nx == 5
+    assert g.Ny == 3
+    assert g.dx == pytest.approx(0.25)
+    assert g.dy == pytest.approx(0.5)
+
+
+def test_grid2d_cartesian_missing_key_raises():
+    with pytest.raises(KeyError):
+        Grid2DCartesian({
+            "coordinate_system": "cartesian2d",
+            "Nx": 5, "x_min": 0.0, "x_max": 1.0,
+            # missing Ny / dy
+        })
+
+
+def test_grid2d_cartesian_non_integer_points_raises():
+    with pytest.raises(RuntimeError):
+        Grid2DCartesian({
+            "coordinate_system": "cartesian2d",
+            "dx": 0.3, "x_min": 0.0, "x_max": 1.0,
+            "Ny": 4, "y_min": 0.0, "y_max": 1.0,
+        })
+
+
+# ---------------------------------------------------------------------------
+# Grid2DCylindrical tests
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(name='cyl2d_grid')
+def cyl2d_grid_fixture():
+    """2D cylindrical grid fixture: 6 x 5 points"""
+    return Grid2DCylindrical({
+        "coordinate_system": "cylindrical2d",
+        "Nr": 6, "r_min": 0.0, "r_max": 0.1,
+        "Nz": 5, "z_min": -0.1, "z_max": 0.1,
+    })
+
+
+def test_grid2d_cylindrical_init(cyl2d_grid):
+    assert cyl2d_grid.Nr == 6
+    assert cyl2d_grid.Nz == 5
+    assert cyl2d_grid.r_min == pytest.approx(0.0)
+    assert cyl2d_grid.r_max == pytest.approx(0.1)
+    assert cyl2d_grid.z_min == pytest.approx(-0.1)
+    assert cyl2d_grid.z_max == pytest.approx(0.1)
+    assert cyl2d_grid.num_points == (6, 5)
+    assert cyl2d_grid.shape == (6, 5)
+    assert cyl2d_grid.dr == pytest.approx(0.02)
+    assert cyl2d_grid.dz == pytest.approx(0.05)
+
+
+def test_grid2d_cylindrical_axes(cyl2d_grid):
+    assert cyl2d_grid.r.shape == (6,)
+    assert cyl2d_grid.z.shape == (5,)
+    assert cyl2d_grid.r_centers.shape == (5,)
+    assert cyl2d_grid.z_centers.shape == (4,)
+    assert np.allclose(cyl2d_grid.r, np.linspace(0.0, 0.1, 6))
+    assert np.allclose(cyl2d_grid.z, np.linspace(-0.1, 0.1, 5))
+    assert cyl2d_grid.r_edges is cyl2d_grid.r
+    assert cyl2d_grid.z_edges is cyl2d_grid.z
+
+
+def test_grid2d_cylindrical_meshgrid(cyl2d_grid):
+    assert cyl2d_grid.RR.shape == (6, 5)
+    assert cyl2d_grid.ZZ.shape == (6, 5)
+    assert cyl2d_grid.RR[0, 0] == pytest.approx(0.0)
+    assert cyl2d_grid.ZZ[0, 0] == pytest.approx(-0.1)
+
+
+def test_grid2d_cylindrical_r_inv(cyl2d_grid):
+    assert cyl2d_grid.r_inv[0] == pytest.approx(0.0)
+    assert cyl2d_grid.r_inv[1] == pytest.approx(1.0 / cyl2d_grid.r[1])
+
+
+def test_grid2d_cylindrical_r_inv_2d_shape(cyl2d_grid):
+    assert cyl2d_grid.r_inv_2d.shape == (6, 5)
+    assert cyl2d_grid.r_inv_2d[0, 0] == pytest.approx(0.0)
+    assert cyl2d_grid.r_inv_2d[1, 2] == pytest.approx(1.0 / cyl2d_grid.r[1])
+
+
+def test_grid2d_cylindrical_cell_volumes_formula(cyl2d_grid):
+    r = cyl2d_grid.r
+    z = cyl2d_grid.z
+    expected = np.pi * np.outer(r[1:] ** 2 - r[:-1] ** 2, z[1:] - z[:-1])
+    assert cyl2d_grid.cell_volumes.shape == (5, 4)
+    assert np.allclose(cyl2d_grid.cell_volumes, expected)
+    assert np.allclose(cyl2d_grid.inverse_cell_volumes, 1.0 / expected)
+
+
+def test_grid2d_cylindrical_generate_field(cyl2d_grid):
+    f = cyl2d_grid.generate_field()
+    assert f.shape == (6, 5)
+    assert np.allclose(f, 0.0)
+
+
+def test_grid2d_cylindrical_generate_field_cell_centered(cyl2d_grid):
+    f = cyl2d_grid.generate_field(placement_of_points="cell-centered")
+    assert f.shape == (5, 4)
+
+
+def test_grid2d_cylindrical_generate_field_staggered(cyl2d_grid):
+    fr = cyl2d_grid.generate_field(placement_of_points="r-edge-z-cell")
+    fz = cyl2d_grid.generate_field(placement_of_points="r-cell-z-edge")
+    assert fr.shape == (6, 4)
+    assert fz.shape == (5, 5)
+
+
+def test_grid2d_cylindrical_generate_field_with_components(cyl2d_grid):
+    f = cyl2d_grid.generate_field(num_components=2)
+    assert f.shape == (6, 5, 2)
+
+
+def test_grid2d_cylindrical_generate_field_unknown_placement_raises(cyl2d_grid):
+    with pytest.raises(ValueError):
+        cyl2d_grid.generate_field(placement_of_points="unknown")
+
+
+def test_grid2d_cylindrical_create_interpolator(cyl2d_grid):
+    """Bilinear interpolation of f(r,z) = r + z should be exact on a uniform grid."""
+    f = cyl2d_grid.generate_field()
+    for i, rv in enumerate(cyl2d_grid.r):
+        for j, zv in enumerate(cyl2d_grid.z):
+            f[i, j] = rv + zv
+    interp = cyl2d_grid.create_interpolator((0.05, 0.0))
+    assert np.isclose(interp(f), 0.05 + 0.0)
+
+
+def test_grid2d_cylindrical_interpolator_out_of_bounds(cyl2d_grid):
+    with pytest.raises(AssertionError):
+        cyl2d_grid.create_interpolator((-0.01, 0.0))
+    with pytest.raises(AssertionError):
+        cyl2d_grid.create_interpolator((0.05, 0.5))
+
+
+def test_grid2d_cylindrical_is_gridbase(cyl2d_grid):
+    assert isinstance(cyl2d_grid, GridBase)
+    assert not isinstance(cyl2d_grid, Grid)
+
+
+def test_grid2d_cylindrical_from_dr_dz():
+    g = Grid2DCylindrical({
+        "coordinate_system": "cylindrical2d",
+        "dr": 0.02, "r_min": 0.0, "r_max": 0.1,
+        "dz": 0.05, "z_min": -0.1, "z_max": 0.1,
+    })
+    assert g.Nr == 6
+    assert g.Nz == 5
+
+
+def test_grid2d_cylindrical_missing_key_raises():
+    with pytest.raises(KeyError):
+        Grid2DCylindrical({
+            "coordinate_system": "cylindrical2d",
+            "Nr": 6, "r_min": 0.0, "r_max": 0.1,
+            # missing Nz / dz
+        })
+
+
+# ---------------------------------------------------------------------------
+# Simulation factory tests
+# ---------------------------------------------------------------------------
+
+def _minimal_sim_config(grid_conf):
+    return {
+        "Grid": grid_conf,
+        "Clock": {"start_time": 0, "end_time": 1, "num_steps": 10},
+        "PhysicsModules": {},
+    }
+
+
+def test_simulation_factory_creates_grid2d_cartesian():
+    sim = Simulation(_minimal_sim_config({
+        "coordinate_system": "cartesian2d",
+        "Nx": 5, "x_min": 0.0, "x_max": 1.0,
+        "Ny": 4, "y_min": 0.0, "y_max": 1.0,
+    }))
+    sim.read_grid_from_input()
+    assert isinstance(sim.grid, Grid2DCartesian)
+    assert sim.grid.Nx == 5
+    assert sim.grid.Ny == 4
+
+
+def test_simulation_factory_creates_grid2d_cylindrical():
+    sim = Simulation(_minimal_sim_config({
+        "coordinate_system": "cylindrical2d",
+        "Nr": 6, "r_min": 0.0, "r_max": 0.1,
+        "Nz": 5, "z_min": -0.1, "z_max": 0.1,
+    }))
+    sim.read_grid_from_input()
+    assert isinstance(sim.grid, Grid2DCylindrical)
+    assert sim.grid.Nr == 6
+
+
+def test_simulation_factory_1d_default_unchanged():
+    """Backward compatibility: no coordinate_system → 1D Grid."""
+    sim = Simulation(_minimal_sim_config({
+        "N": 8, "r_min": 0, "r_max": 1,
+    }))
+    sim.read_grid_from_input()
+    assert isinstance(sim.grid, Grid)
+    assert sim.grid.num_points == 8
+
+
+def test_simulation_factory_1d_cylindrical_unchanged():
+    """Backward compatibility: 1D 'cylindrical' still produces Grid."""
+    sim = Simulation(_minimal_sim_config({
+        "coordinate_system": "cylindrical",
+        "N": 10, "r_min": 0, "r_max": 1,
+    }))
+    sim.read_grid_from_input()
+    assert isinstance(sim.grid, Grid)
+    assert not isinstance(sim.grid, Grid2DCylindrical)
+
+
+def test_simulation_factory_1d_cartesian_unchanged():
+    """Backward compatibility: explicit 'cartesian' still produces Grid."""
+    sim = Simulation(_minimal_sim_config({
+        "coordinate_system": "cartesian",
+        "N": 10, "r_min": 0, "r_max": 1,
+    }))
+    sim.read_grid_from_input()
+    assert isinstance(sim.grid, Grid)
+
+
+def test_simulation_factory_case_insensitive():
+    """coordinate_system matching is case-insensitive."""
+    sim = Simulation(_minimal_sim_config({
+        "coordinate_system": "Cartesian2D",
+        "Nx": 5, "x_min": 0.0, "x_max": 1.0,
+        "Ny": 4, "y_min": 0.0, "y_max": 1.0,
+    }))
+    sim.read_grid_from_input()
+    assert isinstance(sim.grid, Grid2DCartesian)

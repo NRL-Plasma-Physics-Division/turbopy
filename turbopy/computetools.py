@@ -14,7 +14,7 @@ import numpy as np
 import scipy.interpolate as interpolate
 from scipy import sparse
 
-from .core import ComputeTool, Simulation
+from .core import ComputeTool, Grid, Grid2DCartesian, Grid2DCylindrical, Simulation
 
 
 class PoissonSolver1DRadial(ComputeTool):
@@ -82,6 +82,11 @@ class FiniteDifference(ComputeTool):
     """
     def __init__(self, owner: Simulation, input_data: dict):
         super().__init__(owner, input_data)
+        if not isinstance(self._owner.grid, Grid):
+            raise TypeError(
+                "FiniteDifference only supports 1D grids. "
+                "Use FiniteDifference2D for 2D grids."
+            )
         self.dr = self._owner.grid.dr
     
     def setup_ddx(self):
@@ -481,7 +486,188 @@ class Interpolators(ComputeTool):
         return f
 
 
+class FiniteDifference2D(ComputeTool):
+    """Finite difference operators for 2D grids using Kronecker products.
+
+    Constructs sparse matrix representations of first- and second-order
+    derivative operators for :class:`turbopy.core.Grid2DCartesian` and
+    :class:`turbopy.core.Grid2DCylindrical` grids.
+
+    Fields are assumed to be stored in row-major (C) order, i.e., a 2D
+    field array of shape ``(N1, N2)`` is flattened as
+    ``field.ravel(order='C')`` before multiplying by a matrix from this
+    class.  The result can be reshaped back to ``(N1, N2)`` with
+    ``result.reshape((N1, N2))``.
+
+    Given 1D operators ``D1`` (shape ``N1 × N1``) and ``D2`` (shape
+    ``N2 × N2``), the corresponding 2D operators are built via Kronecker
+    products:
+
+    - d/d(axis1): ``kron(D1, I_N2)``
+    - d/d(axis2): ``kron(I_N1, D2)``
+
+    Parameters
+    ----------
+    owner : Simulation
+        The :class:`turbopy.core.Simulation` object that contains this
+        object.
+    input_data : dict
+        There are no custom configuration options for this tool.
+
+    Raises
+    ------
+    TypeError
+        If the simulation grid is not a 2D grid.
+    """
+
+    def __init__(self, owner: Simulation, input_data: dict):
+        super().__init__(owner, input_data)
+        grid = self._owner.grid
+        if not isinstance(grid, (Grid2DCartesian, Grid2DCylindrical)):
+            raise TypeError(
+                "FiniteDifference2D requires a Grid2DCartesian or "
+                "Grid2DCylindrical grid. Use FiniteDifference for 1D grids."
+            )
+        self.grid = grid
+
+    # ------------------------------------------------------------------ #
+    # Internal helpers: 1D sparse matrices                                #
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _centered_diff_1d(N, h):
+        """Centered first-derivative matrix (N × N), spacing h."""
+        g = 1.0 / (2.0 * h)
+        data = np.array([-g * np.ones(N), g * np.ones(N)])
+        return sparse.dia_matrix((data, [-1, 1]), shape=(N, N))
+
+    @staticmethod
+    def _laplacian_1d(N, h):
+        """Second-derivative (Laplacian) matrix (N × N), spacing h."""
+        g2 = 1.0 / h ** 2
+        diag = g2 * np.ones(N)
+        # Standard 3-point stencil; boundary rows left as-is
+        data = np.array([diag, -2.0 * diag, diag])
+        return sparse.dia_matrix((data, [-1, 0, 1]), shape=(N, N))
+
+    # ------------------------------------------------------------------ #
+    # Cartesian 2D operators                                               #
+    # ------------------------------------------------------------------ #
+
+    def ddx(self):
+        """d/dx operator in 2D: ``kron(D1_x, I_Ny)``.
+
+        Returns
+        -------
+        :class:`scipy.sparse.csr_matrix`, shape ``(Nx*Ny, Nx*Ny)``
+        """
+        grid = self.grid
+        if not isinstance(grid, Grid2DCartesian):
+            raise TypeError("ddx() requires a Grid2DCartesian grid.")
+        D1 = self._centered_diff_1d(grid.Nx, grid.dx)
+        I2 = sparse.eye(grid.Ny)
+        return sparse.kron(D1, I2, format='csr')
+
+    def ddy(self):
+        """d/dy operator in 2D: ``kron(I_Nx, D1_y)``.
+
+        Returns
+        -------
+        :class:`scipy.sparse.csr_matrix`, shape ``(Nx*Ny, Nx*Ny)``
+        """
+        grid = self.grid
+        if not isinstance(grid, Grid2DCartesian):
+            raise TypeError("ddy() requires a Grid2DCartesian grid.")
+        I1 = sparse.eye(grid.Nx)
+        D2 = self._centered_diff_1d(grid.Ny, grid.dy)
+        return sparse.kron(I1, D2, format='csr')
+
+    def del2_x(self):
+        """d²/dx² operator in 2D: ``kron(L_x, I_Ny)``.
+
+        Returns
+        -------
+        :class:`scipy.sparse.csr_matrix`, shape ``(Nx*Ny, Nx*Ny)``
+        """
+        grid = self.grid
+        if not isinstance(grid, Grid2DCartesian):
+            raise TypeError("del2_x() requires a Grid2DCartesian grid.")
+        L1 = self._laplacian_1d(grid.Nx, grid.dx)
+        I2 = sparse.eye(grid.Ny)
+        return sparse.kron(L1, I2, format='csr')
+
+    def del2_y(self):
+        """d²/dy² operator in 2D: ``kron(I_Nx, L_y)``.
+
+        Returns
+        -------
+        :class:`scipy.sparse.csr_matrix`, shape ``(Nx*Ny, Nx*Ny)``
+        """
+        grid = self.grid
+        if not isinstance(grid, Grid2DCartesian):
+            raise TypeError("del2_y() requires a Grid2DCartesian grid.")
+        I1 = sparse.eye(grid.Nx)
+        L2 = self._laplacian_1d(grid.Ny, grid.dy)
+        return sparse.kron(I1, L2, format='csr')
+
+    def laplacian(self):
+        """2D Cartesian Laplacian: ``d²/dx² + d²/dy²``.
+
+        Returns
+        -------
+        :class:`scipy.sparse.csr_matrix`, shape ``(Nx*Ny, Nx*Ny)``
+        """
+        return self.del2_x() + self.del2_y()
+
+    # ------------------------------------------------------------------ #
+    # Cylindrical 2D operators                                             #
+    # ------------------------------------------------------------------ #
+
+    def ddr(self):
+        """d/dr operator in 2D cylindrical: ``kron(D1_r, I_Nz)``.
+
+        Returns
+        -------
+        :class:`scipy.sparse.csr_matrix`, shape ``(Nr*Nz, Nr*Nz)``
+        """
+        grid = self.grid
+        if not isinstance(grid, Grid2DCylindrical):
+            raise TypeError("ddr() requires a Grid2DCylindrical grid.")
+        D1 = self._centered_diff_1d(grid.Nr, grid.dr)
+        I2 = sparse.eye(grid.Nz)
+        return sparse.kron(D1, I2, format='csr')
+
+    def ddz(self):
+        """d/dz operator in 2D cylindrical: ``kron(I_Nr, D1_z)``.
+
+        Returns
+        -------
+        :class:`scipy.sparse.csr_matrix`, shape ``(Nr*Nz, Nr*Nz)``
+        """
+        grid = self.grid
+        if not isinstance(grid, Grid2DCylindrical):
+            raise TypeError("ddz() requires a Grid2DCylindrical grid.")
+        I1 = sparse.eye(grid.Nr)
+        D2 = self._centered_diff_1d(grid.Nz, grid.dz)
+        return sparse.kron(I1, D2, format='csr')
+
+    def del2_z(self):
+        """d²/dz² operator in 2D cylindrical: ``kron(I_Nr, L_z)``.
+
+        Returns
+        -------
+        :class:`scipy.sparse.csr_matrix`, shape ``(Nr*Nz, Nr*Nz)``
+        """
+        grid = self.grid
+        if not isinstance(grid, Grid2DCylindrical):
+            raise TypeError("del2_z() requires a Grid2DCylindrical grid.")
+        I1 = sparse.eye(grid.Nr)
+        L2 = self._laplacian_1d(grid.Nz, grid.dz)
+        return sparse.kron(I1, L2, format='csr')
+
+
 ComputeTool.register("BorisPush", BorisPush)
 ComputeTool.register("PoissonSolver1DRadial", PoissonSolver1DRadial)
 ComputeTool.register("FiniteDifference", FiniteDifference)
+ComputeTool.register("FiniteDifference2D", FiniteDifference2D)
 ComputeTool.register("Interpolators", Interpolators)

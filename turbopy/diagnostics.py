@@ -10,7 +10,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 import xarray as xr
 
-from .core import Diagnostic, Simulation
+from .core import (Diagnostic, Grid, Grid2DCartesian, Grid2DCylindrical,
+                   Simulation)
 
 
 class OutputUtility(ABC):
@@ -461,8 +462,22 @@ class GridDiagnostic(Diagnostic):
     def initialize(self):
         """Save grid data into CSV file"""
         super().initialize()
+        grid = self._owner.grid
         with open(self.filename, 'wb') as f:
-            np.savetxt(f, self._owner.grid.r, delimiter=",")
+            if isinstance(grid, Grid2DCartesian):
+                n = max(grid.Nx, grid.Ny)
+                data = np.full((n, 2), np.nan)
+                data[:grid.Nx, 0] = grid.x
+                data[:grid.Ny, 1] = grid.y
+                np.savetxt(f, data, delimiter=",", header="x,y")
+            elif isinstance(grid, Grid2DCylindrical):
+                n = max(grid.Nr, grid.Nz)
+                data = np.full((n, 2), np.nan)
+                data[:grid.Nr, 0] = grid.r
+                data[:grid.Nz, 1] = grid.z
+                np.savetxt(f, data, delimiter=",", header="r,z")
+            else:
+                np.savetxt(f, grid.r, delimiter=",")
 
 
 class ClockDiagnostic(Diagnostic):
@@ -634,9 +649,21 @@ class HistoryDiagnostic(Diagnostic):
         self._traces.coords['time'].attrs['long_name'] = 'Time'
 
         # set up the grid coordinate
-        self._traces.coords['r'] = ('grid', self._owner.grid.r)
-        self._traces.coords['r'].attrs['units'] = 'm'
-        self._traces.coords['r'].attrs['long_name'] = 'Radius'
+        grid = self._owner.grid
+        if isinstance(grid, Grid2DCartesian):
+            raise NotImplementedError(
+                "HistoryDiagnostic does not yet support Grid2DCartesian. "
+                "2D xarray coordinate support is planned as future work."
+            )
+        elif isinstance(grid, Grid2DCylindrical):
+            raise NotImplementedError(
+                "HistoryDiagnostic does not yet support Grid2DCylindrical. "
+                "2D xarray coordinate support is planned as future work."
+            )
+        else:
+            self._traces.coords['r'] = ('grid', grid.r)
+            self._traces.coords['r'].attrs['units'] = 'm'
+            self._traces.coords['r'].attrs['long_name'] = 'Radius'
 
         # set up the history traces
         for trace in self._input_data['traces']:

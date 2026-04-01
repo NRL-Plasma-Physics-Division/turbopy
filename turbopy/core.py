@@ -40,9 +40,10 @@ class Simulation:
 
         ``"Grid"``, optional
             Dictionary containing parameters needed to define the grid.
-            Currently only 1D grids are defined in turboPy.
+            The ``"coordinate_system"`` key selects the grid type:
 
-            The expected parameters are:
+            **1D grids** (default; ``"coordinate_system"`` absent, or
+            ``"cartesian"``, ``"cylindrical"``, ``"spherical"``):
 
             - ``"N"`` | {``"dr"`` | ``"dx"``} :
                 The number of grid points (`int`) | the grid spacing
@@ -51,6 +52,20 @@ class Simulation:
                 The coordinate value of the minimum grid point (`float`)
             - ``"max"`` | ``"x_max"`` | ``"r_max"`` :
                 The coordinate value of the maximum grid point (`float`)
+
+            **2D Cartesian grid** (``"coordinate_system": "cartesian2d"``):
+
+            - ``"Nx"`` | ``"dx"`` : x-axis point count | spacing
+            - ``"x_min"``, ``"x_max"`` : x-axis bounds
+            - ``"Ny"`` | ``"dy"`` : y-axis point count | spacing
+            - ``"y_min"``, ``"y_max"`` : y-axis bounds
+
+            **2D Cylindrical grid** (``"coordinate_system": "cylindrical2d"``):
+
+            - ``"Nr"`` | ``"dr"`` : radial point count | spacing
+            - ``"r_min"``, ``"r_max"`` : radial bounds
+            - ``"Nz"`` | ``"dz"`` : axial point count | spacing
+            - ``"z_min"``, ``"z_max"`` : axial bounds
 
         ``"Clock"``
             Dictionary of parameters needed to define the simulation
@@ -226,8 +241,24 @@ class Simulation:
             d.finalize()
 
     def read_grid_from_input(self):
-        """Construct the grid based on input parameters"""
-        self.grid = Grid(self.input_data["Grid"])
+        """Construct the grid based on input parameters.
+
+        Reads the ``"coordinate_system"`` key from the Grid input to
+        dispatch to the correct :class:`GridBase` subclass.
+        Values ``"cartesian2d"`` and ``"cylindrical2d"`` produce 2D grids.
+        All other values (including the default ``"cartesian"``,
+        ``"cylindrical"``, and ``"spherical"``) produce the existing
+        1D :class:`Grid` for backward compatibility.
+        """
+        grid_data = self.input_data["Grid"]
+        coord_sys = grid_data.get(
+            "coordinate_system", "cartesian").lower().strip()
+        if coord_sys == "cartesian2d":
+            self.grid = Grid2DCartesian(grid_data)
+        elif coord_sys == "cylindrical2d":
+            self.grid = Grid2DCylindrical(grid_data)
+        else:
+            self.grid = Grid(grid_data)
 
     def read_clock_from_input(self):
         """Construct the clock based on input parameters"""
@@ -686,7 +717,56 @@ class SimulationClock:
         return f"{self.__class__.__name__}({self._input_data})"
 
 
-class Grid:
+class GridBase(ABC):
+    """Abstract base class for all turboPy grid types.
+
+    All concrete grid classes inherit from this base and must implement
+    :meth:`generate_field` and :meth:`create_interpolator`. The
+    ``coordinate_system`` class attribute identifies the grid type.
+
+    Use ``isinstance(grid, GridBase)`` to accept any grid type.
+    Use ``isinstance(grid, Grid)`` to identify 1D grids specifically.
+    """
+
+    coordinate_system: str = ""
+
+    @abstractmethod
+    def generate_field(self, num_components=1,
+                       placement_of_points="edge-centered"):
+        """Return a zero-filled :class:`numpy.ndarray` shaped for this grid.
+
+        Parameters
+        ----------
+        num_components : int, optional
+            Number of vector components at each point. Default is 1.
+        placement_of_points : str, optional
+            Designates position of points on the grid.
+
+        Returns
+        -------
+        :class:`numpy.ndarray`
+        """
+
+    @abstractmethod
+    def create_interpolator(self, location):
+        """Return a callable that interpolates a field to ``location``.
+
+        Parameters
+        ----------
+        location : float or tuple of float
+            The coordinate(s) of the requested point. Scalar for 1D
+            grids; a tuple ``(coord1, coord2)`` for 2D grids.
+
+        Returns
+        -------
+        callable
+        """
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({self._input_data})"
+
+
+class Grid(GridBase):
     """Grid class
 
     Parameters
@@ -953,8 +1033,411 @@ class Grid:
             (self.inverse_cell_volumes[1:] + self.inverse_cell_volumes[0:-1])
         self.inverse_interface_volumes[-1] = self.inverse_cell_volumes[-1]
 
-    def __repr__(self):
-        return f"{self.__class__.__name__}({self._input_data})"
+
+class Grid2DCartesian(GridBase):
+    """2D Cartesian grid on (x, y) axes.
+
+    Parameters
+    ----------
+    input_data : `dict`
+        Dictionary containing parameters needed to define the grid.
+
+        The expected parameters are:
+
+        - ``"Nx"`` | ``"dx"`` :
+            The number of x-axis edge points (`int`) | the x spacing
+            (`float`)
+        - ``"Ny"`` | ``"dy"`` :
+            The number of y-axis edge points (`int`) | the y spacing
+            (`float`)
+        - ``"x_min"`` :
+            Minimum x coordinate (`float`)
+        - ``"x_max"`` :
+            Maximum x coordinate (`float`)
+        - ``"y_min"`` :
+            Minimum y coordinate (`float`)
+        - ``"y_max"`` :
+            Maximum y coordinate (`float`)
+
+    Attributes
+    ----------
+    coordinate_system : str
+        Always ``"cartesian2d"``.
+    x, x_edges : :class:`numpy.ndarray`, shape (Nx,)
+        Edge-point coordinates along the x axis.
+    y, y_edges : :class:`numpy.ndarray`, shape (Ny,)
+        Edge-point coordinates along the y axis.
+    x_centers : :class:`numpy.ndarray`, shape (Nx-1,)
+        Cell-center coordinates along x.
+    y_centers : :class:`numpy.ndarray`, shape (Ny-1,)
+        Cell-center coordinates along y.
+    x_widths : :class:`numpy.ndarray`, shape (Nx-1,)
+        Cell widths along x.
+    y_widths : :class:`numpy.ndarray`, shape (Ny-1,)
+        Cell widths along y.
+    dx, dy : float
+        Uniform grid spacings.
+    Nx, Ny : int
+        Number of edge points along each axis.
+    num_points : tuple
+        ``(Nx, Ny)``
+    shape : tuple
+        ``(Nx, Ny)``
+    XX, YY : :class:`numpy.ndarray`, shape (Nx, Ny)
+        Meshgrid arrays (``indexing='ij'``).
+    cell_volumes : :class:`numpy.ndarray`, shape (Nx-1, Ny-1)
+        Area of each cell = ``dx_i * dy_j``.
+    inverse_cell_volumes : :class:`numpy.ndarray`, shape (Nx-1, Ny-1)
+        ``1 / cell_volumes``
+    x_min, x_max, y_min, y_max : float
+        Domain bounds.
+    """
+
+    coordinate_system = "cartesian2d"
+
+    def __init__(self, input_data: dict):
+        self._input_data = input_data
+        self._parse_grid_data()
+        self._set_grid_points()
+        self._set_volume_elements()
+
+    def _parse_grid_data(self):
+        d = self._input_data
+        self.x_min = d["x_min"]
+        self.x_max = d["x_max"]
+        self.y_min = d["y_min"]
+        self.y_max = d["y_max"]
+
+        if "Nx" in d:
+            self.Nx = int(d["Nx"])
+            self.dx = (self.x_max - self.x_min) / (self.Nx - 1)
+        elif "dx" in d:
+            self.dx = float(d["dx"])
+            npts = 1 + (self.x_max - self.x_min) / self.dx
+            if not np.isclose(npts, round(npts)):
+                raise RuntimeError("x range / dx does not give an integer "
+                                   "number of grid points")
+            self.Nx = int(round(npts))
+        else:
+            raise KeyError("Grid2DCartesian requires 'Nx' or 'dx'")
+
+        if "Ny" in d:
+            self.Ny = int(d["Ny"])
+            self.dy = (self.y_max - self.y_min) / (self.Ny - 1)
+        elif "dy" in d:
+            self.dy = float(d["dy"])
+            npts = 1 + (self.y_max - self.y_min) / self.dy
+            if not np.isclose(npts, round(npts)):
+                raise RuntimeError("y range / dy does not give an integer "
+                                   "number of grid points")
+            self.Ny = int(round(npts))
+        else:
+            raise KeyError("Grid2DCartesian requires 'Ny' or 'dy'")
+
+        self.num_points = (self.Nx, self.Ny)
+        self.shape = self.num_points
+
+    def _set_grid_points(self):
+        self.x = np.linspace(self.x_min, self.x_max, self.Nx)
+        self.x_edges = self.x
+        self.y = np.linspace(self.y_min, self.y_max, self.Ny)
+        self.y_edges = self.y
+        self.x_centers = 0.5 * (self.x[1:] + self.x[:-1])
+        self.y_centers = 0.5 * (self.y[1:] + self.y[:-1])
+        self.x_widths = self.x[1:] - self.x[:-1]
+        self.y_widths = self.y[1:] - self.y[:-1]
+        # Use 'ij' indexing so XX.shape == (Nx, Ny)
+        self.XX, self.YY = np.meshgrid(self.x, self.y, indexing='ij')
+
+    def _set_volume_elements(self):
+        # cell_volumes[i, j] = dx_i * dy_j
+        dx2d = self.x_widths[:, np.newaxis]   # (Nx-1, 1)
+        dy2d = self.y_widths[np.newaxis, :]   # (1, Ny-1)
+        self.cell_volumes = dx2d * dy2d        # (Nx-1, Ny-1)
+        self.inverse_cell_volumes = 1.0 / self.cell_volumes
+
+    def generate_field(self, num_components=1,
+                       placement_of_points="edge-centered"):
+        """Return a zero-filled :class:`numpy.ndarray` for a field on this grid.
+
+        Parameters
+        ----------
+        num_components : int, optional
+            Number of vector components at each point. Default is 1.
+        placement_of_points : str, optional
+            One of:
+
+            - ``"edge-centered"`` — shape ``(Nx, Ny)``
+            - ``"cell-centered"`` — shape ``(Nx-1, Ny-1)``
+            - ``"x-edge-y-cell"`` — shape ``(Nx, Ny-1)``
+            - ``"x-cell-y-edge"`` — shape ``(Nx-1, Ny)``
+
+        Returns
+        -------
+        :class:`numpy.ndarray`
+        """
+        placement_map = {
+            "edge-centered":  (self.Nx,     self.Ny),
+            "cell-centered":  (self.Nx - 1, self.Ny - 1),
+            "x-edge-y-cell":  (self.Nx,     self.Ny - 1),
+            "x-cell-y-edge":  (self.Nx - 1, self.Ny),
+        }
+        if placement_of_points not in placement_map:
+            raise ValueError(f"Unknown placement option: {placement_of_points!r}")
+        nx, ny = placement_map[placement_of_points]
+        if num_components == 1:
+            return np.zeros((nx, ny))
+        return np.zeros((nx, ny, num_components))
+
+    def create_interpolator(self, location):
+        """Return a bilinear interpolation function for an edge-centered field.
+
+        Parameters
+        ----------
+        location : tuple of float
+            ``(x0, y0)`` coordinates of the requested point.
+
+        Returns
+        -------
+        callable
+            A function ``f(field_2d) -> float`` that bilinearly interpolates
+            a 2D edge-centered field (shape ``(Nx, Ny)``) to ``location``.
+        """
+        x0, y0 = location
+        assert x0 >= self.x_min, "Requested x0 is outside the grid"
+        assert x0 <= self.x_max, "Requested x0 is outside the grid"
+        assert y0 >= self.y_min, "Requested y0 is outside the grid"
+        assert y0 <= self.y_max, "Requested y0 is outside the grid"
+
+        ix = int(np.searchsorted(self.x, x0, side='right')) - 1
+        iy = int(np.searchsorted(self.y, y0, side='right')) - 1
+        ix = min(ix, self.Nx - 2)
+        iy = min(iy, self.Ny - 2)
+
+        tx = (x0 - self.x[ix]) / (self.x[ix + 1] - self.x[ix])
+        ty = (y0 - self.y[iy]) / (self.y[iy + 1] - self.y[iy])
+
+        def interpolate(field):
+            f00 = field[ix,     iy    ]
+            f10 = field[ix + 1, iy    ]
+            f01 = field[ix,     iy + 1]
+            f11 = field[ix + 1, iy + 1]
+            return ((1 - tx) * (1 - ty) * f00
+                    + tx * (1 - ty) * f10
+                    + (1 - tx) * ty * f01
+                    + tx * ty * f11)
+
+        return interpolate
+
+
+class Grid2DCylindrical(GridBase):
+    """2D cylindrical grid on (r, z) axes.
+
+    This represents a full 2D ``(r, z)`` domain, distinct from the
+    existing 1D ``"cylindrical"`` :class:`Grid` which is a 1D radial
+    coordinate with cylindrical volume elements.
+
+    Parameters
+    ----------
+    input_data : `dict`
+        Dictionary containing parameters needed to define the grid.
+
+        The expected parameters are:
+
+        - ``"Nr"`` | ``"dr"`` :
+            The number of radial edge points (`int`) | the radial
+            spacing (`float`)
+        - ``"Nz"`` | ``"dz"`` :
+            The number of axial edge points (`int`) | the axial
+            spacing (`float`)
+        - ``"r_min"`` :
+            Minimum radial coordinate (`float`, typically ``0.0``)
+        - ``"r_max"`` :
+            Maximum radial coordinate (`float`)
+        - ``"z_min"`` :
+            Minimum axial coordinate (`float`)
+        - ``"z_max"`` :
+            Maximum axial coordinate (`float`)
+
+    Attributes
+    ----------
+    coordinate_system : str
+        Always ``"cylindrical2d"``.
+    r, r_edges : :class:`numpy.ndarray`, shape (Nr,)
+        Edge-point radial coordinates.
+    z, z_edges : :class:`numpy.ndarray`, shape (Nz,)
+        Edge-point axial coordinates.
+    r_centers : :class:`numpy.ndarray`, shape (Nr-1,)
+        Radial cell centers.
+    z_centers : :class:`numpy.ndarray`, shape (Nz-1,)
+        Axial cell centers.
+    r_widths : :class:`numpy.ndarray`, shape (Nr-1,)
+        Cell widths in r.
+    z_widths : :class:`numpy.ndarray`, shape (Nz-1,)
+        Cell widths in z.
+    dr, dz : float
+        Uniform grid spacings.
+    Nr, Nz : int
+        Number of edge points along each axis.
+    num_points : tuple
+        ``(Nr, Nz)``
+    shape : tuple
+        ``(Nr, Nz)``
+    RR, ZZ : :class:`numpy.ndarray`, shape (Nr, Nz)
+        Meshgrid arrays (``indexing='ij'``).
+    r_inv : :class:`numpy.ndarray`, shape (Nr,)
+        ``1/r`` at each radial edge point; ``0`` where ``r == 0``.
+    r_inv_2d : :class:`numpy.ndarray`, shape (Nr, Nz)
+        Meshgrid of ``r_inv``, useful for 2D vector operators.
+    cell_volumes : :class:`numpy.ndarray`, shape (Nr-1, Nz-1)
+        Volume of each annular cell = ``pi * (r_{i+1}^2 - r_i^2) * dz_j``.
+    inverse_cell_volumes : :class:`numpy.ndarray`, shape (Nr-1, Nz-1)
+        ``1 / cell_volumes``
+    r_min, r_max, z_min, z_max : float
+        Domain bounds.
+    """
+
+    coordinate_system = "cylindrical2d"
+
+    def __init__(self, input_data: dict):
+        self._input_data = input_data
+        self._parse_grid_data()
+        self._set_grid_points()
+        self._set_volume_elements()
+
+    def _parse_grid_data(self):
+        d = self._input_data
+        self.r_min = d["r_min"]
+        self.r_max = d["r_max"]
+        self.z_min = d["z_min"]
+        self.z_max = d["z_max"]
+
+        if "Nr" in d:
+            self.Nr = int(d["Nr"])
+            self.dr = (self.r_max - self.r_min) / (self.Nr - 1)
+        elif "dr" in d:
+            self.dr = float(d["dr"])
+            npts = 1 + (self.r_max - self.r_min) / self.dr
+            if not np.isclose(npts, round(npts)):
+                raise RuntimeError("r range / dr does not give an integer "
+                                   "number of grid points")
+            self.Nr = int(round(npts))
+        else:
+            raise KeyError("Grid2DCylindrical requires 'Nr' or 'dr'")
+
+        if "Nz" in d:
+            self.Nz = int(d["Nz"])
+            self.dz = (self.z_max - self.z_min) / (self.Nz - 1)
+        elif "dz" in d:
+            self.dz = float(d["dz"])
+            npts = 1 + (self.z_max - self.z_min) / self.dz
+            if not np.isclose(npts, round(npts)):
+                raise RuntimeError("z range / dz does not give an integer "
+                                   "number of grid points")
+            self.Nz = int(round(npts))
+        else:
+            raise KeyError("Grid2DCylindrical requires 'Nz' or 'dz'")
+
+        self.num_points = (self.Nr, self.Nz)
+        self.shape = self.num_points
+
+    def _set_grid_points(self):
+        self.r = np.linspace(self.r_min, self.r_max, self.Nr)
+        self.r_edges = self.r
+        self.z = np.linspace(self.z_min, self.z_max, self.Nz)
+        self.z_edges = self.z
+        self.r_centers = 0.5 * (self.r[1:] + self.r[:-1])
+        self.z_centers = 0.5 * (self.z[1:] + self.z[:-1])
+        self.r_widths = self.r[1:] - self.r[:-1]
+        self.z_widths = self.z[1:] - self.z[:-1]
+        # Use 'ij' indexing so RR.shape == (Nr, Nz)
+        self.RR, self.ZZ = np.meshgrid(self.r, self.z, indexing='ij')
+        # r_inv: 1/r with 0 where r == 0; errstate suppresses the
+        # divide-by-zero warning for the r[0] == 0 case before masking.
+        with np.errstate(divide='ignore', invalid='ignore'):
+            r_inv_raw = np.where(self.r != 0, 1.0 / self.r, 0.0)
+        self.r_inv = r_inv_raw
+        self.r_inv_2d, _ = np.meshgrid(self.r_inv, self.z, indexing='ij')
+
+    def _set_volume_elements(self):
+        # V[i, j] = pi * (r_{i+1}^2 - r_i^2) * dz_j
+        r_sq_diff = np.pi * (self.r[1:] ** 2 - self.r[:-1] ** 2)  # (Nr-1,)
+        self.cell_volumes = (r_sq_diff[:, np.newaxis]
+                             * self.z_widths[np.newaxis, :])        # (Nr-1, Nz-1)
+        self.inverse_cell_volumes = 1.0 / self.cell_volumes
+
+    def generate_field(self, num_components=1,
+                       placement_of_points="edge-centered"):
+        """Return a zero-filled :class:`numpy.ndarray` for a field on this grid.
+
+        Parameters
+        ----------
+        num_components : int, optional
+            Number of vector components at each point. Default is 1.
+        placement_of_points : str, optional
+            One of:
+
+            - ``"edge-centered"`` — shape ``(Nr, Nz)``
+            - ``"cell-centered"`` — shape ``(Nr-1, Nz-1)``
+            - ``"r-edge-z-cell"`` — shape ``(Nr, Nz-1)``
+            - ``"r-cell-z-edge"`` — shape ``(Nr-1, Nz)``
+
+        Returns
+        -------
+        :class:`numpy.ndarray`
+        """
+        placement_map = {
+            "edge-centered":  (self.Nr,     self.Nz),
+            "cell-centered":  (self.Nr - 1, self.Nz - 1),
+            "r-edge-z-cell":  (self.Nr,     self.Nz - 1),
+            "r-cell-z-edge":  (self.Nr - 1, self.Nz),
+        }
+        if placement_of_points not in placement_map:
+            raise ValueError(f"Unknown placement option: {placement_of_points!r}")
+        nr, nz = placement_map[placement_of_points]
+        if num_components == 1:
+            return np.zeros((nr, nz))
+        return np.zeros((nr, nz, num_components))
+
+    def create_interpolator(self, location):
+        """Return a bilinear interpolation function for an edge-centered field.
+
+        Parameters
+        ----------
+        location : tuple of float
+            ``(r0, z0)`` coordinates of the requested point.
+
+        Returns
+        -------
+        callable
+            A function ``f(field_2d) -> float`` that bilinearly interpolates
+            a 2D edge-centered field (shape ``(Nr, Nz)``) to ``location``.
+        """
+        r0, z0 = location
+        assert r0 >= self.r_min, "Requested r0 is outside the grid"
+        assert r0 <= self.r_max, "Requested r0 is outside the grid"
+        assert z0 >= self.z_min, "Requested z0 is outside the grid"
+        assert z0 <= self.z_max, "Requested z0 is outside the grid"
+
+        ir = int(np.searchsorted(self.r, r0, side='right')) - 1
+        iz = int(np.searchsorted(self.z, z0, side='right')) - 1
+        ir = min(ir, self.Nr - 2)
+        iz = min(iz, self.Nz - 2)
+
+        tr = (r0 - self.r[ir]) / (self.r[ir + 1] - self.r[ir])
+        tz = (z0 - self.z[iz]) / (self.z[iz + 1] - self.z[iz])
+
+        def interpolate(field):
+            f00 = field[ir,     iz    ]
+            f10 = field[ir + 1, iz    ]
+            f01 = field[ir,     iz + 1]
+            f11 = field[ir + 1, iz + 1]
+            return ((1 - tr) * (1 - tz) * f00
+                    + tr * (1 - tz) * f10
+                    + (1 - tr) * tz * f01
+                    + tr * tz * f11)
+
+        return interpolate
 
 
 class Diagnostic(DynamicFactory):
