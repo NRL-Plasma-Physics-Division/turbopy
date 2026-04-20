@@ -19,6 +19,7 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 import numpy as np
 import warnings
+import time
 
 
 class Simulation:
@@ -67,6 +68,12 @@ class Simulation:
                 step (`float`)
             - ``"print_time"`` :
                 `bool`, optional, default is ``False``
+            - ``"wall_start_time"`` : `float`
+                Starting time of the simulation.
+            - ``"wall_end_time"`` : `float`
+                End time of the simulation.
+            - ``"wall_time"`` : `float`
+                Total time of simulation.
 
         ``"PhysicsModules"`` : `dict` [`str`, `dict`]
             Dictionary of :class:`PhysicsModule` items needed for the
@@ -132,6 +139,10 @@ class Simulation:
         self.clock = None
         self.units = None
 
+        self.wall_start_time = None
+        self.wall_end_time = None
+        self.wall_time = None
+
         self.input_data = input_data
 
         self.all_shared_resources = {}
@@ -156,6 +167,9 @@ class Simulation:
             self.fundamental_cycle()
 
         self.finalize_simulation()
+        """Output the total wall time of the simulation"""
+        self.wall_time = self.wall_end_time - self.wall_start_time
+        print(f"Simulation duration = {self.wall_time} seconds")
         print("Simulation complete")
 
     def fundamental_cycle(self):
@@ -187,6 +201,7 @@ class Simulation:
 
         print("Initializing Simulation Clock...")
         self.read_clock_from_input()
+        self.wall_start_time = time.time()
 
         print("Reading Tools...")
         self.read_tools_from_input()
@@ -224,6 +239,8 @@ class Simulation:
         """
         for d in self.diagnostics:
             d.finalize()
+
+        self.wall_end_time = time.time()
 
     def read_grid_from_input(self):
         """Construct the grid based on input parameters"""
@@ -681,6 +698,17 @@ class SimulationClock:
     def is_running(self):
         """Check if time is less than end time"""
         return self.this_step < self.num_steps
+
+    # def read_wall_time_at_physics_start_time(self):
+    #    self.wall_start_time = time.time()
+
+    # def read_simulation_time_at_physics_end_time(self):
+    #    self.wall_end_time = time.time()
+
+    # def total_wall_time(self):
+    #    """Output the total wall time of the simulation"""
+    #    self.wall_time = self.wall_end_time - self.wall_start_time
+    #    print(f"Simulation duration = {self.wall_time}")
 
     def __repr__(self):
         return f"{self.__class__.__name__}({self._input_data})"
