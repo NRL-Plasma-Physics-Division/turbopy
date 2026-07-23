@@ -65,11 +65,13 @@ Built-in diagnostics
 
 :class:`turbopy.diagnostics.HistoryDiagnostic`
    Aggregate multiple traces into an
-   :mod:`xarray` dataset and write a single NetCDF file.  **1D grids
-   only** — the current implementation raises
-   :class:`NotImplementedError` if the simulation grid is a
-   :class:`~turbopy.core.Grid2DCartesian` or
-   :class:`~turbopy.core.Grid2DCylindrical`.
+   :mod:`xarray` dataset and write a single NetCDF file.  Supports 1D
+   grids and both 2D grid types
+   (:class:`~turbopy.core.Grid2DCartesian` and
+   :class:`~turbopy.core.Grid2DCylindrical`).  On 2D grids the
+   resulting NetCDF dataset carries spatial coordinates in addition to
+   ``time``: ``x`` and ``y`` for Cartesian grids, or ``r`` and ``z``
+   for cylindrical grids.
 
 Output utility helpers
 ----------------------

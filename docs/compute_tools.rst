@@ -79,8 +79,26 @@ Built-in compute tools
    the result can be ``.reshape((N1, N2))``'d back to 2D.  Operators
    are built via Kronecker products of 1D building blocks.  Raises
    :class:`TypeError` in ``__init__`` if the grid is 1D.  Provides
-   ``ddx``, ``ddy``, ``del2_x``, ``del2_y``, ``laplacian`` (Cartesian)
-   and ``ddr``, ``ddz``, ``del2_z`` (cylindrical).
+   ``ddx``, ``ddy``, ``del2_x``, ``del2_y`` for
+   :class:`~turbopy.core.Grid2DCartesian`, and ``ddr``, ``ddz``,
+   ``del2_r``, ``del2_z`` for
+   :class:`~turbopy.core.Grid2DCylindrical`.  The
+   :meth:`~turbopy.computetools.FiniteDifference2D.laplacian` method
+   dispatches on grid type: it returns ``del2_x + del2_y`` for
+   Cartesian grids and ``del2_r + del2_z`` (with the ``(1/r) d/dr``
+   term folded into ``del2_r``) for cylindrical grids.
+
+:class:`turbopy.computetools.PoissonSolver2D`
+   Solves the 2D Poisson equation on either a
+   :class:`~turbopy.core.Grid2DCartesian` or a
+   :class:`~turbopy.core.Grid2DCylindrical` grid, imposing homogeneous
+   Dirichlet (``φ = 0``) conditions on all four boundaries.  Uses
+   :meth:`~turbopy.computetools.FiniteDifference2D.laplacian`
+   internally to assemble the sparse system, then calls
+   :func:`scipy.sparse.linalg.spsolve`.  The ``solve(source)`` method
+   expects ``source`` to be a 2D array whose shape matches
+   ``grid.shape``.  Raises :class:`TypeError` if the simulation grid
+   is a 1D :class:`~turbopy.core.Grid`.
 
 :class:`turbopy.computetools.BorisPush`
    Boris particle pusher.  ``push`` updates the particle position and

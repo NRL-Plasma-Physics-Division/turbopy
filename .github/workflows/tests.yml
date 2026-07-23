@@ -9,18 +9,13 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ['3.11', '3.12', '3.13']
-
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.13
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: '3.13'
           cache: pip
           cache-dependency-path: pyproject.toml
 
@@ -34,7 +29,6 @@ jobs:
         run: pytest --cov-report=xml --cov=turbopy tests/
 
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.11'
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.xml

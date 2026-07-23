@@ -667,18 +667,13 @@ class ClockDiagnostic(Diagnostic):
 class HistoryDiagnostic(Diagnostic):
     """Outputs histories/traces as functions of time
 
-    This diagnostic assists in outputting 1D history traces. Multiple time-
-    dependant quantities can be selected, and are output to a NetCDF file
-    using the xarray python package.
-
-    Raises
-    ------
-    NotImplementedError
-        Raised in :meth:`initialize` if the simulation grid is a
-        :class:`~turbopy.core.Grid2DCartesian` or
-        :class:`~turbopy.core.Grid2DCylindrical`.  Only 1D grids are
-        currently supported; 2D xarray coordinate support is planned
-        as future work.
+    This diagnostic aggregates multiple time-dependent quantities and
+    outputs them to a single NetCDF file using the :mod:`xarray` package.
+    Supports 1D grids and both 2D grid types
+    (:class:`~turbopy.core.Grid2DCartesian` and
+    :class:`~turbopy.core.Grid2DCylindrical`).  On 2D grids the resulting
+    dataset carries spatial coordinates in addition to ``time``: ``x`` and
+    ``y`` for Cartesian grids, or ``r`` and ``z`` for cylindrical grids.
 
     Examples
     --------
@@ -788,15 +783,14 @@ class HistoryDiagnostic(Diagnostic):
 
         Sets up the ``time`` and grid coordinates, then walks
         ``input_data["traces"]`` to expand every trace as a new
-        variable with a ``timestep`` dimension.  Only 1D grids are
-        supported.
-
-        Raises
-        ------
-        NotImplementedError
-            If the simulation grid is
-            :class:`~turbopy.core.Grid2DCartesian` or
-            :class:`~turbopy.core.Grid2DCylindrical`.
+        variable with a ``timestep`` dimension.  Supports 1D grids and
+        both 2D grid types.  On a
+        :class:`~turbopy.core.Grid2DCartesian` grid the dataset gains
+        ``x`` and ``y`` coordinates; on a
+        :class:`~turbopy.core.Grid2DCylindrical` grid it gains ``r``
+        and ``z`` coordinates.  On a 1D
+        :class:`~turbopy.core.Grid` the dataset gains an ``r``
+        coordinate along the ``"grid"`` dimension.
         """
         # set up the time coordinate
         self._traces.coords['time'] = ('timestep', np.zeros(self._num_outputs))
